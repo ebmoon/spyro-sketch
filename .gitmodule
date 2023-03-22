@@ -1,0 +1,7 @@
+[submodule "sketch-backend"]
+	path = sketch-backend
+	url = git@github.com:asolarlez/sketch-backend
+
+[submodule "sketch-frontend"]
+	path = sketch-frontend
+	url = git@github.com/asolarlez/sketch-frontend
