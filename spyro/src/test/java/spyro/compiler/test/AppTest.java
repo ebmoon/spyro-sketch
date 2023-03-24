@@ -1,4 +1,4 @@
-package spyro.compile.test;
+package spyro.compiler.test;
 
 import static org.junit.Assert.assertTrue;
 
