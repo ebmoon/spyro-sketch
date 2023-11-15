@@ -74,6 +74,11 @@
         <artifactId>swing-layout</artifactId>
         <version>1.0.3</version>
     </dependency>
+    <dependency>
+	  <groupId>net.sourceforge.argparse4j</groupId>
+	  <artifactId>argparse4j</artifactId>
+	  <version>0.9.0</version>
+	</dependency>
 
     <!-- serialize objects to xml easily; see FunctionDeclPrinter for example -->
     <dependency>
