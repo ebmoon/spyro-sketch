@@ -2,6 +2,11 @@ package spyro.util.exceptions;
 
 import spyro.util.exceptions.SpyroException;
 
+/**
+ * Exception from parsing Spyro query.
+ * 
+ * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
+ */
 public class ParseException extends SpyroException {
     private static final long serialVersionUID = 32493250295264101L;
 

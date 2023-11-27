@@ -5,6 +5,11 @@ import sketch.util.exceptions.SketchException;
 
 import static sketch.util.DebugOut.printError;
 
+/**
+ * Exception for errors occurring during Spyro execution (not the underlying solver).
+ * 
+ * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
+ */
 public abstract class SpyroException extends SketchException {
     private static final long serialVersionUID = 495808246383L;
 

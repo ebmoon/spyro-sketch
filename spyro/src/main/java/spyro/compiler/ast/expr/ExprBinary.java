@@ -1,0 +1,41 @@
+package spyro.compiler.ast.expr;
+
+import spyro.compiler.ast.SpyroNodeVisitor;
+import spyro.compiler.ast.expr.ExprUnary.UnaryOp;
+
+/**
+ * Class for binary operator expressions
+ * 
+ * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
+ */
+public class ExprBinary extends Expression {
+
+	public enum BinaryOp {
+		BINOP_ADD, BINOP_SUB, BINOP_MUL, BINOP_DIV, BINOP_MOD,
+		BINOP_AND, BINOP_OR, 
+		BINOP_EQ, BINOP_NEQ, BINOP_LT, BINOP_LE, BINOP_GT, BINOP_GE,
+		// below expressions are not supported now
+		BINOP_BAND, BINOP_BOR, BINOP_BXOR, 
+		BINOP_LSHIFT, BINOP_RSHIFT
+	}
+	
+	private UnaryOp op;
+	private Expression left, right;
+	
+	public ExprBinary(UnaryOp op, Expression left, Expression right) {
+		super();
+		this.op = op;
+		this.left = left;
+		this.right = right;
+	}
+	
+	public UnaryOp getOp() { return op; }
+	public Expression getLeft() { return left; }
+	public Expression getRight() { return right; }
+	
+	@Override
+	public void accept(SpyroNodeVisitor v) {
+		v.visitExprBinary(this);
+	}
+
+}
