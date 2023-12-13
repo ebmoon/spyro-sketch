@@ -10,7 +10,10 @@ program : declVariables declSignatures declLanguage declExamples declAssumptions
 
 declVariables : VARIABLES LBRACE declVar+ RBRACE ;
 
-declVar : type ID SEMI ; 
+declVar 
+ : type ID SEMI				#declVisibleVar 
+ | HIDDENVAR type ID SEMI	#declHiddenVar
+ ; 
 
 declSignatures : SIGNATURES LBRACE declSig+ RBRACE ;
 
@@ -83,6 +86,7 @@ RBRACE : '}';
 
 ARROW : '->';
 
+HIDDENVAR : 'hidden';
 TRUE : 'true';
 FALSE : 'false';
 NULL : 'null';
