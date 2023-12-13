@@ -1,4 +1,4 @@
-// Generated from Spyro.g4 by ANTLR 4.12.0
+// Generated from Spyro.g4 by ANTLR 4.13.1
 
 package spyro.compiler.parser;
 
@@ -41,7 +41,14 @@ public class SpyroBaseVisitor<T> extends AbstractParseTreeVisitor<T> implements 
 	 * <p>The default implementation returns the result of calling
 	 * {@link #visitChildren} on {@code ctx}.</p>
 	 */
-	@Override public T visitDeclVar(SpyroParser.DeclVarContext ctx) { return visitChildren(ctx); }
+	@Override public T visitDeclVisibleVar(SpyroParser.DeclVisibleVarContext ctx) { return visitChildren(ctx); }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation returns the result of calling
+	 * {@link #visitChildren} on {@code ctx}.</p>
+	 */
+	@Override public T visitDeclHiddenVar(SpyroParser.DeclHiddenVarContext ctx) { return visitChildren(ctx); }
 	/**
 	 * {@inheritDoc}
 	 *

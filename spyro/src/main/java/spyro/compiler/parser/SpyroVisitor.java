@@ -1,4 +1,4 @@
-// Generated from Spyro.g4 by ANTLR 4.12.0
+// Generated from Spyro.g4 by ANTLR 4.13.1
 
 package spyro.compiler.parser;
 
@@ -31,11 +31,19 @@ public interface SpyroVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitDeclVariables(SpyroParser.DeclVariablesContext ctx);
 	/**
-	 * Visit a parse tree produced by {@link SpyroParser#declVar}.
+	 * Visit a parse tree produced by the {@code declVisibleVar}
+	 * labeled alternative in {@link SpyroParser#declVar}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
-	T visitDeclVar(SpyroParser.DeclVarContext ctx);
+	T visitDeclVisibleVar(SpyroParser.DeclVisibleVarContext ctx);
+	/**
+	 * Visit a parse tree produced by the {@code declHiddenVar}
+	 * labeled alternative in {@link SpyroParser#declVar}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitDeclHiddenVar(SpyroParser.DeclHiddenVarContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link SpyroParser#declSignatures}.
 	 * @param ctx the parse tree

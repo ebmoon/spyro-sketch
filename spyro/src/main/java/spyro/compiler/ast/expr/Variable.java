@@ -15,14 +15,16 @@ public class Variable extends Expression {
 	private Type type;
 	private boolean hidden;
 	
-	public Variable(String id) {
+	public Variable(Type type, String id) {
 		super();
+		this.type = type;
 		this.id = String.valueOf(id);
 		this.hidden = false;
 	}
 	
-	public Variable(String id, boolean hidden) {
+	public Variable(Type type, String id, boolean hidden) {
 		super();
+		this.type = type;
 		this.id = String.valueOf(id);
 		this.hidden = hidden;
 	}

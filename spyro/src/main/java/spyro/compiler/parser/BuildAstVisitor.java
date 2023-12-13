@@ -31,11 +31,28 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
 		return new Query(variables, signatures);
 	}
 
+	public Variable visitDeclVar(SpyroParser.DeclVarContext ctx) {
+		if (ctx instanceof SpyroParser.DeclVisibleVarContext)
+			return visitDeclVisibleVar((SpyroParser.DeclVisibleVarContext) ctx);
+		else if (ctx instanceof SpyroParser.DeclHiddenVarContext)
+			return visitDeclHiddenVar((SpyroParser.DeclHiddenVarContext) ctx);
+		return null;
+	}
+	
 	@Override 
-	public Variable visitDeclVar(SpyroParser.DeclVarContext ctx) { 
+	public Variable visitDeclVisibleVar(SpyroParser.DeclVisibleVarContext ctx) { 
 		Type type = visitType(ctx.type());
+		String id = ctx.ID().getText();
 		
-		return null; 
+		return new Variable(type, id); 
+	}
+	
+	@Override 
+	public Variable visitDeclHiddenVar(SpyroParser.DeclHiddenVarContext ctx) { 
+		Type type = visitType(ctx.type());
+		String id = ctx.ID().getText();
+		
+		return new Variable(type, id, true); 
 	}
 	
 	@Override
