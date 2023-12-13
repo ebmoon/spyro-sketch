@@ -1,6 +1,8 @@
 package spyro.compiler.ast;
 
 import spyro.compiler.ast.expr.*;
+import spyro.compiler.ast.grammar.*;
+import spyro.compiler.ast.type.*;
 
 /**
  * Visitor interface for SpyroNode nodes. 
@@ -20,4 +22,9 @@ public interface SpyroNodeVisitor {
 	public Object visitConstInt(ConstInt n);
 	public Object visitConstBool(ConstBool b);
 	public Object visitConstNull(ConstNull nullptr);
+	
+	public Object visitTypePrimitive(TypePrimitive type);
+	public Object visitTypeStruct(TypeStruct type);
+	
+	public Object visitGrammarRule(GrammarRule rule);
 }

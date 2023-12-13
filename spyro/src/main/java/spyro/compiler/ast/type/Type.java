@@ -15,6 +15,10 @@ public abstract class Type extends SpyroNode {
 		this.id = String.valueOf(id);
 	}
 	
+	public static boolean isPrimitiveId(String id) {
+		return (id.equals("int") || id.equals("boolean"));
+	}
+	
     public boolean isStruct () { return false; }
     public boolean isArray () { return false; }
     
