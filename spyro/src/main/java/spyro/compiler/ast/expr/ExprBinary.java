@@ -19,17 +19,17 @@ public class ExprBinary extends Expression {
 		BINOP_LSHIFT, BINOP_RSHIFT
 	}
 	
-	private UnaryOp op;
+	private BinaryOp op;
 	private Expression left, right;
 	
-	public ExprBinary(UnaryOp op, Expression left, Expression right) {
+	public ExprBinary(BinaryOp op, Expression left, Expression right) {
 		super();
 		this.op = op;
 		this.left = left;
 		this.right = right;
 	}
 	
-	public UnaryOp getOp() { return op; }
+	public BinaryOp getOp() { return op; }
 	public Expression getLeft() { return left; }
 	public Expression getRight() { return right; }
 	
