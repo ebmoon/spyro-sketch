@@ -25,7 +25,7 @@ declLanguageRule : type ID ARROW (expr ('|' expr)*) SEMI ;
 
 declExamples : EXAMPLES LBRACE declExampleRule* RBRACE ;
 
-declExampleRule : type ARROW (expr ('|' expr)*);
+declExampleRule : type ARROW (expr ('|' expr)*) SEMI;
 
 declAssumptions : ASSUMPTIONS LBRACE declAssumption RBRACE SEMI ;
 
@@ -56,7 +56,7 @@ atom
  | HOLE LPAREN INT RPAREN	#sizedHoleAtom
  ;
 
-VARIABLES : 'variable';
+VARIABLES : 'variables';
 SIGNATURES : 'signatures';
 LANGUAGE : 'language';
 EXAMPLES : 'examples';

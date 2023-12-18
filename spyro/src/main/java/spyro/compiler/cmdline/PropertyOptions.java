@@ -17,5 +17,5 @@ public class PropertyOptions extends CliAnnotatedOptionGroup {
 	public int numAtomMax = 3;
 	
 	@CliParameter(help = "Disable minimization of synthesized properties")
-	public boolean disableMinimization = false;
+	public boolean disableMin = false;
 }

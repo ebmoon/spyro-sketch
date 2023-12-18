@@ -1,27 +1,57 @@
 package spyro.compiler.main;
 
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.List;
+
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CharStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+
+import antlr.RecognitionException;
+import antlr.TokenStreamException;
+
+import java.io.FileInputStream;
+import java.io.IOException;
 
 import sketch.compiler.main.other.ErrorHandling;
 import sketch.util.exceptions.SketchException;
 import spyro.compiler.main.cmdline.SpyroOptions;
+import spyro.compiler.ast.*;
+import spyro.compiler.parser.*;
+import spyro.util.exceptions.ParseException;
 
 public class SpyroMain implements Runnable
 {	
+	public SpyroOptions options;
+	
 	public SpyroMain(String[] args) {
+		this.options = new SpyroOptions(args);
 //		SpyroCommandParser parser = new SpyroCommandParser();
 //		CommandLine line = parser.parse(args);
 	}
 	
+    private Query parseFiles() throws java.io.IOException, 
+    	antlr.RecognitionException, antlr.TokenStreamException
+	{
+    	CharStream in = CharStreams.fromStream(new FileInputStream(options.spyroFile));
+    	SpyroLexer lexer = new SpyroLexer(in);
+    	CommonTokenStream tokens = new CommonTokenStream(lexer);
+    	SpyroParser parser = new SpyroParser(tokens);
+    	
+    	BuildAstVisitor visitor = new BuildAstVisitor();
+    	
+    	Query query = visitor.visitParse(parser.parse());
+    	
+    	return query;
+	}
+	
 	public void run() {
-//		parser.parse(args);
-		
-        System.out.println("Hello World!");
+		try {
+			Query query = parseFiles();
+			
+			System.out.println(query);
+		} catch (RecognitionException | TokenStreamException | IOException e) {
+			throw new ParseException("could not parse program");
+		}
 	}
 	
 	public static boolean isDebug = true;

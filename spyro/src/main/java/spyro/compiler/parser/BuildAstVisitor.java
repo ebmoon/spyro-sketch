@@ -1,12 +1,14 @@
 package spyro.compiler.parser;
 
 import java.util.List;
-import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import spyro.compiler.ast.*;
 import spyro.compiler.ast.expr.*;
 import spyro.compiler.ast.type.*;
+import spyro.compiler.ast.grammar.*;
 import spyro.util.exceptions.*;
 
 /**
@@ -16,7 +18,7 @@ import spyro.util.exceptions.*;
  */
 public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
 
-	HashMap<String, Variable> varContext;
+	Map<String, Variable> varContext;
 	
 	@Override 
 	public Query visitParse(SpyroParser.ParseContext ctx) { 
@@ -29,11 +31,17 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
 			.map(varCtx -> visitDeclVar(varCtx))
 			.collect(Collectors.toList());
 		
+		// id -> Variable map
+		varContext = variables.stream()
+				.collect(Collectors.toMap(Variable::getId, Function.identity()));
+		
 		List<ExprFuncCall> signatures = ctx.declSignatures().declSig().stream()
 				.map(sigCtx -> visitDeclSig(sigCtx))
 				.collect(Collectors.toList());
+		
+		List<GrammarRule> grammar = null;
 
-		return new Query(variables, signatures);
+		return new Query(variables, signatures, grammar);
 	}
 
 	public Variable visitDeclVar(SpyroParser.DeclVarContext ctx) {
@@ -120,7 +128,7 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
 		else if (ctx instanceof SpyroParser.SizedHoleAtomContext)
 			return visitSizedHoleAtom((SpyroParser.SizedHoleAtomContext) ctx);
 		else if (ctx instanceof SpyroParser.IdAtomContext)
-			return null;	// Not implemented
+			return visitIdAtom((SpyroParser.IdAtomContext) ctx);
 		else
 			throw new ParseException("Unknown atom expression");
 	}
@@ -155,6 +163,16 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
 	public Hole visitSizedHoleAtom(SpyroParser.SizedHoleAtomContext ctx) {
 		int size = Integer.parseInt(ctx.INT().getText());
 		return new Hole(size);
+	}
+	
+	@Override
+	public Variable visitIdAtom(SpyroParser.IdAtomContext ctx) {
+		String id = ctx.ID().getText();
+		if (varContext.containsKey(id)) {
+			return varContext.get(id);
+		} else {
+			throw new ParseException("Unknown variable " + id);
+		}
 	}
 	
 	@Override
