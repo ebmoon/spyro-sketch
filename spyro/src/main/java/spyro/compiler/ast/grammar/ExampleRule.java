@@ -5,21 +5,22 @@ import java.util.List;
 import spyro.compiler.ast.SpyroNode;
 import spyro.compiler.ast.SpyroNodeVisitor;
 import spyro.compiler.ast.expr.*;
+import spyro.compiler.ast.type.*;
 
-public class GrammarRule extends SpyroNode {
+public class ExampleRule extends SpyroNode {
 
-	Variable nonterminal;
+	Type ty;
 	List<Expression> rules;
 
 	
-	public GrammarRule(Variable nonterminal, List<Expression> rules) {
-		this.nonterminal = nonterminal;
+	public ExampleRule(Type ty, List<Expression> rules) {
+		this.ty = ty;
 		this.rules = rules;
 	}
 	
 	@Override
 	public void accept(SpyroNodeVisitor v) {
-		v.visitGrammarRule(this);
+		v.visitExampleRule(this);
 	}
 	
 }

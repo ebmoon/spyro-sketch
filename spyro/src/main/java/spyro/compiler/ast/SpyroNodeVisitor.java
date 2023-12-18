@@ -27,4 +27,5 @@ public interface SpyroNodeVisitor {
 	public Object visitTypeStruct(TypeStruct type);
 	
 	public Object visitGrammarRule(GrammarRule rule);
+	public Object visitExampleRule(ExampleRule rule);
 }

@@ -2,6 +2,7 @@ package spyro.compiler.parser;
 
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -28,7 +29,7 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
 	@Override 
 	public Query visitProgram(SpyroParser.ProgramContext ctx) { 
 		List<Variable> variables = ctx.declVariables().declVar().stream()
-			.map(varCtx -> visitDeclVar(varCtx))
+			.map(varContext -> visitDeclVar(varContext))
 			.collect(Collectors.toList());
 		
 		// id -> Variable map
@@ -36,12 +37,18 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
 				.collect(Collectors.toMap(Variable::getId, Function.identity()));
 		
 		List<ExprFuncCall> signatures = ctx.declSignatures().declSig().stream()
-				.map(sigCtx -> visitDeclSig(sigCtx))
+				.map(sigContext -> visitDeclSig(sigContext))
 				.collect(Collectors.toList());
 		
-		List<GrammarRule> grammar = null;
 
-		return new Query(variables, signatures, grammar);
+		// To-Do: Handle function calls and anonymous functions
+		List<GrammarRule> grammar = visitLanguage(ctx.declLanguage());
+		
+		List<ExampleRule> examples = ctx.declExamples().declExampleRule().stream()
+				.map(exampleContext -> visitDeclExampleRule(exampleContext))
+				.collect(Collectors.toList());
+		
+		return new Query(variables, signatures, grammar, examples);
 	}
 
 	public Variable visitDeclVar(SpyroParser.DeclVarContext ctx) {
@@ -285,5 +292,51 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
 		Expression expr2 = visitExpression(ctx.expr(1));
 		
 		return new ExprBinary(ExprBinary.BinaryOp.BINOP_OR, expr1, expr2);
+	}
+	
+	public List<GrammarRule> visitLanguage(SpyroParser.DeclLanguageContext ctx) {
+		Map<String, Variable> contextBackup = new HashMap<String, Variable>(varContext);
+		List<SpyroParser.DeclLanguageRuleContext> ruleContexts = ctx.declLanguageRule();
+		
+		// Construct an extended context with nonterminals
+		for (SpyroParser.DeclLanguageRuleContext ruleContext : ruleContexts) {
+			String nonterminalID = ruleContext.ID().getText();
+			Type ty = visitType(ruleContext.type());
+			Variable v = new Variable(ty, nonterminalID);
+			
+			varContext.put(nonterminalID, v);
+		}
+		
+		// Construct GrammarRule objects with extended context
+		List<GrammarRule> rules = ruleContexts.stream()
+				.map(ruleContext -> visitDeclLanguageRule(ruleContext))
+				.collect(Collectors.toList());
+		
+		// Restore the context without nonterminals
+		varContext = contextBackup;
+		
+		return rules;
+	}
+	
+	@Override
+	public GrammarRule visitDeclLanguageRule(SpyroParser.DeclLanguageRuleContext ctx) {
+		String nonterminalID = ctx.ID().getText();
+		Variable nonterminal = varContext.get(nonterminalID);
+		List<Expression> rules = ctx.expr().stream()
+				.map(exprContext -> visitExpression(exprContext))
+				.collect(Collectors.toList());
+		
+		return new GrammarRule(nonterminal, rules);
+	}
+	
+
+	@Override
+	public ExampleRule visitDeclExampleRule(SpyroParser.DeclExampleRuleContext ctx) {
+		Type ty = visitType(ctx.type());
+		List<Expression> rules = ctx.expr().stream()
+				.map(exprContext -> visitExpression(exprContext))
+				.collect(Collectors.toList());
+		
+		return new ExampleRule(ty, rules);
 	}
 }
