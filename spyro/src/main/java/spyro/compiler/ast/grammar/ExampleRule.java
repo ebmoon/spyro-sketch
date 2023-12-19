@@ -7,6 +7,11 @@ import spyro.compiler.ast.SpyroNodeVisitor;
 import spyro.compiler.ast.expr.*;
 import spyro.compiler.ast.type.*;
 
+/**
+ * Class for example production rule
+ * 
+ * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
+ */
 public class ExampleRule extends SpyroNode {
 
 	Type ty;

@@ -12,21 +12,31 @@ import antlr.TokenStreamException;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+import sketch.compiler.ast.core.Program;
+import sketch.compiler.main.cmdline.SketchOptions;
 import sketch.compiler.main.other.ErrorHandling;
+import sketch.compiler.main.seq.SequentialSketchMain;
 import sketch.util.exceptions.SketchException;
 import spyro.compiler.main.cmdline.SpyroOptions;
 import spyro.compiler.ast.*;
 import spyro.compiler.parser.*;
 import spyro.util.exceptions.ParseException;
 
-public class SpyroMain implements Runnable
+/**
+ * The main entry point for the Spyro specification synthesizer.
+ * Running it as a standalone program reads a list of files provided
+ * on the command line. It considers the first file as Spyro file, and 
+ * remaining as sketch program files.
+ * 
+ * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
+ */
+public class SpyroMain extends SequentialSketchMain
 {	
 	public SpyroOptions options;
 	
 	public SpyroMain(String[] args) {
-		this.options = new SpyroOptions(args);
-//		SpyroCommandParser parser = new SpyroCommandParser();
-//		CommandLine line = parser.parse(args);
+		super(new SpyroOptions(args));
+		this.options = (SpyroOptions) super.options;
 	}
 	
     private Query parseFiles() throws java.io.IOException, 
@@ -38,17 +48,20 @@ public class SpyroMain implements Runnable
     	SpyroParser parser = new SpyroParser(tokens);
     	
     	BuildAstVisitor visitor = new BuildAstVisitor();
-    	
     	Query query = visitor.visitParse(parser.parse());
     	
     	return query;
 	}
 	
 	public void run() {
+    	Program prog = null;	// Sketch program
+    	Query query = null;		// Spyro query
 		try {
-			Query query = parseFiles();
+			query = parseFiles();
+			prog = parseProgram();
 			
 			System.out.println(query);
+			System.out.println(prog);
 		} catch (RecognitionException | TokenStreamException | IOException e) {
 			throw new ParseException("could not parse program");
 		}

@@ -7,6 +7,11 @@ import sketch.compiler.main.cmdline.SketchOptions;
 import spyro.compiler.cmdline.PropertyOptions;
 import spyro.util.cli.SpyroCliParser;
 
+/**
+ * Class for Spyro options, which extends sketch options to spyro options.
+ * 
+ * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
+ */
 public class SpyroOptions extends SketchOptions {
 	public PropertyOptions propOpts = new PropertyOptions();
 	public String spyroName;
@@ -32,17 +37,19 @@ public class SpyroOptions extends SketchOptions {
         args = solverOpts.parse(parser).get_args();
         this.backendArgs = parser.backendArgs;
         this.nativeArgs = parser.nativeArgs;
-        if (args.length < 1 || args[0].equals("")) {
+        if (args.length < 2 || args[0].equals("") || args[1].equals("")) {
             parser.printHelpAndExit("no files specified");
         }
 
         // actions
-        argsAsList = Arrays.asList(args);
         spyroFile = new File(args[0]);
         spyroName = sketchFile.getName().replaceFirst("\\.+$", "");
         sketchFile = new File(args[1]);
         sketchName = sketchFile.getName().replaceFirst("\\.+$", "");
         feOpts.outputCode |= feOpts.outputTest;
+        
+        args = Arrays.copyOfRange(args, 1, args.length);
+        argsAsList = Arrays.asList(args);
     }
 	
     public static SpyroOptions getSingleton() {
