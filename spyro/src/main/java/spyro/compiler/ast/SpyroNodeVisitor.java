@@ -13,7 +13,7 @@ import spyro.compiler.ast.type.*;
 public interface SpyroNodeVisitor {
 	public Object visitQuery(Query q);
 	
-	public Object visitVariable(Variable decl);
+	public Object visitVariable(Variable v);
 	public Object visitHole(Hole hole);
 	public Object visitExprFuncCall(ExprFuncCall fc);
 	public Object visitExprUnary(ExprUnary e);
@@ -25,7 +25,7 @@ public interface SpyroNodeVisitor {
 	
 	public Object visitTypePrimitive(TypePrimitive type);
 	public Object visitTypeStruct(TypeStruct type);
-	
+
 	public Object visitGrammarRule(GrammarRule rule);
 	public Object visitExampleRule(ExampleRule rule);
 }

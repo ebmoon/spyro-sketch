@@ -12,15 +12,25 @@ import antlr.TokenStreamException;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+import sketch.compiler.ast.core.Function;
 import sketch.compiler.ast.core.Program;
+import sketch.compiler.main.PlatformLocalization;
 import sketch.compiler.main.cmdline.SketchOptions;
 import sketch.compiler.main.other.ErrorHandling;
+import sketch.compiler.main.passes.CleanupFinalCode;
 import sketch.compiler.main.seq.SequentialSketchMain;
+import sketch.compiler.passes.printers.SimpleCodePrinter;
+import sketch.compiler.stencilSK.EliminateStarStatic;
 import sketch.util.exceptions.SketchException;
 import spyro.compiler.main.cmdline.SpyroOptions;
 import spyro.compiler.ast.*;
 import spyro.compiler.parser.*;
+import spyro.synthesizer.GeneratorBuilder;
+import spyro.synthesizer.PrimitiveConstructor;
+import spyro.synthesizer.Property;
 import spyro.util.exceptions.ParseException;
+
+import javax.sound.midi.SysexMessage;
 
 /**
  * The main entry point for the Spyro specification synthesizer.
@@ -37,6 +47,7 @@ public class SpyroMain extends SequentialSketchMain
 	public SpyroMain(String[] args) {
 		super(new SpyroOptions(args));
 		this.options = (SpyroOptions) super.options;
+        PlatformLocalization.getLocalization().setTempDirs();
 	}
 	
     private Query parseFiles() throws java.io.IOException, 
@@ -59,12 +70,50 @@ public class SpyroMain extends SequentialSketchMain
 		try {
 			query = parseFiles();
 			prog = parseProgram();
-			
-			System.out.println(query);
-			System.out.println(prog);
+
+
+            GeneratorBuilder builder = new GeneratorBuilder();
+            query.accept(builder);
+//            for (Function func : builder.getTypeGenerators()){
+//                System.out.println((new SimpleCodePrinter()).visitFunction(func));
+//            }
+//            for (Function func : builder.getNonTerminalGenerators()){
+//                System.out.println((new SimpleCodePrinter()).visitFunction(func));
+//            }
+            PrimitiveConstructor primitiveConstructor = new PrimitiveConstructor(builder, prog);
+
+            Property prop = new Property(builder.appendToVariableAsParams("out"));
+            Program testSoundness = primitiveConstructor.constructSoundnessSketchCode(prop);
+
+            testSoundness.debugDump();
+            prog = testSoundness;
+
 		} catch (RecognitionException | TokenStreamException | IOException e) {
 			throw new ParseException("could not parse program");
 		}
+
+        prog = this.preprocAndSemanticCheck(prog);
+
+        SynthesisResult synthResult = this.partialEvalAndSolve(prog);
+        prog = synthResult.lowered.result;
+
+        Program finalCleaned = synthResult.lowered.highLevelC;
+
+        Program substituted;
+        if (synthResult.solution != null) {
+            EliminateStarStatic eliminate_star = new EliminateStarStatic(synthResult.solution);
+            substituted = (Program) finalCleaned.accept(eliminate_star);
+        } else {
+            substituted = finalCleaned;
+        }
+
+        Program substitutedCleaned =
+                (new CleanupFinalCode(varGen, options,
+                        visibleRControl(finalCleaned))).visitProgram(substituted);
+
+        generateCode(substitutedCleaned);
+        this.log(1, "[SKETCH] DONE");
+
 	}
 	
 	public static boolean isDebug = true;

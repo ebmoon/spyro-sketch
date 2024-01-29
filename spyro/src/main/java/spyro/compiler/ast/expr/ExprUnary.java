@@ -25,8 +25,8 @@ public class ExprUnary extends Expression {
 	}
 	
 	@Override
-	public void accept(SpyroNodeVisitor v) {
-		v.visitExprUnary(this);
+	public Object accept(SpyroNodeVisitor v) {
+		return v.visitExprUnary(this);
 	}
 
 	public UnaryOp getOp() { return op; }

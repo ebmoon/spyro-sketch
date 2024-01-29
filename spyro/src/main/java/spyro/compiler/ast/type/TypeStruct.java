@@ -12,9 +12,10 @@ public class TypeStruct extends Type {
 		super(id);
 	}
 
+
 	@Override
-	public void accept(SpyroNodeVisitor v) { 
-		v.visitTypeStruct(this); 
+	public Object accept(SpyroNodeVisitor v) {
+		return v.visitTypeStruct(this);
 	}
 	
 	@Override

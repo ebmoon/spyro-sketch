@@ -7,5 +7,5 @@ package spyro.compiler.ast;
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
 public abstract class SpyroNode {
-	public abstract void accept(SpyroNodeVisitor v);
+	public abstract Object accept(SpyroNodeVisitor v);
 }

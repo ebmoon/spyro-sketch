@@ -12,7 +12,7 @@ public class ConstNull extends Constant {
 	public ConstNull() { super(); }
 	
 	@Override
-	public void accept(SpyroNodeVisitor v) {
-		v.visitConstNull(this);
+	public Object accept(SpyroNodeVisitor v) {
+		return v.visitConstNull(this);
 	}
 }
