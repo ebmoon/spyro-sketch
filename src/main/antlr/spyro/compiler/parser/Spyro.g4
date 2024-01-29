@@ -17,7 +17,7 @@ declVar
 
 declSignatures : SIGNATURES LBRACE declSig+ RBRACE ;
 
-declSig : expr SEMI;
+declSig : expr SEMI ;
 
 declLanguage : LANGUAGE LBRACE declLanguageRule+ RBRACE ;
 
@@ -25,7 +25,7 @@ declLanguageRule : type ID ARROW (expr ('|' expr)*) SEMI ;
 
 declExamples : EXAMPLES LBRACE declExampleRule* RBRACE ;
 
-declExampleRule : type ARROW (expr ('|' expr)*) SEMI;
+declExampleRule : type ARROW (expr ('|' expr)*) SEMI ;
 
 declAssumptions : ASSUMPTIONS LBRACE declAssumption RBRACE SEMI ;
 

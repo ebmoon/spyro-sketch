@@ -4,7 +4,7 @@ import java.io.File;
 import java.util.Arrays;
 
 import sketch.compiler.main.cmdline.SketchOptions;
-import spyro.compiler.cmdline.PropertyOptions;
+import spyro.synthesis.cmdline.PropertyOptions;
 import spyro.util.cli.SpyroCliParser;
 
 /**
@@ -43,7 +43,7 @@ public class SpyroOptions extends SketchOptions {
 
         // actions
         spyroFile = new File(args[0]);
-        spyroName = sketchFile.getName().replaceFirst("\\.+$", "");
+        spyroName = spyroFile.getName().replaceFirst("\\.+$", "");
         sketchFile = new File(args[1]);
         sketchName = sketchFile.getName().replaceFirst("\\.+$", "");
         feOpts.outputCode |= feOpts.outputTest;

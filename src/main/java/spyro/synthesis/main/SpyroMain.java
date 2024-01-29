@@ -1,4 +1,4 @@
-package spyro.compiler.main;
+package spyro.synthesis.main;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package spyro.compiler.cmdline;
+package spyro.synthesis.cmdline;
 
 import sketch.util.cli.CliAnnotatedOptionGroup;
 import sketch.util.cli.CliParameter;
