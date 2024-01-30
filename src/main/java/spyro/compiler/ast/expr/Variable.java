@@ -30,7 +30,7 @@ public class Variable extends Expression {
 	}
 	
 	@Override
-	public void accept(SpyroNodeVisitor visitor) { visitor.visitVariable(this); }
+	public Object accept(SpyroNodeVisitor visitor) { return visitor.visitVariable(this); }
 	
 	public boolean isHidden() { return hidden; }
 	public String getId() { return id; }

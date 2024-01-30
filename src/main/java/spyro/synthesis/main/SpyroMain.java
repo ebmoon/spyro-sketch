@@ -1,7 +1,5 @@
 package spyro.synthesis.main;
 
-import java.util.List;
-
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -13,13 +11,23 @@ import java.io.FileInputStream;
 import java.io.IOException;
 
 import sketch.compiler.ast.core.Program;
-import sketch.compiler.main.cmdline.SketchOptions;
+import sketch.compiler.main.PlatformLocalization;
 import sketch.compiler.main.other.ErrorHandling;
+import sketch.compiler.main.passes.CleanupFinalCode;
 import sketch.compiler.main.seq.SequentialSketchMain;
+import sketch.compiler.stencilSK.EliminateStarStatic;
 import sketch.util.exceptions.SketchException;
 import spyro.compiler.main.cmdline.SpyroOptions;
 import spyro.compiler.ast.*;
 import spyro.compiler.parser.*;
+import spyro.synthesis.Example;
+import spyro.synthesis.ExampleSet;
+import spyro.synthesis.Property;
+import spyro.synthesis.PropertySet;
+import spyro.synthesis.primitives.CommonSketchBuilder;
+import spyro.synthesis.primitives.PrecisionSketchBuilder;
+import spyro.synthesis.primitives.SoundnessSketchBuilder;
+import spyro.synthesis.primitives.SynthesisSketchBuilder;
 import spyro.util.exceptions.ParseException;
 
 /**
@@ -33,13 +41,18 @@ import spyro.util.exceptions.ParseException;
 public class SpyroMain extends SequentialSketchMain
 {	
 	public SpyroOptions options;
+
+    private SynthesisSketchBuilder synth;
+    private SoundnessSketchBuilder soundness;
+    private PrecisionSketchBuilder precision;
 	
 	public SpyroMain(String[] args) {
 		super(new SpyroOptions(args));
 		this.options = (SpyroOptions) super.options;
+        PlatformLocalization.getLocalization().setTempDirs();
 	}
 	
-    private Query parseFiles() throws java.io.IOException, 
+    private Query parseSpyroQuery() throws java.io.IOException,
     	antlr.RecognitionException, antlr.TokenStreamException
 	{
     	CharStream in = CharStreams.fromStream(new FileInputStream(options.spyroFile));
@@ -52,19 +65,84 @@ public class SpyroMain extends SequentialSketchMain
     	
     	return query;
 	}
-	
+
+
+    private SynthesisResult runSketchSolver(Program prog) {
+        prog = this.preprocAndSemanticCheck(prog);
+        return this.partialEvalAndSolve(prog);
+    }
+
+    public Example checkSoundness(Property phi) {
+        // TODO Implement
+        return null;
+    }
+
+    public Property synthesize(ExampleSet pos, ExampleSet negMust, ExampleSet negMay) {
+        // TODO Implement
+        return null;
+    }
+
+    public Example checkPrecision(Property phi, ExampleSet pos, ExampleSet negMust, ExampleSet negMay, Property phiPrime) {
+        // TODO Implement
+        return null;
+    }
+    public Property synthesizeProperty(Property phiInit, ExampleSet pos, ExampleSet negMust, ExampleSet negMay) {
+        Property phiE = phiInit;
+        Property phiLastSound = null;
+
+        while(true) {
+            Example ePos = checkSoundness(phiE);
+            if (ePos != null) {
+                pos.add(ePos);
+                Property phiPrime = synthesize(pos, negMust, negMay);
+                if (phiPrime != null) {
+                    phiE = phiPrime;
+                }
+                else {
+                    phiE = phiLastSound;
+                    negMay.clear();
+                }
+            }
+            else {
+                negMust.merge(negMay);
+                negMay.clear();
+                phiLastSound = phiE;
+                Property phiPrime = null;
+                Example eNeg = checkPrecision(phiE, pos, negMust, negMay, phiPrime);
+                if (eNeg == null) {
+                    return phiE;
+                }
+                else {
+                    negMay.add(eNeg);
+                    phiE = phiPrime;
+                }
+            }
+        }
+    }
+
+    public PropertySet synthesizeProperties(Property phiInit) {
+        // TODO Implement
+        return null;
+    }
+
 	public void run() {
     	Program prog = null;	// Sketch program
     	Query query = null;		// Spyro query
 		try {
-			query = parseFiles();
+			query = parseSpyroQuery();
 			prog = parseProgram();
-			
-			System.out.println(query);
-			System.out.println(prog);
 		} catch (RecognitionException | TokenStreamException | IOException e) {
 			throw new ParseException("could not parse program");
 		}
+
+        CommonSketchBuilder commonBuilder = new CommonSketchBuilder(prog);
+        query.accept(commonBuilder);
+
+        synth = new SynthesisSketchBuilder(commonBuilder);
+        soundness = new SoundnessSketchBuilder(commonBuilder);
+        precision = new PrecisionSketchBuilder(commonBuilder);
+
+        synthesizeProperties(null);
 	}
 	
 	public static boolean isDebug = true;

@@ -26,8 +26,8 @@ public class ExprFuncCall extends Expression {
 	public List<Expression> getArgs() { return args; }
 	
 	@Override
-	public void accept(SpyroNodeVisitor v) {
-		v.visitExprFuncCall(this);
+	public Object accept(SpyroNodeVisitor v) {
+		return v.visitExprFuncCall(this);
 	}
 }
  

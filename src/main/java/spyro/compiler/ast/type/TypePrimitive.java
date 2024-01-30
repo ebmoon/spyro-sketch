@@ -29,8 +29,8 @@ public class TypePrimitive extends Type {
 	}
 
 	@Override
-	public void accept(SpyroNodeVisitor v) { 
-		v.visitTypePrimitive(this); 
+	public Object accept(SpyroNodeVisitor v) {
+		return v.visitTypePrimitive(this);
 	}
 	
 	public PredefinedType getPredefinedType() { return ty; }

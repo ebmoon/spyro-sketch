@@ -31,7 +31,7 @@ public class Query extends SpyroNode {
 	}
 	
 	@Override
-	public void accept(SpyroNodeVisitor visitor) { visitor.visitQuery(this); }
+	public Object accept(SpyroNodeVisitor visitor) { return visitor.visitQuery(this); }
 	
 	public List<Variable> getVariables() { return this.variables; }
 	public List<ExprFuncCall> getSignatures() { return this.signatures; }

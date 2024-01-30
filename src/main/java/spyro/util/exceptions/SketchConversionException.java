@@ -1,8 +1,8 @@
 package spyro.util.exceptions;
 
 /**
- * Exception from constructing sketch query
- * 
+ * Exception from constructing sketch code from Spyro input
+ *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
 public class SketchConversionException extends SpyroException {

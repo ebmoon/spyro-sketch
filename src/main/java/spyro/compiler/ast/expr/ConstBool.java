@@ -17,8 +17,8 @@ public class ConstBool extends Constant {
 	}
 	
 	@Override
-	public void accept(SpyroNodeVisitor v) {
-		v.visitConstBool(this);
+	public Object accept(SpyroNodeVisitor v) {
+		return v.visitConstBool(this);
 	}
 
 	public boolean getValue() { return value; }

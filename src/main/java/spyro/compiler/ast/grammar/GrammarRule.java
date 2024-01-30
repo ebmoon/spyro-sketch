@@ -23,8 +23,15 @@ public class GrammarRule extends SpyroNode {
 	}
 	
 	@Override
-	public void accept(SpyroNodeVisitor v) {
-		v.visitGrammarRule(this);
+	public Object accept(SpyroNodeVisitor v) {
+		return v.visitGrammarRule(this);
 	}
-	
+
+	public Variable getNonterminal() {
+		return nonterminal;
+	}
+
+	public List<Expression> getRules() {
+		return rules;
+	}
 }

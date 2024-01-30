@@ -24,8 +24,12 @@ public class ExampleRule extends SpyroNode {
 	}
 	
 	@Override
-	public void accept(SpyroNodeVisitor v) {
-		v.visitExampleRule(this);
+	public Object accept(SpyroNodeVisitor v) {
+		return v.visitExampleRule(this);
 	}
+
+	public Type getType() {return ty;}
+
+	public List<Expression> getRules() {return rules;}
 	
 }

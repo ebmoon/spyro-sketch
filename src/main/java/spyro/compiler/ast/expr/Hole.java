@@ -22,8 +22,8 @@ public class Hole extends Expression {
 	}
 	
 	@Override
-	public void accept(SpyroNodeVisitor v) {
-		v.visitHole(this);
+	public Object accept(SpyroNodeVisitor v) {
+		return v.visitHole(this);
 	}
 
 	public int getSize() {

@@ -34,8 +34,8 @@ public class ExprBinary extends Expression {
 	public Expression getRight() { return right; }
 	
 	@Override
-	public void accept(SpyroNodeVisitor v) {
-		v.visitExprBinary(this);
+	public Object accept(SpyroNodeVisitor v) {
+		return v.visitExprBinary(this);
 	}
 
 }

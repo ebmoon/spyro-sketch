@@ -17,8 +17,8 @@ public class ConstInt extends Constant {
 	}
 	
 	@Override
-	public void accept(SpyroNodeVisitor v) {
-		v.visitConstInt(this);
+	public Object accept(SpyroNodeVisitor v) {
+		return v.visitConstInt(this);
 	}
 
 	public int getValue() { return this.value; }
