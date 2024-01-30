@@ -8,7 +8,9 @@ import java.util.List;
 public class ExampleSet {
     List<Example> exList;
 
-    public void add(Example ex) { exList.add(ex); }
+    public void add(Example ex) {
+        exList.add(ex);
+    }
 
     public void clear() {
         exList.clear();

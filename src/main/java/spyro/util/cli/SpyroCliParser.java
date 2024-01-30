@@ -3,9 +3,9 @@ package spyro.util.cli;
 import sketch.util.cli.SketchCliParser;
 
 /**
- * CLI parser for Spyro. 
+ * CLI parser for Spyro.
  * It extends SketchCliParser with additional options.
- * 
+ *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
 public class SpyroCliParser extends SketchCliParser {

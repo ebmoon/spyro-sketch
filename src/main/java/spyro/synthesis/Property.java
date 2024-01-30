@@ -1,13 +1,7 @@
 package spyro.synthesis;
 
-import sketch.compiler.ast.core.*;
-import sketch.compiler.ast.core.exprs.ExprConstInt;
-import sketch.compiler.ast.core.exprs.ExprVar;
-import sketch.compiler.ast.core.stmts.Statement;
-import sketch.compiler.ast.core.stmts.StmtAssign;
-import sketch.compiler.ast.core.stmts.StmtBlock;
-
-import java.util.List;
+import sketch.compiler.ast.core.FENode;
+import sketch.compiler.ast.core.Function;
 
 /**
  * Class for synthesized property
@@ -21,7 +15,9 @@ public class Property {
 
     Function impl;
 
-    public Property(Function impl) { this.impl = impl; }
+    public Property(Function impl) {
+        this.impl = impl;
+    }
 
     public Function toSketchCode() {
         Function.FunctionCreator fc = Function.creator((FENode) null, phiID, Function.FcnType.Static);

@@ -1,31 +1,34 @@
 package spyro.compiler.main.cmdline;
 
-import java.io.File;
-import java.util.Arrays;
-
 import sketch.compiler.main.cmdline.SketchOptions;
 import spyro.synthesis.cmdline.PropertyOptions;
 import spyro.util.cli.SpyroCliParser;
 
+import java.io.File;
+import java.util.Arrays;
+
 /**
  * Class for Spyro options, which extends sketch options to spyro options.
- * 
+ *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
 public class SpyroOptions extends SketchOptions {
-	public PropertyOptions propOpts = new PropertyOptions();
-	public String spyroName;
-	public File spyroFile;
-	protected static SpyroOptions _singleton;
-	
+    protected static SpyroOptions _singleton;
+    public PropertyOptions propOpts = new PropertyOptions();
+    public String spyroName;
+    public File spyroFile;
+
     public SpyroOptions(String[] inArgs) {
         super(inArgs);
         SpyroCliParser parser = new SpyroCliParser(inArgs);
         parseCommandline(parser);
         _singleton = this;
     }
-    
-    
+
+    public static SpyroOptions getSingleton() {
+        return _singleton;
+    }
+
     public void parseCommandline(SpyroCliParser parser) {
         this.currentArgs = parser.inArgs;
         this.bndOpts.parse(parser);
@@ -47,12 +50,8 @@ public class SpyroOptions extends SketchOptions {
         sketchFile = new File(args[1]);
         sketchName = sketchFile.getName().replaceFirst("\\.+$", "");
         feOpts.outputCode |= feOpts.outputTest;
-        
+
         args = Arrays.copyOfRange(args, 1, args.length);
         argsAsList = Arrays.asList(args);
-    }
-	
-    public static SpyroOptions getSingleton() {
-        return _singleton;
     }
 }

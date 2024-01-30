@@ -1,15 +1,12 @@
 package spyro.synthesis.primitives;
 
-import sketch.compiler.ast.core.*;
 import sketch.compiler.ast.core.Package;
-import sketch.compiler.ast.core.exprs.ExprConstInt;
+import sketch.compiler.ast.core.*;
 import sketch.compiler.ast.core.exprs.ExprFunCall;
 import sketch.compiler.ast.core.exprs.ExprUnary;
 import sketch.compiler.ast.core.exprs.ExprVar;
 import sketch.compiler.ast.core.stmts.*;
 import sketch.compiler.ast.core.typs.StructDef;
-import spyro.compiler.ast.expr.Variable;
-import spyro.synthesis.ExampleSet;
 import spyro.synthesis.Property;
 
 import java.util.ArrayList;

@@ -9,18 +9,25 @@ import spyro.compiler.ast.SpyroNode;
  */
 public abstract class Type extends SpyroNode {
 
-	private String id;
-	
-	public Type(String id) {
-		this.id = String.valueOf(id);
-	}
-	
-	public static boolean isPrimitiveId(String id) {
-		return (id.equals("int") || id.equals("boolean"));
-	}
-	
-    public boolean isStruct () { return false; }
-    public boolean isArray () { return false; }
-    
-    public String toString() { return id; }
+    private String id;
+
+    public Type(String id) {
+        this.id = String.valueOf(id);
+    }
+
+    public static boolean isPrimitiveId(String id) {
+        return (id.equals("int") || id.equals("boolean"));
+    }
+
+    public boolean isStruct() {
+        return false;
+    }
+
+    public boolean isArray() {
+        return false;
+    }
+
+    public String toString() {
+        return id;
+    }
 }
