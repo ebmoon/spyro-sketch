@@ -2,25 +2,45 @@ package spyro.synthesis;
 
 import sketch.compiler.ast.core.Function;
 
+import java.util.ArrayList;
 import java.util.List;
 
-
+/**
+ * Class for set of examples used in Counterexample-Guided-Inductive-Synthesis (CEGIS)
+ *
+ * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
+ */
 public class ExampleSet {
-    List<Example> exList;
+    List<Example> examples;
+
+    public ExampleSet() {
+        this.examples = new ArrayList<>();
+    }
+
+    public ExampleSet(List<Example> examples) {
+        this.examples = new ArrayList<>(examples);
+    }
 
     public void add(Example ex) {
-        exList.add(ex);
+        examples.add(ex);
     }
 
     public void clear() {
-        exList.clear();
+        examples.clear();
     }
 
     public void merge(ExampleSet E) {
-        exList.addAll(E.exList);
+        examples.addAll(E.examples);
     }
 
-    public List<Function> toSketchCode() {
-        return null;
+    public List<Function> toSketchCode(String prefix) {
+        List<Function> exampleConstraints = new ArrayList<>();
+
+        int cnt = 0;
+        for (Example ex : examples) {
+            exampleConstraints.add(ex.toSketchCode(prefix + "_" + cnt++));
+        }
+
+        return exampleConstraints;
     }
 }

@@ -20,7 +20,8 @@ import java.util.List;
 public class SoundnessSketchBuilder {
 
     final CommonSketchBuilder commonBuilder;
-    private Function soundnessBody = null;
+    public final static String soundnessFunctionID = "soundness";
+    Function soundnessBody = null;
 
     public SoundnessSketchBuilder(CommonSketchBuilder commonBuilder) {
         this.commonBuilder = commonBuilder;
@@ -28,7 +29,7 @@ public class SoundnessSketchBuilder {
 
     private Function getSoundnessBody() {
         if (soundnessBody == null) {
-            Function.FunctionCreator fc = Function.creator((FEContext) null, "soundness", Function.FcnType.Harness);
+            Function.FunctionCreator fc = Function.creator((FEContext) null, soundnessFunctionID, Function.FcnType.Harness);
 
             List<Statement> stmts = new ArrayList<>();
             stmts.add(commonBuilder.getVariablesWithHole());

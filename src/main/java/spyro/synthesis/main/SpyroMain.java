@@ -5,11 +5,17 @@ import antlr.TokenStreamException;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
+import sketch.compiler.ast.core.Function;
+import sketch.compiler.ast.core.Parameter;
 import sketch.compiler.ast.core.Program;
+import sketch.compiler.ast.core.stmts.StmtBlock;
 import sketch.compiler.main.PlatformLocalization;
 import sketch.compiler.main.other.ErrorHandling;
+import sketch.compiler.main.passes.CleanupFinalCode;
+import sketch.compiler.main.passes.SubstituteSolution;
 import sketch.compiler.main.seq.SequentialSketchMain;
 import sketch.util.exceptions.SketchException;
+import sketch.util.exceptions.SketchNotResolvedException;
 import spyro.compiler.ast.Query;
 import spyro.compiler.main.cmdline.SpyroOptions;
 import spyro.compiler.parser.BuildAstVisitor;
@@ -19,14 +25,13 @@ import spyro.synthesis.Example;
 import spyro.synthesis.ExampleSet;
 import spyro.synthesis.Property;
 import spyro.synthesis.PropertySet;
-import spyro.synthesis.primitives.CommonSketchBuilder;
-import spyro.synthesis.primitives.PrecisionSketchBuilder;
-import spyro.synthesis.primitives.SoundnessSketchBuilder;
-import spyro.synthesis.primitives.SynthesisSketchBuilder;
+import spyro.synthesis.primitives.*;
+import spyro.util.exceptions.OutputParseException;
 import spyro.util.exceptions.ParseException;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * The main entry point for the Spyro specification synthesizer.
@@ -39,9 +44,14 @@ import java.io.IOException;
 public class SpyroMain extends SequentialSketchMain {
     public static boolean isDebug = true;
     public SpyroOptions options;
+
+    private Program prog;
+    private Query query;
+    private CommonSketchBuilder commonSketchBuilder;
     private SynthesisSketchBuilder synth;
     private SoundnessSketchBuilder soundness;
     private PrecisionSketchBuilder precision;
+
 
     public SpyroMain(String[] args) {
         super(new SpyroOptions(args));
@@ -102,9 +112,44 @@ public class SpyroMain extends SequentialSketchMain {
         return this.partialEvalAndSolve(prog);
     }
 
-    public Example checkSoundness(Property phi) {
-        // TODO Implement
+    private Program simplifySynthResult(SynthesisResult synthResult) {
+        Program finalCleaned = synthResult.lowered.highLevelC;
+        Program substituted = (new SubstituteSolution(varGen, options, synthResult.solution))
+                .visitProgram(finalCleaned);
+        return (new CleanupFinalCode(varGen, options, visibleRControl(finalCleaned)))
+                .visitProgram(substituted);
+    }
+
+    private Function findFunction(Program prog, String name) {
+        List<Function> funcs = prog.getPackages().get(0).getFuncs();
+        for (Function func : funcs)
+            if (func.getName().equals(name))
+                return func;
+
         return null;
+    }
+
+    public Example checkSoundness(Property phi) {
+        Program sketchCode = soundness.soundnessSketchCode(phi);
+
+        try {
+            SynthesisResult synthResult = runSketchSolver(sketchCode);
+            if (synthResult.solution != null) {
+                Program substitutedCleaned = simplifySynthResult(synthResult);
+                Function f = findFunction(substitutedCleaned, SoundnessSketchBuilder.soundnessFunctionID);
+                if (f == null) {
+                    throw new OutputParseException("Failed to find function: "
+                            + SoundnessSketchBuilder.soundnessFunctionID);
+                } else {
+                    return (new SoundnessResultExtractor((StmtBlock) f.getBody()))
+                            .extractPositiveExample();
+                }
+            } else {
+                return null;
+            }
+        } catch (SketchNotResolvedException e) {
+            return null;
+        }
     }
 
     public Property synthesize(ExampleSet pos, ExampleSet negMust, ExampleSet negMay) {
@@ -117,9 +162,10 @@ public class SpyroMain extends SequentialSketchMain {
         return null;
     }
 
-    public Property synthesizeProperty(Property phiInit, ExampleSet pos, ExampleSet negMust, ExampleSet negMay) {
+    public Property synthesizeProperty(Property phiInit, ExampleSet pos, ExampleSet negMust) {
         Property phiE = phiInit;
         Property phiLastSound = null;
+        ExampleSet negMay = new ExampleSet();
 
         while (true) {
             Example ePos = checkSoundness(phiE);
@@ -149,13 +195,18 @@ public class SpyroMain extends SequentialSketchMain {
     }
 
     public PropertySet synthesizeProperties(Property phiInit) {
-        // TODO Implement
-        return null;
+        ExampleSet pos = new ExampleSet();
+        ExampleSet negMust = new ExampleSet();
+        PropertySet properties = new PropertySet(commonSketchBuilder);
+
+        // TODO Implement Loop
+        Property prop = synthesizeProperty(phiInit, pos, negMust);
+        System.out.println(prop.toSketchCode().getBody().toString());
+
+        return properties;
     }
 
     public void run() {
-        Program prog = null;    // Sketch program
-        Query query = null;        // Spyro query
         try {
             query = parseSpyroQuery();
             prog = parseProgram();
@@ -163,12 +214,16 @@ public class SpyroMain extends SequentialSketchMain {
             throw new ParseException("could not parse program");
         }
 
-        CommonSketchBuilder commonBuilder = new CommonSketchBuilder(prog);
-        query.accept(commonBuilder);
+        commonSketchBuilder = new CommonSketchBuilder(prog);
+        query.accept(commonSketchBuilder);
 
-        synth = new SynthesisSketchBuilder(commonBuilder);
-        soundness = new SoundnessSketchBuilder(commonBuilder);
-        precision = new PrecisionSketchBuilder(commonBuilder);
+        synth = new SynthesisSketchBuilder(commonSketchBuilder);
+        soundness = new SoundnessSketchBuilder(commonSketchBuilder);
+        precision = new PrecisionSketchBuilder(commonSketchBuilder);
+
+        List<Parameter> params = commonSketchBuilder.getExtendedParams("out");
+        Property phiInit = Property.truth(params);
+        synthesizeProperties(phiInit);
 
         synthesizeProperties(null);
     }

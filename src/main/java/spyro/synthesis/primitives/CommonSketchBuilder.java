@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
  */
 public class CommonSketchBuilder implements SpyroNodeVisitor {
 
+    Program prog;
     Program impl;
 
     List<Variable> variables;
@@ -47,6 +48,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
     Map<String, Integer> maxCxt;
 
     public CommonSketchBuilder(Program impl) {
+        this.prog = Program.emptyProgram();
         this.impl = impl;
     }
 
@@ -74,6 +76,15 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         return exampleGenerators;
     }
 
+    public List<Parameter> getVariableAsParams() { return variableAsParams; }
+    public List<Parameter> getExtendedParams(String outputVarID) {
+        Parameter outputParam = new Parameter((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, outputVarID, Parameter.REF);
+        List<Parameter> extendedParams = new ArrayList<>(variableAsParams);
+        extendedParams.add(outputParam);
+
+        return extendedParams;
+    }
+
     public List<sketch.compiler.ast.core.exprs.Expression> appendToVariableAsExprs(ExprVar v) {
         List<sketch.compiler.ast.core.exprs.Expression> ret = new ArrayList<>(variableAsExprs);
         ret.add(v);
@@ -99,18 +110,19 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         return new StmtVarDecl((FENode) null, types, names, inits);
     }
 
-    private Parameter variableToParam(Variable var) {
+    protected Parameter variableToParam(Variable var) {
         sketch.compiler.ast.core.typs.Type ty = (sketch.compiler.ast.core.typs.Type) var.getType().accept(this);
         return new Parameter((FENode) null, ty, var.getId());
     }
 
-    private sketch.compiler.ast.core.typs.Type doType(Type ty) {
+    protected sketch.compiler.ast.core.typs.Type doType(Type ty) {
         return (sketch.compiler.ast.core.typs.Type) ty.accept(this);
     }
 
     @Override
-    public Object visitQuery(Query q) {
+    public Program visitQuery(Query q) {
         nonterminalToSketchType = new HashMap<>();
+        typeStringToSketchType = new HashMap<>();
 
         variables = q.getVariables();
         variableAsExprs = variables.stream()
@@ -132,10 +144,14 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         nonterminalToSketchType = q.getGrammar().stream()
                 .map(GrammarRule::getNonterminal)
                 .collect(Collectors.toMap(Variable::getId, v -> this.doType(v.getType())));
-
         propertyGenerators = q.getGrammar().stream()
                 .map(rule -> (Function) rule.accept(this))
                 .collect(Collectors.toList());
+
+        nonterminalToSketchType = new HashMap<>();
+        typeStringToSketchType = q.getExamples().stream()
+                .map(ExampleRule::getType)
+                .collect(Collectors.toMap(Type::toString, this::doType));
         exampleGenerators = q.getExamples().stream()
                 .map(rule -> (Function) rule.accept(this))
                 .collect(Collectors.toList());
@@ -164,7 +180,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
     @Override
     public ExprStar visitHole(Hole hole) {
-        return new ExprStar((FENode) null, hole.getSize());
+        return new ExprStar(prog, hole.getSize());
     }
 
     @Override
@@ -263,7 +279,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         return new TypeStructRef(type.toString(), false, null);
     }
 
-    public Statement doGrammarRHSTerm(Expression t) {
+    public List<Statement> doRHSTerm(Expression t) {
         generatorCxt = new HashMap<>();
         sketch.compiler.ast.core.exprs.Expression e = (sketch.compiler.ast.core.exprs.Expression) t.accept(this);
 
@@ -278,6 +294,8 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
             int numPrevNonterminals = maxCxt.getOrDefault(key, 0);
             if (numPrevNonterminals >= value)
                 continue;
+
+            maxCxt.put(key, value);     // This value is new maxmmum
 
             for (int i = 0; i < value; i++) {
                 String varID = String.format("var_%s_%d", key, i);
@@ -297,14 +315,14 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         StmtReturn stmtReturn = new StmtReturn((FENode) null, e);
         StmtIfThen stmtIfThen = new StmtIfThen((FENode) null, new ExprStar(stmtReturn), stmtReturn, null);
 
-        StmtBlock stmt;
+        List<Statement> stmts;
         if (!names.isEmpty()) {
-            stmt = new StmtBlock((FENode) null, Arrays.asList(stmtVarDecl, stmtIfThen));
+            stmts = Arrays.asList(stmtVarDecl, stmtIfThen);
         } else {
-            stmt = new StmtBlock((FENode) null, Collections.singletonList(stmtIfThen));
+            stmts = Collections.singletonList(stmtIfThen);
         }
 
-        return stmt;
+        return stmts;
     }
 
     @Override
@@ -318,7 +336,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         sketch.compiler.ast.core.Function.FunctionCreator fc = sketch.compiler.ast.core.Function.creator((FEContext) null, generatorID, sketch.compiler.ast.core.Function.FcnType.Generator);
 
         List<Statement> bodyStmts = rule.getRules().stream()
-                .map(this::doGrammarRHSTerm)
+                .flatMap(t -> doRHSTerm(t).stream())
                 .collect(Collectors.toList());
         // One of production rule must be chosen
         bodyStmts.add(new StmtAssert((FENode) null, new ExprConstInt(0), 0));
@@ -331,51 +349,6 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         return fc.create();
     }
 
-
-    public Statement doExampleRHSTerm(Expression t) {
-        generatorCxt = new HashMap<>();
-        sketch.compiler.ast.core.exprs.Expression e = (sketch.compiler.ast.core.exprs.Expression) t.accept(this);
-
-        List<sketch.compiler.ast.core.typs.Type> types = new ArrayList<>();
-        List<String> names = new ArrayList<>();
-        List<sketch.compiler.ast.core.exprs.Expression> inits = new ArrayList<>();
-
-        for (Map.Entry<String, Integer> entry : generatorCxt.entrySet()) {
-            String key = entry.getKey();
-            int value = entry.getValue();
-
-            int numPrevNonterminals = maxCxt.getOrDefault(key, 0);
-            if (numPrevNonterminals >= value)
-                continue;
-
-            for (int i = 0; i < value; i++) {
-                String varID = String.format("var_%s_%d", key, i);
-                String funID = String.format("%s_gen", key);
-
-                List<sketch.compiler.ast.core.exprs.Expression> paramVars = variableAsParams.stream()
-                        .map(param -> new ExprVar((FENode) null, param.getName()))
-                        .collect(Collectors.toList());
-
-                names.add(varID);
-                types.add(nonterminalToSketchType.get(key));
-                inits.add(new ExprFunCall((FENode) null, funID, paramVars));
-            }
-        }
-
-        StmtVarDecl stmtVarDecl = new StmtVarDecl((FENode) null, types, names, inits);
-        StmtReturn stmtReturn = new StmtReturn((FENode) null, e);
-        StmtIfThen stmtIfThen = new StmtIfThen((FENode) null, new ExprStar(stmtReturn), stmtReturn, null);
-
-        StmtBlock stmt;
-        if (!names.isEmpty()) {
-            stmt = new StmtBlock((FENode) null, Arrays.asList(stmtVarDecl, stmtIfThen));
-        } else {
-            stmt = new StmtBlock((FENode) null, Collections.singletonList(stmtIfThen));
-        }
-
-        return stmt;
-    }
-
     @Override
     public sketch.compiler.ast.core.Function visitExampleRule(ExampleRule rule) {
         String generatorID = String.format("%s_gen", rule.getType().toString());
@@ -383,7 +356,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
         sketch.compiler.ast.core.Function.FunctionCreator fc = sketch.compiler.ast.core.Function.creator((FEContext) null, generatorID, Function.FcnType.Generator);
         List<Statement> bodyStmts = rule.getRules().stream()
-                .map(this::doExampleRHSTerm)
+                .flatMap(t -> doRHSTerm(t).stream())
                 .collect(Collectors.toList());
         // One of production rule must be chosen
         bodyStmts.add(new StmtAssert((FENode) null, new ExprConstInt(0), 0));

@@ -19,13 +19,12 @@ import java.util.List;
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
-public class PrecisionSketchBuilder {
+public class PrecisionSketchBuilder extends SynthesisSketchBuilder {
 
-    final CommonSketchBuilder commonBuilder;
-    private Function precisionBody = null;
+    Function precisionBody = null;
 
     public PrecisionSketchBuilder(CommonSketchBuilder commonBuilder) {
-        this.commonBuilder = commonBuilder;
+        super(commonBuilder);
     }
 
     private Function getPrecisionBody() {
@@ -75,7 +74,7 @@ public class PrecisionSketchBuilder {
         return precisionBody;
     }
 
-    public Program soundnessSketchCode(Property phi, PropertySet phi_list, ExampleSet pos, ExampleSet negMust, ExampleSet negMay) {
+    public Program precisionSketchCode(Property phi, PropertySet phi_list, ExampleSet pos, ExampleSet neg) {
         final String pkgName = "CheckPrecision";
         List<ExprVar> vars = new ArrayList<ExprVar>();
         List<StmtSpAssert> specialAsserts = new ArrayList<StmtSpAssert>();
@@ -86,14 +85,14 @@ public class PrecisionSketchBuilder {
         List<StructDef> structs = commonBuilder.getStructDefinitions();
         List<Function> funcs = new ArrayList<Function>(commonBuilder.getFunctions());
 
-        funcs.addAll(pos.toSketchCode());
-        funcs.addAll(negMay.toSketchCode());
-        funcs.addAll(negMust.toSketchCode());
+        funcs.addAll(pos.toSketchCode("pos"));
+        funcs.addAll(neg.toSketchCode("neg"));
         funcs.add(phi.toSketchCode());
         funcs.addAll(phi_list.toSketchCode());
         funcs.addAll(commonBuilder.getExampleGenerators());
         funcs.addAll(commonBuilder.getPropertyGenerators());
-        funcs.add(this.getPrecisionBody());
+        funcs.add(getSynthesisBody());
+        funcs.add(getPrecisionBody());
 
         funcs.forEach(func -> func.setPkg(pkgName));
 

@@ -33,7 +33,7 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
     @Override
     public Query visitProgram(SpyroParser.ProgramContext ctx) {
         List<Variable> variables = ctx.declVariables().declVar().stream()
-                .map(varContext -> visitDeclVar(varContext))
+                .map(this::visitDeclVar)
                 .collect(Collectors.toList());
 
         // id -> Variable map
@@ -41,15 +41,14 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
                 .collect(Collectors.toMap(Variable::getId, Function.identity()));
 
         List<ExprFuncCall> signatures = ctx.declSignatures().declSig().stream()
-                .map(sigContext -> visitDeclSig(sigContext))
+                .map(this::visitDeclSig)
                 .collect(Collectors.toList());
-
 
         // To-Do: Handle function calls and anonymous functions
         List<GrammarRule> grammar = visitLanguage(ctx.declLanguage());
 
         List<ExampleRule> examples = ctx.declExamples().declExampleRule().stream()
-                .map(exampleContext -> visitDeclExampleRule(exampleContext))
+                .map(this::visitDeclExampleRule)
                 .collect(Collectors.toList());
 
         return new Query(variables, signatures, grammar, examples);
@@ -190,7 +189,7 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
     public ExprFuncCall visitFunctionExpr(SpyroParser.FunctionExprContext ctx) {
         String id = ctx.ID().getText();
         List<Expression> exprs = ctx.expr().stream()
-                .map(exprCtx -> visitExpression(exprCtx))
+                .map(this::visitExpression)
                 .collect(Collectors.toList());
 
         return new ExprFuncCall(id, exprs);
@@ -327,7 +326,7 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
         String nonterminalID = ctx.ID().getText();
         Variable nonterminal = varContext.get(nonterminalID);
         List<Expression> rules = ctx.expr().stream()
-                .map(exprContext -> visitExpression(exprContext))
+                .map(this::visitExpression)
                 .collect(Collectors.toList());
 
         return new GrammarRule(nonterminal, rules);
@@ -338,7 +337,7 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
     public ExampleRule visitDeclExampleRule(SpyroParser.DeclExampleRuleContext ctx) {
         Type ty = visitType(ctx.type());
         List<Expression> rules = ctx.expr().stream()
-                .map(exprContext -> visitExpression(exprContext))
+                .map(this::visitExpression)
                 .collect(Collectors.toList());
 
         return new ExampleRule(ty, rules);
