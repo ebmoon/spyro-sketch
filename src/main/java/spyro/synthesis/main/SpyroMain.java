@@ -14,6 +14,7 @@ import sketch.compiler.main.other.ErrorHandling;
 import sketch.compiler.main.passes.CleanupFinalCode;
 import sketch.compiler.main.passes.SubstituteSolution;
 import sketch.compiler.main.seq.SequentialSketchMain;
+import sketch.util.Pair;
 import sketch.util.exceptions.SketchException;
 import sketch.util.exceptions.SketchNotResolvedException;
 import spyro.compiler.ast.Query;
@@ -152,43 +153,41 @@ public class SpyroMain extends SequentialSketchMain {
         }
     }
 
-    public Property synthesize(ExampleSet pos, ExampleSet negMust, ExampleSet negMay) {
+    public Property synthesize(ExampleSet pos, ExampleSet neg) {
         // TODO Implement
         return null;
     }
 
-    public Example checkPrecision(Property phi, ExampleSet pos, ExampleSet negMust, ExampleSet negMay, Property phiPrime) {
+    public Pair<Property, Example> checkPrecision(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg) {
         // TODO Implement
         return null;
     }
 
-    public Property synthesizeProperty(Property phiInit, ExampleSet pos, ExampleSet negMust) {
+    public Property synthesizeProperty(PropertySet psi, Property phiInit, ExampleSet pos, ExampleSet negMust) {
         Property phiE = phiInit;
         Property phiLastSound = null;
-        ExampleSet negMay = new ExampleSet();
+        ExampleSet neg = negMust.copy();
 
         while (true) {
             Example ePos = checkSoundness(phiE);
             if (ePos != null) {
                 pos.add(ePos);
-                Property phiPrime = synthesize(pos, negMust, negMay);
+                Property phiPrime = synthesize(pos, neg);
                 if (phiPrime != null) {
                     phiE = phiPrime;
                 } else {
                     phiE = phiLastSound;
-                    negMay.clear();
+                    neg = negMust.copy();
                 }
             } else {
-                negMust.merge(negMay);
-                negMay.clear();
+                negMust = neg.copy();
                 phiLastSound = phiE;
-                Property phiPrime = null;
-                Example eNeg = checkPrecision(phiE, pos, negMust, negMay, phiPrime);
-                if (eNeg == null) {
+                Pair<Property, Example> precisionResult = checkPrecision(psi, phiE, pos, neg);
+                if (precisionResult == null) {
                     return phiE;
                 } else {
-                    negMay.add(eNeg);
-                    phiE = phiPrime;
+                    neg.add(precisionResult.getSecond());
+                    phiE = precisionResult.getFirst();
                 }
             }
         }
@@ -200,7 +199,7 @@ public class SpyroMain extends SequentialSketchMain {
         PropertySet properties = new PropertySet(commonSketchBuilder);
 
         // TODO Implement Loop
-        Property prop = synthesizeProperty(phiInit, pos, negMust);
+        Property prop = synthesizeProperty(properties, phiInit, pos, negMust);
         System.out.println(prop.toSketchCode().getBody().toString());
 
         return properties;
@@ -223,8 +222,12 @@ public class SpyroMain extends SequentialSketchMain {
 
         List<Parameter> params = commonSketchBuilder.getExtendedParams("out");
         Property phiInit = Property.truth(params);
-        synthesizeProperties(phiInit);
+        PropertySet properties = synthesizeProperties(phiInit);
 
-        synthesizeProperties(null);
+        int idx = 0;
+        for (Property prop : properties.getProperties()) {
+            System.out.println(idx++);
+            System.out.println(prop.toSketchCode().getBody().toString());
+        }
     }
 }

@@ -29,6 +29,8 @@ public class ExampleSet {
         examples.clear();
     }
 
+    public ExampleSet copy() { return new ExampleSet(examples); }
+
     public void merge(ExampleSet E) {
         examples.addAll(E.examples);
     }
