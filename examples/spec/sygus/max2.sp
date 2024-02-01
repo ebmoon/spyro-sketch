@@ -9,7 +9,7 @@ signatures {
 }
 
 language {
-    boolean AP -> compare(I, I) ;
+    boolean AP -> I < I | I <= I | I > I | I >= I | I == I | I != I ;
     int I -> x1 | x2 | o ;
 }
 

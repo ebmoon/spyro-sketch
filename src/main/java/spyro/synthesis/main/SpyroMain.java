@@ -53,7 +53,6 @@ public class SpyroMain extends SequentialSketchMain {
     private SoundnessSketchBuilder soundness;
     private PrecisionSketchBuilder precision;
 
-
     public SpyroMain(String[] args) {
         super(new SpyroOptions(args));
         this.options = (SpyroOptions) super.options;
@@ -121,30 +120,16 @@ public class SpyroMain extends SequentialSketchMain {
                 .visitProgram(substituted);
     }
 
-    private Function findFunction(Program prog, String name) {
-        List<Function> funcs = prog.getPackages().get(0).getFuncs();
-        for (Function func : funcs)
-            if (func.getName().equals(name))
-                return func;
-
-        return null;
-    }
-
     public Example checkSoundness(Property phi) {
+        if (isDebug)
+            System.out.println("CheckSoundness");
         Program sketchCode = soundness.soundnessSketchCode(phi);
 
         try {
             SynthesisResult synthResult = runSketchSolver(sketchCode);
             if (synthResult.solution != null) {
                 Program substitutedCleaned = simplifySynthResult(synthResult);
-                Function f = findFunction(substitutedCleaned, SoundnessSketchBuilder.soundnessFunctionID);
-                if (f == null) {
-                    throw new OutputParseException("Failed to find function: "
-                            + SoundnessSketchBuilder.soundnessFunctionID);
-                } else {
-                    return (new SoundnessResultExtractor((StmtBlock) f.getBody()))
-                            .extractPositiveExample();
-                }
+                return new SoundnessResultExtractor(substitutedCleaned).extractPositiveExample();
             } else {
                 return null;
             }
@@ -154,13 +139,40 @@ public class SpyroMain extends SequentialSketchMain {
     }
 
     public Property synthesize(ExampleSet pos, ExampleSet neg) {
-        // TODO Implement
-        return null;
+        if (isDebug)
+            System.out.println("Synthesize");
+        Program sketchCode = synth.synthesisSketchCode(pos, neg);
+
+        try {
+            SynthesisResult synthResult = runSketchSolver(sketchCode);
+            if (synthResult.solution != null) {
+                Program substitutedCleaned = simplifySynthResult(synthResult);
+                return new SynthesisResultExtractor(substitutedCleaned).extractProperty();
+            } else {
+                return null;
+            }
+        } catch (SketchNotResolvedException e) {
+            return null;
+        }
     }
 
     public Pair<Property, Example> checkPrecision(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg) {
-        // TODO Implement
-        return null;
+        if (isDebug)
+            System.out.println("CheckPrecision");
+        Program sketchCode = precision.precisionSketchCode(psi, phi, pos, neg);
+
+        try {
+            SynthesisResult synthResult = runSketchSolver(sketchCode);
+            if (synthResult.solution != null) {
+                Program substitutedCleaned = simplifySynthResult(synthResult);
+                PrecisionResultExtractor extractor = new PrecisionResultExtractor(substitutedCleaned);
+                return new Pair(extractor.extractProperty(), extractor.extractNegativeExample());
+            } else {
+                return null;
+            }
+        } catch (SketchNotResolvedException e) {
+            return null;
+        }
     }
 
     public Property synthesizeProperty(PropertySet psi, Property phiInit, ExampleSet pos, ExampleSet negMust) {

@@ -8,6 +8,8 @@ import sketch.compiler.ast.core.exprs.*;
 import sketch.compiler.ast.core.exprs.Expression;
 import sketch.compiler.ast.core.stmts.Statement;
 import sketch.compiler.ast.core.stmts.StmtAssign;
+import sketch.compiler.ast.core.stmts.StmtBlock;
+import sketch.compiler.ast.core.stmts.StmtExpr;
 import spyro.synthesis.primitives.CommonSketchBuilder;
 
 import java.util.ArrayList;
@@ -66,36 +68,43 @@ public class PropertySet {
         return e;
     }
 
-    private Expression toFunCall(Function fn, List<Expression> params) {
-        return new ExprFunCall((FENode) null, fn.getName(), params);
+    private Expression toFunCall(Function fn, List<Expression> params, Expression outVar) {
+        List<Expression> paramsWithOut = new ArrayList<>(params);
+        paramsWithOut.add(outVar);
+        return new ExprFunCall((FENode) null, fn.getName(), paramsWithOut);
     }
 
     public List<Function> toSketchCode() {
         if (sketchCode == null) {
             sketchCode = new ArrayList<>();
 
+            Function.FunctionCreator fc = Function.creator((FEContext) null, conjunctionID, Function.FcnType.Static);
+            final String tempVarID = "out";
+            List<Parameter> params = commonBuilder.getExtendedParams(tempVarID);
+            List<Expression> vars = commonBuilder.getVariableAsExprs();
+
+            List<Statement> body = new ArrayList<>();
+            List<Expression> outVars = new ArrayList<>();
+
             int idx = 0;
             for (Property prop : properties) {
-                String id = String.format("%s_%d", Property.phiID, idx++);
-                sketchCode.add(prop.toSketchCode(id));
+                Function f = prop.toSketchCode();
+                ExprVar outVar = new ExprVar((FENode) null, "out_" + idx);
+
+                sketchCode.add(f);
+                body.add(new StmtExpr(toFunCall(f, vars, outVar)));
+                outVars.add(outVar);
             }
 
-            Function.FunctionCreator fc = Function.creator((FEContext) null, conjunctionID, Function.FcnType.Static);
-            List<Parameter> params = commonBuilder.getPropertyGenerators().get(0).getParams();
-            List<Expression> paramsAsVar = params.stream()
-                    .map(param -> new ExprVar((FENode) null, param.getName()))
-                    .collect(Collectors.toList());
-            List<Expression> functionCalls = sketchCode.stream()
-                    .map(f -> toFunCall(f, paramsAsVar))
-                    .collect(Collectors.toList());;
-            ExprVar lastParamVar = (ExprVar) paramsAsVar.get(params.size() - 1);
-            Statement body = new StmtAssign(lastParamVar, conjunction(functionCalls));
+            ExprVar lastParamVar = new ExprVar((FENode) null, tempVarID);
+            body.add(new StmtAssign(lastParamVar, conjunction(outVars)));
 
             fc.params(params);
-            fc.body(body);
+            fc.body(new StmtBlock(body));
 
             sketchCode.add(fc.create());
         }
+
         return sketchCode;
     }
 }

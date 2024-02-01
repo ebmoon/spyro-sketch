@@ -76,6 +76,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         return exampleGenerators;
     }
 
+    public List<sketch.compiler.ast.core.exprs.Expression> getVariableAsExprs() { return variableAsExprs; }
     public List<Parameter> getVariableAsParams() { return variableAsParams; }
     public List<Parameter> getExtendedParams(String outputVarID) {
         Parameter outputParam = new Parameter((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, outputVarID, Parameter.REF);
@@ -313,7 +314,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
         StmtVarDecl stmtVarDecl = new StmtVarDecl((FENode) null, types, names, inits);
         StmtReturn stmtReturn = new StmtReturn((FENode) null, e);
-        StmtIfThen stmtIfThen = new StmtIfThen((FENode) null, new ExprStar(stmtReturn), stmtReturn, null);
+        StmtIfThen stmtIfThen = new StmtIfThen((FENode) null, new ExprStar(stmtReturn, 1), stmtReturn, null);
 
         List<Statement> stmts;
         if (!names.isEmpty()) {

@@ -23,13 +23,15 @@ public class PrecisionSketchBuilder extends SynthesisSketchBuilder {
 
     Function precisionBody = null;
 
+    public final static String precisionFunctionID = "precision";
+
     public PrecisionSketchBuilder(CommonSketchBuilder commonBuilder) {
         super(commonBuilder);
     }
 
     private Function getPrecisionBody() {
         if (precisionBody == null) {
-            Function.FunctionCreator fc = Function.creator((FEContext) null, "precision", Function.FcnType.Harness);
+            Function.FunctionCreator fc = Function.creator((FEContext) null, precisionFunctionID, Function.FcnType.Harness);
 
             List<Statement> stmts = new ArrayList<>();
             stmts.add(commonBuilder.getVariablesWithHole());
@@ -74,7 +76,7 @@ public class PrecisionSketchBuilder extends SynthesisSketchBuilder {
         return precisionBody;
     }
 
-    public Program precisionSketchCode(Property phi, PropertySet phi_list, ExampleSet pos, ExampleSet neg) {
+    public Program precisionSketchCode(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg) {
         final String pkgName = "CheckPrecision";
         List<ExprVar> vars = new ArrayList<ExprVar>();
         List<StmtSpAssert> specialAsserts = new ArrayList<StmtSpAssert>();
@@ -88,7 +90,7 @@ public class PrecisionSketchBuilder extends SynthesisSketchBuilder {
         funcs.addAll(pos.toSketchCode("pos"));
         funcs.addAll(neg.toSketchCode("neg"));
         funcs.add(phi.toSketchCode());
-        funcs.addAll(phi_list.toSketchCode());
+        funcs.addAll(psi.toSketchCode());
         funcs.addAll(commonBuilder.getExampleGenerators());
         funcs.addAll(commonBuilder.getPropertyGenerators());
         funcs.add(getSynthesisBody());

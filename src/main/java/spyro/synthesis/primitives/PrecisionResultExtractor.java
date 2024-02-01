@@ -1,9 +1,9 @@
 package spyro.synthesis.primitives;
 
 import sketch.compiler.ast.core.FENode;
-import sketch.compiler.ast.core.Function;
 import sketch.compiler.ast.core.Program;
 import sketch.compiler.ast.core.exprs.ExprFunCall;
+import sketch.compiler.ast.core.exprs.ExprUnary;
 import sketch.compiler.ast.core.exprs.ExprVar;
 import sketch.compiler.ast.core.exprs.Expression;
 import sketch.compiler.ast.core.stmts.*;
@@ -14,18 +14,19 @@ import spyro.synthesis.Property;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SoundnessResultExtractor extends CommonResultExtractor {
+public class PrecisionResultExtractor extends SynthesisResultExtractor {
 
-    public SoundnessResultExtractor(Program result) {
+
+    public PrecisionResultExtractor(Program result) {
         super(result);
     }
 
-    public Example extractPositiveExample() {
-        StmtBlock body = (StmtBlock) findFunction(result, SoundnessSketchBuilder.soundnessFunctionID).getBody();
+    public Example extractNegativeExample() {
+        StmtBlock body = (StmtBlock) findFunction(result, PrecisionSketchBuilder.precisionFunctionID).getBody();
         List<Statement> stmts = body.getStmts();
         int numStmts = stmts.size();
 
-        List<Statement> posExBody = new ArrayList<>(stmts.subList(0, numStmts - 3));
+        List<Statement> negExBody = new ArrayList<>(stmts.subList(0, numStmts - 9));
 
         final String tempVarID = "out";
         ExprVar tempVar = new ExprVar((FENode) null, tempVarID);
@@ -37,10 +38,10 @@ public class SoundnessResultExtractor extends CommonResultExtractor {
 
         ExprFunCall newFunCall = new ExprFunCall((FENode) null, Property.newPhiID, params);
 
-        posExBody.add(new StmtVarDecl((FENode) null, TypePrimitive.bittype, tempVarID, null));
-        posExBody.add(new StmtExpr(newFunCall));
-        posExBody.add(new StmtAssert(body, tempVar, false));
+        negExBody.add(new StmtVarDecl((FENode) null, TypePrimitive.bittype, tempVarID, null));
+        negExBody.add(new StmtExpr(newFunCall));
+        negExBody.add(new StmtAssert(body, new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, tempVar), false));
 
-        return new Example(new StmtBlock(posExBody));
+        return new Example(new StmtBlock(negExBody));
     }
 }
