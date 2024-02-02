@@ -241,16 +241,18 @@ public class SpyroMain extends SequentialSketchMain {
         }
     }
 
-    public PropertySet synthesizeProperties(Property phiInit) {
+    public PropertySet synthesizeProperties(PropertySet psiInit) {
+        PropertySet psi = new PropertySet(commonSketchBuilder);
         ExampleSet pos = new ExampleSet();
         ExampleSet negMust;
-        PropertySet psi = new PropertySet(commonSketchBuilder);
         Property phi;
         PropertySynthesisResult result;
 
+        psi.addAll(psiInit.getProperties());
+
         // TODO Implement Loop
         while (true) {
-            result = synthesizeProperty(psi, phiInit, pos, new ExampleSet());
+            result = synthesizeProperty(psi, truth, pos, new ExampleSet());
             phi = result.prop;
             pos = result.pos;
             negMust = result.negMust;
@@ -290,8 +292,10 @@ public class SpyroMain extends SequentialSketchMain {
         improvement = new ImprovementSketchBuilder(commonSketchBuilder);
 
         List<Parameter> params = commonSketchBuilder.getExtendedParams("out");
-        Property phiInit = Property.truth(params);
-        PropertySet properties = synthesizeProperties(phiInit);
+        truth = Property.truth(params);
+
+        PropertySet psi = new PropertySet(commonSketchBuilder);
+        PropertySet properties = synthesizeProperties(psi);
 
         int idx = 0;
         for (Property prop : properties.getProperties()) {
