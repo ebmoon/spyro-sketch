@@ -30,7 +30,7 @@ language {
 // recursive constructor for each type
 // Provide only input arguments to function call
 // integer is chosen from arbitrary positive or negative 3-bits integer
-example {
+examples {
     int -> ??(3) | -1 * ??(3) ;
     list -> nil() | cons(int, list);
 }
