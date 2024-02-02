@@ -35,6 +35,10 @@ public class ExampleSet {
         examples.addAll(E.examples);
     }
 
+    public boolean isEmpty() {
+        return examples.isEmpty();
+    }
+
     public List<Function> toSketchCode(String prefix) {
         List<Function> exampleConstraints = new ArrayList<>();
 
