@@ -6,10 +6,8 @@ import sketch.compiler.ast.core.Function;
 import sketch.compiler.ast.core.Parameter;
 import sketch.compiler.ast.core.exprs.*;
 import sketch.compiler.ast.core.exprs.Expression;
-import sketch.compiler.ast.core.stmts.Statement;
-import sketch.compiler.ast.core.stmts.StmtAssign;
-import sketch.compiler.ast.core.stmts.StmtBlock;
-import sketch.compiler.ast.core.stmts.StmtExpr;
+import sketch.compiler.ast.core.stmts.*;
+import sketch.compiler.ast.core.typs.TypePrimitive;
 import spyro.synthesis.primitives.CommonSketchBuilder;
 
 import java.util.ArrayList;
@@ -88,10 +86,11 @@ public class PropertySet {
 
             int idx = 0;
             for (Property prop : properties) {
-                Function f = prop.toSketchCode();
-                ExprVar outVar = new ExprVar((FENode) null, "out_" + idx);
+                Function f = prop.toSketchCode(Property.phiID + "_" + idx);
+                ExprVar outVar = new ExprVar((FENode) null, "out_" + idx++);
 
                 sketchCode.add(f);
+                body.add(new StmtVarDecl((FENode) null, TypePrimitive.bittype, outVar.getName(), null));
                 body.add(new StmtExpr(toFunCall(f, vars, outVar)));
                 outVars.add(outVar);
             }

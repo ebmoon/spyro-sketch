@@ -32,6 +32,9 @@ import spyro.util.exceptions.ParseException;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -52,11 +55,25 @@ public class SpyroMain extends SequentialSketchMain {
     private SynthesisSketchBuilder synth;
     private SoundnessSketchBuilder soundness;
     private PrecisionSketchBuilder precision;
+    private ImprovementSketchBuilder improvement;
+
+    private Property truth;
 
     public SpyroMain(String[] args) {
         super(new SpyroOptions(args));
         this.options = (SpyroOptions) super.options;
+
         PlatformLocalization.getLocalization().setTempDirs();
+        redirectStderrToNull();
+    }
+
+    void redirectStderrToNull() {
+        System.setErr(new PrintStream(new OutputStream() {
+            @Override
+            public void write(int b) {
+                // DO NOTHING
+            }
+        }));
     }
 
     public static void main(String[] args) {
@@ -108,8 +125,8 @@ public class SpyroMain extends SequentialSketchMain {
     }
 
     private SynthesisResult runSketchSolver(Program prog) {
-        prog = this.preprocAndSemanticCheck(prog);
-        return this.partialEvalAndSolve(prog);
+        prog = preprocAndSemanticCheck(prog);
+        return partialEvalAndSolve(prog);
     }
 
     private Program simplifySynthResult(SynthesisResult synthResult) {
@@ -175,7 +192,26 @@ public class SpyroMain extends SequentialSketchMain {
         }
     }
 
-    public Property synthesizeProperty(PropertySet psi, Property phiInit, ExampleSet pos, ExampleSet negMust) {
+    public Example checkImprovement(PropertySet psi, Property phi) {
+        if (isDebug)
+            System.out.println("CheckImprovement");
+        Program sketchCode = improvement.improvementSketchCode(psi, phi);
+
+        try {
+            SynthesisResult synthResult = runSketchSolver(sketchCode);
+            if (synthResult.solution != null) {
+                Program substitutedCleaned = simplifySynthResult(synthResult);
+                ImprovementResultExtractor extractor = new ImprovementResultExtractor(substitutedCleaned);
+                return extractor.extractNegativeExample();
+            } else {
+                return null;
+            }
+        } catch (SketchNotResolvedException e) {
+            return null;
+        }
+    }
+
+    public PropertySynthesisResult synthesizeProperty(PropertySet psi, Property phiInit, ExampleSet pos, ExampleSet negMust) {
         Property phiE = phiInit;
         Property phiLastSound = null;
         ExampleSet neg = negMust.copy();
@@ -196,7 +232,7 @@ public class SpyroMain extends SequentialSketchMain {
                 phiLastSound = phiE;
                 Pair<Property, Example> precisionResult = checkPrecision(psi, phiE, pos, neg);
                 if (precisionResult == null) {
-                    return phiE;
+                    return new PropertySynthesisResult(phiE, pos, negMust);
                 } else {
                     neg.add(precisionResult.getSecond());
                     phiE = precisionResult.getFirst();
@@ -205,16 +241,38 @@ public class SpyroMain extends SequentialSketchMain {
         }
     }
 
-    public PropertySet synthesizeProperties(Property phiInit) {
+    public PropertySet synthesizeProperties(PropertySet psiInit) {
+        PropertySet psi = new PropertySet(commonSketchBuilder);
         ExampleSet pos = new ExampleSet();
-        ExampleSet negMust = new ExampleSet();
-        PropertySet properties = new PropertySet(commonSketchBuilder);
+        ExampleSet negMust;
+        Property phi;
+        PropertySynthesisResult result;
+
+        psi.addAll(psiInit.getProperties());
 
         // TODO Implement Loop
-        Property prop = synthesizeProperty(properties, phiInit, pos, negMust);
-        System.out.println(prop.toSketchCode().getBody().toString());
+        while (true) {
+            result = synthesizeProperty(psi, truth, pos, new ExampleSet());
+            phi = result.prop;
+            pos = result.pos;
+            negMust = result.negMust;
 
-        return properties;
+            // Check if most precise candidates improves property.
+            // If negMust is nonempty, those examples are witness of improvement.
+            if (negMust.isEmpty()) {
+                Example neg = checkImprovement(psi, phi);
+                if (neg != null) {
+                    negMust = new ExampleSet(Collections.singletonList(neg));
+                } else {
+                    return psi;
+                }
+            }
+
+            result = synthesizeProperty(new PropertySet(commonSketchBuilder), phi, pos, negMust);
+            phi = result.prop;
+            pos = result.pos;
+            psi.add(phi);
+        }
     }
 
     public void run() {
@@ -231,15 +289,30 @@ public class SpyroMain extends SequentialSketchMain {
         synth = new SynthesisSketchBuilder(commonSketchBuilder);
         soundness = new SoundnessSketchBuilder(commonSketchBuilder);
         precision = new PrecisionSketchBuilder(commonSketchBuilder);
+        improvement = new ImprovementSketchBuilder(commonSketchBuilder);
 
         List<Parameter> params = commonSketchBuilder.getExtendedParams("out");
-        Property phiInit = Property.truth(params);
-        PropertySet properties = synthesizeProperties(phiInit);
+        truth = Property.truth(params);
+
+        PropertySet psi = new PropertySet(commonSketchBuilder);
+        PropertySet properties = synthesizeProperties(psi);
 
         int idx = 0;
         for (Property prop : properties.getProperties()) {
             System.out.println(idx++);
             System.out.println(prop.toSketchCode().getBody().toString());
+        }
+    }
+
+    static class PropertySynthesisResult {
+        Property prop;
+        ExampleSet pos;
+        ExampleSet negMust;
+
+        public PropertySynthesisResult(Property prop, ExampleSet pos, ExampleSet negMust) {
+            this.prop = prop;
+            this.pos = pos;
+            this.negMust = negMust;
         }
     }
 }

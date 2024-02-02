@@ -298,7 +298,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
             maxCxt.put(key, value);     // This value is new maxmmum
 
-            for (int i = 0; i < value; i++) {
+            for (int i = numPrevNonterminals; i < value; i++) {
                 String varID = String.format("var_%s_%d", key, i);
                 String funID = String.format("%s_gen", key);
 
