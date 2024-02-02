@@ -14,12 +14,12 @@ import java.util.List;
  */
 public class ExampleRule extends SpyroNode {
 
-    Type ty;
-    List<Expression> rules;
+    Nonterminal nonterminal;
+    List<RHSTerm> rules;
 
 
-    public ExampleRule(Type ty, List<Expression> rules) {
-        this.ty = ty;
+    public ExampleRule(Nonterminal nonterminal, List<RHSTerm> rules) {
+        this.nonterminal = nonterminal;
         this.rules = rules;
     }
 
@@ -28,11 +28,11 @@ public class ExampleRule extends SpyroNode {
         return v.visitExampleRule(this);
     }
 
-    public Type getType() {
-        return ty;
+    public Nonterminal getNonterminal() {
+        return nonterminal;
     }
 
-    public List<Expression> getRules() {
+    public List<RHSTerm> getRules() {
         return rules;
     }
 

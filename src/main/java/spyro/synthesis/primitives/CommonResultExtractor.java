@@ -25,7 +25,7 @@ public class CommonResultExtractor {
         }
     }
 
-    Function findFunction(Program prog, String name) {
+    static Function findFunction(Program prog, String name) {
         List<Function> funcs = prog.getPackages().get(0).getFuncs();
         for (Function func : funcs)
             if (func.getName().equals(name))

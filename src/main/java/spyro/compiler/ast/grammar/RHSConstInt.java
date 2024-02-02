@@ -1,4 +1,4 @@
-package spyro.compiler.ast.expr;
+package spyro.compiler.ast.grammar;
 
 import spyro.compiler.ast.SpyroNodeVisitor;
 
@@ -7,18 +7,18 @@ import spyro.compiler.ast.SpyroNodeVisitor;
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
-public class ConstInt extends Constant {
+public class RHSConstInt extends RHSConstant {
 
     private int value;
 
-    public ConstInt(int value) {
+    public RHSConstInt(int value) {
         super();
         this.value = value;
     }
 
     @Override
     public Object accept(SpyroNodeVisitor v) {
-        return v.visitConstInt(this);
+        return v.visitRHSConstInt(this);
     }
 
     public int getValue() {

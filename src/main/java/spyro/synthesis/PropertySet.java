@@ -16,7 +16,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Class for synthesized properties
+ * Class for synthesized properties.
+ * It requires a information from query to set its parameter.
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */

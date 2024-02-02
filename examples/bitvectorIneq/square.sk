@@ -1,0 +1,15 @@
+void bvadd(int x, int y, ref int ret) {
+    ret = (x + y) % 16; 
+}
+
+void bvadd3(int x, int y, int z, ref int ret) {
+    ret = (x + y + z) % 16; 
+}
+
+void bvmul(int x, int y, ref int ret) {
+    ret = (x * y) % 16;
+}
+
+void square(int x, ref int ret) {
+    bvmul(x, x, ret);
+}

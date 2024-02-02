@@ -3,8 +3,7 @@ package spyro.compiler.parser;
 import spyro.compiler.ast.Query;
 import spyro.compiler.ast.SpyroNode;
 import spyro.compiler.ast.expr.*;
-import spyro.compiler.ast.grammar.ExampleRule;
-import spyro.compiler.ast.grammar.GrammarRule;
+import spyro.compiler.ast.grammar.*;
 import spyro.compiler.ast.type.Type;
 import spyro.compiler.ast.type.TypePrimitive;
 import spyro.compiler.ast.type.TypeStruct;
@@ -24,6 +23,7 @@ import java.util.stream.Collectors;
 public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
 
     Map<String, Variable> varContext;
+    Map<String, Nonterminal> nonterminalContext;
 
     @Override
     public Query visitParse(SpyroParser.ParseContext ctx) {
@@ -38,18 +38,16 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
 
         // id -> Variable map
         varContext = variables.stream()
-                .collect(Collectors.toMap(Variable::getId, Function.identity()));
+                .collect(Collectors.toMap(Variable::getID, Function.identity()));
 
         List<ExprFuncCall> signatures = ctx.declSignatures().declSig().stream()
                 .map(this::visitDeclSig)
                 .collect(Collectors.toList());
 
-        // To-Do: Handle function calls and anonymous functions
+        // TODO Handle anonymous functions
         List<GrammarRule> grammar = visitLanguage(ctx.declLanguage());
 
-        List<ExampleRule> examples = ctx.declExamples().declExampleRule().stream()
-                .map(this::visitDeclExampleRule)
-                .collect(Collectors.toList());
+        List<ExampleRule> examples = visitExamples(ctx.declExamples());
 
         return new Query(variables, signatures, grammar, examples);
     }
@@ -89,17 +87,30 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
         }
     }
 
+    public ExprFuncCall visitSignature(SpyroParser.FunctionExprContext ctx) {
+        String id = ctx.ID().getText();
+
+        // It only allows variables as argument
+        List<Expression> args = ctx.expr().stream()
+                .map(exprCtx -> ((SpyroParser.AtomExprContext) exprCtx).atom())
+                .map(atomCtx -> ((SpyroParser.IdAtomContext) atomCtx).ID().getText())
+                .map(varID -> varContext.get(varID))
+                .collect(Collectors.toList());
+
+        return new ExprFuncCall(id, args);
+    }
+
     @Override
     public ExprFuncCall visitDeclSig(SpyroParser.DeclSigContext ctx) {
         SpyroParser.ExprContext expr = ctx.expr();
         if (expr instanceof SpyroParser.FunctionExprContext) {
-            return visitFunctionExpr((SpyroParser.FunctionExprContext) expr);
+            return visitSignature((SpyroParser.FunctionExprContext) expr);
         } else {
             throw new ParseException("Signature must be a form of function call");
         }
     }
 
-    public Expression visitExpression(SpyroParser.ExprContext ctx) {
+    public RHSTerm visitExpression(SpyroParser.ExprContext ctx) {
         if (ctx instanceof SpyroParser.FunctionExprContext)
             return visitFunctionExpr((SpyroParser.FunctionExprContext) ctx);
         else if (ctx instanceof SpyroParser.ParenExprContext)
@@ -126,7 +137,7 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
             throw new ParseException("Unknown expression case");
     }
 
-    public Expression visitAtom(SpyroParser.AtomContext ctx) {
+    public RHSTerm visitAtom(SpyroParser.AtomContext ctx) {
         if (ctx instanceof SpyroParser.NumberAtomContext)
             return visitNumberAtom((SpyroParser.NumberAtomContext) ctx);
         else if (ctx instanceof SpyroParser.BooleanAtomContext)
@@ -144,73 +155,75 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
     }
 
     @Override
-    public ConstInt visitNumberAtom(SpyroParser.NumberAtomContext ctx) {
+    public RHSConstInt visitNumberAtom(SpyroParser.NumberAtomContext ctx) {
         int val = Integer.parseInt(ctx.INT().getText());
-        return new ConstInt(val);
+        return new RHSConstInt(val);
     }
 
     @Override
-    public ConstBool visitBooleanAtom(SpyroParser.BooleanAtomContext ctx) {
+    public RHSConstBool visitBooleanAtom(SpyroParser.BooleanAtomContext ctx) {
         if (ctx.TRUE() != null)
-            return new ConstBool(true);
+            return new RHSConstBool(true);
         else if (ctx.FALSE() != null)
-            return new ConstBool(false);
+            return new RHSConstBool(false);
         else
             throw new ParseException("Unknown boolean value");
     }
 
     @Override
-    public ConstNull visitNullAtom(SpyroParser.NullAtomContext ctx) {
-        return new ConstNull();
+    public RHSConstNull visitNullAtom(SpyroParser.NullAtomContext ctx) {
+        return new RHSConstNull();
     }
 
     @Override
-    public Hole visitUnsizedHoleAtom(SpyroParser.UnsizedHoleAtomContext ctx) {
-        return new Hole();
+    public RHSHole visitUnsizedHoleAtom(SpyroParser.UnsizedHoleAtomContext ctx) {
+        return new RHSHole();
     }
 
     @Override
-    public Hole visitSizedHoleAtom(SpyroParser.SizedHoleAtomContext ctx) {
+    public RHSHole visitSizedHoleAtom(SpyroParser.SizedHoleAtomContext ctx) {
         int size = Integer.parseInt(ctx.INT().getText());
-        return new Hole(size);
+        return new RHSHole(size);
     }
 
     @Override
-    public Variable visitIdAtom(SpyroParser.IdAtomContext ctx) {
+    public RHSTerm visitIdAtom(SpyroParser.IdAtomContext ctx) {
         String id = ctx.ID().getText();
         if (varContext.containsKey(id)) {
-            return varContext.get(id);
+            return new RHSVariable(varContext.get(id));
+        } else if (nonterminalContext.containsKey(id)) {
+            return nonterminalContext.get(id);
         } else {
             throw new ParseException("Unknown variable " + id);
         }
     }
 
     @Override
-    public ExprFuncCall visitFunctionExpr(SpyroParser.FunctionExprContext ctx) {
+    public RHSFuncCall visitFunctionExpr(SpyroParser.FunctionExprContext ctx) {
         String id = ctx.ID().getText();
-        List<Expression> exprs = ctx.expr().stream()
+        List<RHSTerm> exprs = ctx.expr().stream()
                 .map(this::visitExpression)
                 .collect(Collectors.toList());
 
-        return new ExprFuncCall(id, exprs);
+        return new RHSFuncCall(id, exprs);
     }
 
     @Override
-    public ExprUnary visitUnaryMinusExpr(SpyroParser.UnaryMinusExprContext ctx) {
-        Expression expr = visitExpression(ctx.expr());
-        return new ExprUnary(ExprUnary.UnaryOp.UNOP_NEG, expr);
+    public RHSUnary visitUnaryMinusExpr(SpyroParser.UnaryMinusExprContext ctx) {
+        RHSTerm expr = visitExpression(ctx.expr());
+        return new RHSUnary(ExprUnary.UnaryOp.UNOP_NEG, expr);
     }
 
     @Override
-    public ExprUnary visitNotExpr(SpyroParser.NotExprContext ctx) {
-        Expression expr = visitExpression(ctx.expr());
-        return new ExprUnary(ExprUnary.UnaryOp.UNOP_NOT, expr);
+    public RHSUnary visitNotExpr(SpyroParser.NotExprContext ctx) {
+        RHSTerm expr = visitExpression(ctx.expr());
+        return new RHSUnary(ExprUnary.UnaryOp.UNOP_NOT, expr);
     }
 
     @Override
-    public ExprBinary visitMultiplicationExpr(SpyroParser.MultiplicationExprContext ctx) {
-        Expression expr1 = visitExpression(ctx.expr(0));
-        Expression expr2 = visitExpression(ctx.expr(1));
+    public RHSBinary visitMultiplicationExpr(SpyroParser.MultiplicationExprContext ctx) {
+        RHSTerm expr1 = visitExpression(ctx.expr(0));
+        RHSTerm expr2 = visitExpression(ctx.expr(1));
         ExprBinary.BinaryOp op;
 
         if (ctx.MULT() != null) {
@@ -223,13 +236,13 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
             throw new ParseException("Unknown multiplicative binary operator");
         }
 
-        return new ExprBinary(op, expr1, expr2);
+        return new RHSBinary(op, expr1, expr2);
     }
 
     @Override
-    public ExprBinary visitAdditiveExpr(SpyroParser.AdditiveExprContext ctx) {
-        Expression expr1 = visitExpression(ctx.expr(0));
-        Expression expr2 = visitExpression(ctx.expr(1));
+    public RHSBinary visitAdditiveExpr(SpyroParser.AdditiveExprContext ctx) {
+        RHSTerm expr1 = visitExpression(ctx.expr(0));
+        RHSTerm expr2 = visitExpression(ctx.expr(1));
         ExprBinary.BinaryOp op;
 
         if (ctx.PLUS() != null) {
@@ -240,13 +253,13 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
             throw new ParseException("Unknown additive binary operator");
         }
 
-        return new ExprBinary(op, expr1, expr2);
+        return new RHSBinary(op, expr1, expr2);
     }
 
     @Override
-    public ExprBinary visitRelationalExpr(SpyroParser.RelationalExprContext ctx) {
-        Expression expr1 = visitExpression(ctx.expr(0));
-        Expression expr2 = visitExpression(ctx.expr(1));
+    public RHSBinary visitRelationalExpr(SpyroParser.RelationalExprContext ctx) {
+        RHSTerm expr1 = visitExpression(ctx.expr(0));
+        RHSTerm expr2 = visitExpression(ctx.expr(1));
         ExprBinary.BinaryOp op;
 
         if (ctx.LTEQ() != null) {
@@ -261,13 +274,13 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
             throw new ParseException("Unknown relational binary operator");
         }
 
-        return new ExprBinary(op, expr1, expr2);
+        return new RHSBinary(op, expr1, expr2);
     }
 
     @Override
-    public ExprBinary visitEqualityExpr(SpyroParser.EqualityExprContext ctx) {
-        Expression expr1 = visitExpression(ctx.expr(0));
-        Expression expr2 = visitExpression(ctx.expr(1));
+    public RHSBinary visitEqualityExpr(SpyroParser.EqualityExprContext ctx) {
+        RHSTerm expr1 = visitExpression(ctx.expr(0));
+        RHSTerm expr2 = visitExpression(ctx.expr(1));
         ExprBinary.BinaryOp op;
 
         if (ctx.EQ() != null) {
@@ -278,45 +291,63 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
             throw new ParseException("Unknown equality binary operator");
         }
 
-        return new ExprBinary(op, expr1, expr2);
+        return new RHSBinary(op, expr1, expr2);
     }
 
     @Override
-    public ExprBinary visitAndExpr(SpyroParser.AndExprContext ctx) {
-        Expression expr1 = visitExpression(ctx.expr(0));
-        Expression expr2 = visitExpression(ctx.expr(1));
+    public RHSBinary visitAndExpr(SpyroParser.AndExprContext ctx) {
+        RHSTerm expr1 = visitExpression(ctx.expr(0));
+        RHSTerm expr2 = visitExpression(ctx.expr(1));
 
-        return new ExprBinary(ExprBinary.BinaryOp.BINOP_AND, expr1, expr2);
+        return new RHSBinary(ExprBinary.BinaryOp.BINOP_AND, expr1, expr2);
     }
 
     @Override
-    public ExprBinary visitOrExpr(SpyroParser.OrExprContext ctx) {
-        Expression expr1 = visitExpression(ctx.expr(0));
-        Expression expr2 = visitExpression(ctx.expr(1));
+    public RHSBinary visitOrExpr(SpyroParser.OrExprContext ctx) {
+        RHSTerm expr1 = visitExpression(ctx.expr(0));
+        RHSTerm expr2 = visitExpression(ctx.expr(1));
 
-        return new ExprBinary(ExprBinary.BinaryOp.BINOP_OR, expr1, expr2);
+        return new RHSBinary(ExprBinary.BinaryOp.BINOP_OR, expr1, expr2);
     }
 
     public List<GrammarRule> visitLanguage(SpyroParser.DeclLanguageContext ctx) {
-        Map<String, Variable> contextBackup = new HashMap<String, Variable>(varContext);
         List<SpyroParser.DeclLanguageRuleContext> ruleContexts = ctx.declLanguageRule();
 
-        // Construct an extended context with nonterminals
+        // Construct an context with nonterminals
+        nonterminalContext = new HashMap<>();
         for (SpyroParser.DeclLanguageRuleContext ruleContext : ruleContexts) {
             String nonterminalID = ruleContext.ID().getText();
             Type ty = visitType(ruleContext.type());
-            Variable v = new Variable(ty, nonterminalID);
+            Nonterminal v = new Nonterminal(ty, nonterminalID);
 
-            varContext.put(nonterminalID, v);
+            nonterminalContext.put(nonterminalID, v);
         }
 
         // Construct GrammarRule objects with extended context
         List<GrammarRule> rules = ruleContexts.stream()
-                .map(ruleContext -> visitDeclLanguageRule(ruleContext))
+                .map(this::visitDeclLanguageRule)
                 .collect(Collectors.toList());
 
-        // Restore the context without nonterminals
-        varContext = contextBackup;
+        return rules;
+    }
+
+    public List<ExampleRule> visitExamples(SpyroParser.DeclExamplesContext ctx) {
+        List<SpyroParser.DeclExampleRuleContext> ruleContexts = ctx.declExampleRule();
+
+        // Construct an context with nonterminals
+        nonterminalContext = new HashMap<>();
+        for (SpyroParser.DeclExampleRuleContext ruleContext : ruleContexts) {
+            String nonterminalID = ruleContext.ID().getText();
+            Type ty = visitType(ruleContext.type());
+            Nonterminal v = new Nonterminal(ty, nonterminalID);
+
+            nonterminalContext.put(nonterminalID, v);
+        }
+
+        // Construct ExampleRule objects with extended context
+        List<ExampleRule> rules = ruleContexts.stream()
+                .map(this::visitDeclExampleRule)
+                .collect(Collectors.toList());
 
         return rules;
     }
@@ -324,8 +355,8 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
     @Override
     public GrammarRule visitDeclLanguageRule(SpyroParser.DeclLanguageRuleContext ctx) {
         String nonterminalID = ctx.ID().getText();
-        Variable nonterminal = varContext.get(nonterminalID);
-        List<Expression> rules = ctx.expr().stream()
+        Nonterminal nonterminal = nonterminalContext.get(nonterminalID);
+        List<RHSTerm> rules = ctx.expr().stream()
                 .map(this::visitExpression)
                 .collect(Collectors.toList());
 
@@ -335,11 +366,12 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
 
     @Override
     public ExampleRule visitDeclExampleRule(SpyroParser.DeclExampleRuleContext ctx) {
-        Type ty = visitType(ctx.type());
-        List<Expression> rules = ctx.expr().stream()
+        String nonterminalID = ctx.ID().getText();
+        Nonterminal nonterminal = nonterminalContext.get(nonterminalID);
+        List<RHSTerm> rules = ctx.expr().stream()
                 .map(this::visitExpression)
                 .collect(Collectors.toList());
 
-        return new ExampleRule(ty, rules);
+        return new ExampleRule(nonterminal, rules);
     }
 }

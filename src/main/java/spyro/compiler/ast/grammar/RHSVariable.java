@@ -1,6 +1,7 @@
-package spyro.compiler.ast.expr;
+package spyro.compiler.ast.grammar;
 
 import spyro.compiler.ast.SpyroNodeVisitor;
+import spyro.compiler.ast.expr.Variable;
 import spyro.compiler.ast.type.Type;
 
 /**
@@ -9,34 +10,27 @@ import spyro.compiler.ast.type.Type;
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
-public class Variable extends Expression {
+public class RHSVariable extends RHSTerm {
 
     private String id;
     private Type type;
-    private boolean hidden;
 
-    public Variable(Type type, String id) {
+    public RHSVariable(Type type, String id) {
         super();
         this.type = type;
         this.id = String.valueOf(id);
-        this.hidden = false;
     }
 
-    public Variable(Type type, String id, boolean hidden) {
-        super();
-        this.type = type;
-        this.id = String.valueOf(id);
-        this.hidden = hidden;
+    public RHSVariable(Variable v) {
+        this.type = v.getType();
+        this.id = v.getID();
     }
 
     @Override
     public Object accept(SpyroNodeVisitor visitor) {
-        return visitor.visitVariable(this);
+        return visitor.visitRHSVariable(this);
     }
 
-    public boolean isHidden() {
-        return hidden;
-    }
 
     public String getID() {
         return id;

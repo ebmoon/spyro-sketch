@@ -24,4 +24,8 @@ public class ConstBool extends Constant {
     public boolean getValue() {
         return value;
     }
+
+    public String toString() {
+        return String.valueOf(value);
+    }
 }
