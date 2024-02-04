@@ -1,4 +1,4 @@
-package spyro.compiler.ast.expr;
+package spyro.compiler.ast.grammar;
 
 import spyro.compiler.ast.SpyroNodeVisitor;
 
@@ -7,23 +7,23 @@ import spyro.compiler.ast.SpyroNodeVisitor;
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
-public class Hole extends Expression {
+public class RHSHole extends RHSTerm {
 
     private int size;
 
-    public Hole() {
+    public RHSHole() {
         super();
         this.size = 0;
     }
 
-    public Hole(int size) {
+    public RHSHole(int size) {
         super();
         this.size = size;
     }
 
     @Override
     public Object accept(SpyroNodeVisitor v) {
-        return v.visitHole(this);
+        return v.visitRHSHole(this);
     }
 
     public int getSize() {

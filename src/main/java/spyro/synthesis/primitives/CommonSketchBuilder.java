@@ -2,6 +2,7 @@ package spyro.synthesis.primitives;
 
 import sketch.compiler.ast.core.*;
 import sketch.compiler.ast.core.exprs.*;
+import sketch.compiler.ast.core.exprs.Expression;
 import sketch.compiler.ast.core.stmts.*;
 import sketch.compiler.ast.core.typs.StructDef;
 import sketch.compiler.ast.core.typs.TypeStructRef;
@@ -9,10 +10,8 @@ import spyro.compiler.ast.Query;
 import spyro.compiler.ast.SpyroNodeVisitor;
 import spyro.compiler.ast.expr.ExprBinary;
 import spyro.compiler.ast.expr.ExprUnary;
-import spyro.compiler.ast.expr.Expression;
 import spyro.compiler.ast.expr.*;
-import spyro.compiler.ast.grammar.ExampleRule;
-import spyro.compiler.ast.grammar.GrammarRule;
+import spyro.compiler.ast.grammar.*;
 import spyro.compiler.ast.type.Type;
 import spyro.compiler.ast.type.TypePrimitive;
 import spyro.compiler.ast.type.TypeStruct;
@@ -43,9 +42,12 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
     Map<String, sketch.compiler.ast.core.typs.Type> variableToSketchType;
     Map<String, sketch.compiler.ast.core.typs.Type> nonterminalToSketchType;
-    Map<String, sketch.compiler.ast.core.typs.Type> typeStringToSketchType;
+    Map<String, Function> firstExampleGenerators;
+
+    List<Statement> stmtsToPrepend;
     Map<String, Integer> generatorCxt;
     Map<String, Integer> maxCxt;
+    int cnt;
 
     public CommonSketchBuilder(Program impl) {
         this.prog = Program.emptyProgram();
@@ -98,13 +100,13 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         List<sketch.compiler.ast.core.exprs.Expression> inits = new ArrayList<>();
 
         for (Variable v : variables) {
-            String varID = v.getId();
+            String varID = v.getID();
             Type ty = v.getType();
             sketch.compiler.ast.core.typs.Type sketchType = doType(ty);
 
             names.add(varID);
             types.add(sketchType);
-            String funId = String.format("%s_gen", ty.toString());
+            String funId = firstExampleGenerators.get(ty.toString()).getName();
             inits.add(new ExprFunCall((FENode) null, funId, new ArrayList<>()));
         }
 
@@ -113,7 +115,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
     protected Parameter variableToParam(Variable var) {
         sketch.compiler.ast.core.typs.Type ty = (sketch.compiler.ast.core.typs.Type) var.getType().accept(this);
-        return new Parameter((FENode) null, ty, var.getId());
+        return new Parameter((FENode) null, ty, var.getID());
     }
 
     protected sketch.compiler.ast.core.typs.Type doType(Type ty) {
@@ -123,17 +125,18 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
     @Override
     public Program visitQuery(Query q) {
         nonterminalToSketchType = new HashMap<>();
-        typeStringToSketchType = new HashMap<>();
+        firstExampleGenerators = new HashMap<>();
+        cnt = 0;
 
         variables = q.getVariables();
         variableAsExprs = variables.stream()
-                .map(decl -> new ExprVar((FENode) null, decl.getId()))
+                .map(decl -> new ExprVar((FENode) null, decl.getID()))
                 .collect(Collectors.toList());
         variableAsParams = variables.stream()
                 .map(this::variableToParam)
                 .collect(Collectors.toList());
         variableToSketchType = variables.stream()
-                .collect(Collectors.toMap(Variable::getId, decl -> doType(decl.getType())));
+                .collect(Collectors.toMap(Variable::getID, decl -> doType(decl.getType())));
 
         signatures = q.getSignatures().stream()
                 .map(sig -> (ExprFunCall) sig.accept(this))
@@ -144,15 +147,14 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
         nonterminalToSketchType = q.getGrammar().stream()
                 .map(GrammarRule::getNonterminal)
-                .collect(Collectors.toMap(Variable::getId, v -> this.doType(v.getType())));
+                .collect(Collectors.toMap(Nonterminal::getID, n -> this.doType(n.getType())));
         propertyGenerators = q.getGrammar().stream()
                 .map(rule -> (Function) rule.accept(this))
                 .collect(Collectors.toList());
 
-        nonterminalToSketchType = new HashMap<>();
-        typeStringToSketchType = q.getExamples().stream()
-                .map(ExampleRule::getType)
-                .collect(Collectors.toMap(Type::toString, this::doType));
+        nonterminalToSketchType = q.getExamples().stream()
+                .map(ExampleRule::getNonterminal)
+                .collect(Collectors.toMap(Nonterminal::getID, n -> this.doType(n.getType())));
         exampleGenerators = q.getExamples().stream()
                 .map(rule -> (Function) rule.accept(this))
                 .collect(Collectors.toList());
@@ -160,21 +162,15 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         return null;
     }
 
+    private ExprVar freshVar() {
+        return new ExprVar((FENode) null, String.format("fresh_var_%d", cnt++));
+    }
+
     @Override
     public sketch.compiler.ast.core.exprs.Expression visitVariable(Variable v) {
-        String varID = v.getId();
-        if (nonterminalToSketchType.containsKey(varID)) {
-            int cnt = generatorCxt.getOrDefault(varID, 0);
-            String varId = String.format("var_%s_%d", v.getId(), cnt);
-            generatorCxt.put(varID, cnt + 1);
-            return new ExprVar((FENode) null, varId);
-        } else if (typeStringToSketchType.containsKey(varID)) {
-            int cnt = generatorCxt.getOrDefault(varID, 0);
-            String varId = String.format("var_%s_%d", v.getId(), cnt);
-            generatorCxt.put(varID, cnt + 1);
-            return new ExprVar((FENode) null, varId);
-        } else if (variableToSketchType.containsKey(varID)) {
-            return new ExprVar((FENode) null, v.getId());
+        String varID = v.getID();
+        if (variableToSketchType.containsKey(varID)) {
+            return new ExprVar((FENode) null, v.getID());
         } else
             throw new SketchConversionException("visitVariable called for a undefined variable");
     }
@@ -185,67 +181,23 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
     }
 
     @Override
-    public Object visitExprFuncCall(ExprFuncCall fc) {
+    public ExprFunCall visitExprFuncCall(ExprFuncCall fc) {
         List<sketch.compiler.ast.core.exprs.Expression> params = fc.getArgs().stream()
                 .map(e -> (sketch.compiler.ast.core.exprs.Expression) e.accept(this))
                 .collect(Collectors.toList());
 
-        return new ExprFunCall((FENode) null, fc.getFunctionId(), params);
+        return new ExprFunCall((FENode) null, fc.getFunctionID(), params);
     }
 
     @Override
-    public Object visitExprUnary(ExprUnary e) {
-        sketch.compiler.ast.core.exprs.Expression subExpr = (sketch.compiler.ast.core.exprs.Expression) e.getExpr().accept(this);
-
-        switch (e.getOp()) {
-            case UNOP_NOT:
-                return new sketch.compiler.ast.core.exprs.ExprUnary((FENode) null, sketch.compiler.ast.core.exprs.ExprUnary.UNOP_NOT, subExpr);
-            case UNOP_BNOT:
-                return new sketch.compiler.ast.core.exprs.ExprUnary((FENode) null, sketch.compiler.ast.core.exprs.ExprUnary.UNOP_BNOT, subExpr);
-            case UNOP_NEG:
-                return new sketch.compiler.ast.core.exprs.ExprUnary((FENode) null, sketch.compiler.ast.core.exprs.ExprUnary.UNOP_NEG, subExpr);
-            default:
-                throw new SketchConversionException("Unknown unary operator");
-        }
+    public sketch.compiler.ast.core.exprs.ExprUnary visitExprUnary(ExprUnary e) {
+        Expression subExpr = (Expression) e.getExpr().accept(this);
+        return constructExprUnary(subExpr, e.getOp());
     }
 
     @Override
     public sketch.compiler.ast.core.exprs.ExprBinary visitExprBinary(ExprBinary e) {
-        sketch.compiler.ast.core.exprs.Expression left = (sketch.compiler.ast.core.exprs.Expression) e.getLeft().accept(this);
-        sketch.compiler.ast.core.exprs.Expression right = (sketch.compiler.ast.core.exprs.Expression) e.getRight().accept(this);
-        switch (e.getOp()) {
-            // Arithmetic
-            case BINOP_ADD:
-                return new sketch.compiler.ast.core.exprs.ExprBinary((FENode) null, sketch.compiler.ast.core.exprs.ExprBinary.BINOP_ADD, left, right);
-            case BINOP_SUB:
-                return new sketch.compiler.ast.core.exprs.ExprBinary((FENode) null, sketch.compiler.ast.core.exprs.ExprBinary.BINOP_SUB, left, right);
-            case BINOP_MUL:
-                return new sketch.compiler.ast.core.exprs.ExprBinary((FENode) null, sketch.compiler.ast.core.exprs.ExprBinary.BINOP_MUL, left, right);
-            case BINOP_DIV:
-                return new sketch.compiler.ast.core.exprs.ExprBinary((FENode) null, sketch.compiler.ast.core.exprs.ExprBinary.BINOP_DIV, left, right);
-            case BINOP_MOD:
-                return new sketch.compiler.ast.core.exprs.ExprBinary((FENode) null, sketch.compiler.ast.core.exprs.ExprBinary.BINOP_MOD, left, right);
-            // Boolean
-            case BINOP_AND:
-                return new sketch.compiler.ast.core.exprs.ExprBinary((FENode) null, sketch.compiler.ast.core.exprs.ExprBinary.BINOP_AND, left, right);
-            case BINOP_OR:
-                return new sketch.compiler.ast.core.exprs.ExprBinary((FENode) null, sketch.compiler.ast.core.exprs.ExprBinary.BINOP_OR, left, right);
-            // Comparison
-            case BINOP_EQ:
-                return new sketch.compiler.ast.core.exprs.ExprBinary((FENode) null, sketch.compiler.ast.core.exprs.ExprBinary.BINOP_EQ, left, right);
-            case BINOP_NEQ:
-                return new sketch.compiler.ast.core.exprs.ExprBinary((FENode) null, sketch.compiler.ast.core.exprs.ExprBinary.BINOP_NEQ, left, right);
-            case BINOP_LT:
-                return new sketch.compiler.ast.core.exprs.ExprBinary((FENode) null, sketch.compiler.ast.core.exprs.ExprBinary.BINOP_LT, left, right);
-            case BINOP_LE:
-                return new sketch.compiler.ast.core.exprs.ExprBinary((FENode) null, sketch.compiler.ast.core.exprs.ExprBinary.BINOP_LE, left, right);
-            case BINOP_GT:
-                return new sketch.compiler.ast.core.exprs.ExprBinary((FENode) null, sketch.compiler.ast.core.exprs.ExprBinary.BINOP_GT, left, right);
-            case BINOP_GE:
-                return new sketch.compiler.ast.core.exprs.ExprBinary((FENode) null, sketch.compiler.ast.core.exprs.ExprBinary.BINOP_GE, left, right);
-            default:
-                throw new SketchConversionException("Unknown binary operator");
-        }
+        return constructExprBinary((Expression) e.getLeft().accept(this), (Expression) e.getRight().accept(this), e.getOp());
     }
 
     @Override
@@ -280,8 +232,137 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         return new TypeStructRef(type.toString(), false, null);
     }
 
-    public List<Statement> doRHSTerm(Expression t) {
+    @Override
+    public Object visitNonterminal(Nonterminal n) {
+        String varID = n.getID();
+        if (nonterminalToSketchType.containsKey(varID)) {
+            int cnt = generatorCxt.getOrDefault(varID, 0);
+            String varId = String.format("var_%s_%d", n.getID(), cnt);
+            generatorCxt.put(varID, cnt + 1);
+            return new ExprVar((FENode) null, varId);
+        } else
+            throw new SketchConversionException("visitVariable called for a undefined variable");
+    }
+
+    @Override
+    public Object visitRHSUnary(RHSUnary e) {
+        Expression subExpr = (Expression) e.getExpr().accept(this);
+        return constructExprUnary(subExpr, e.getOp());
+    }
+
+    private sketch.compiler.ast.core.exprs.ExprUnary constructExprUnary(Expression subExpr, ExprUnary.UnaryOp op) {
+        switch (op) {
+            case UNOP_NOT:
+                return new sketch.compiler.ast.core.exprs.ExprUnary((FENode) null, sketch.compiler.ast.core.exprs.ExprUnary.UNOP_NOT, subExpr);
+            case UNOP_BNOT:
+                return new sketch.compiler.ast.core.exprs.ExprUnary((FENode) null, sketch.compiler.ast.core.exprs.ExprUnary.UNOP_BNOT, subExpr);
+            case UNOP_NEG:
+                return new sketch.compiler.ast.core.exprs.ExprUnary((FENode) null, sketch.compiler.ast.core.exprs.ExprUnary.UNOP_NEG, subExpr);
+            default:
+                throw new SketchConversionException("Unknown unary operator");
+        }
+    }
+
+    @Override
+    public sketch.compiler.ast.core.exprs.ExprBinary visitRHSBinary(RHSBinary e) {
+        Expression left = (Expression) e.getLeft().accept(this);
+        Expression right = (Expression) e.getRight().accept(this);
+        return constructExprBinary(left, right, e.getOp());
+    }
+
+    private sketch.compiler.ast.core.exprs.ExprBinary constructExprBinary(Expression left, Expression right, ExprBinary.BinaryOp op) {
+        switch (op) {
+            // Arithmetic
+            case BINOP_ADD:
+                return new sketch.compiler.ast.core.exprs.ExprBinary((FENode) null, sketch.compiler.ast.core.exprs.ExprBinary.BINOP_ADD, left, right);
+            case BINOP_SUB:
+                return new sketch.compiler.ast.core.exprs.ExprBinary((FENode) null, sketch.compiler.ast.core.exprs.ExprBinary.BINOP_SUB, left, right);
+            case BINOP_MUL:
+                return new sketch.compiler.ast.core.exprs.ExprBinary((FENode) null, sketch.compiler.ast.core.exprs.ExprBinary.BINOP_MUL, left, right);
+            case BINOP_DIV:
+                return new sketch.compiler.ast.core.exprs.ExprBinary((FENode) null, sketch.compiler.ast.core.exprs.ExprBinary.BINOP_DIV, left, right);
+            case BINOP_MOD:
+                return new sketch.compiler.ast.core.exprs.ExprBinary((FENode) null, sketch.compiler.ast.core.exprs.ExprBinary.BINOP_MOD, left, right);
+            // Boolean
+            case BINOP_AND:
+                return new sketch.compiler.ast.core.exprs.ExprBinary((FENode) null, sketch.compiler.ast.core.exprs.ExprBinary.BINOP_AND, left, right);
+            case BINOP_OR:
+                return new sketch.compiler.ast.core.exprs.ExprBinary((FENode) null, sketch.compiler.ast.core.exprs.ExprBinary.BINOP_OR, left, right);
+            // Comparison
+            case BINOP_EQ:
+                return new sketch.compiler.ast.core.exprs.ExprBinary((FENode) null, sketch.compiler.ast.core.exprs.ExprBinary.BINOP_EQ, left, right);
+            case BINOP_NEQ:
+                return new sketch.compiler.ast.core.exprs.ExprBinary((FENode) null, sketch.compiler.ast.core.exprs.ExprBinary.BINOP_NEQ, left, right);
+            case BINOP_LT:
+                return new sketch.compiler.ast.core.exprs.ExprBinary((FENode) null, sketch.compiler.ast.core.exprs.ExprBinary.BINOP_LT, left, right);
+            case BINOP_LE:
+                return new sketch.compiler.ast.core.exprs.ExprBinary((FENode) null, sketch.compiler.ast.core.exprs.ExprBinary.BINOP_LE, left, right);
+            case BINOP_GT:
+                return new sketch.compiler.ast.core.exprs.ExprBinary((FENode) null, sketch.compiler.ast.core.exprs.ExprBinary.BINOP_GT, left, right);
+            case BINOP_GE:
+                return new sketch.compiler.ast.core.exprs.ExprBinary((FENode) null, sketch.compiler.ast.core.exprs.ExprBinary.BINOP_GE, left, right);
+            default:
+                throw new SketchConversionException("Unknown binary operator");
+        }
+    }
+
+    private sketch.compiler.ast.core.typs.Type getReturnType(String functionID) {
+        Function f = CommonResultExtractor.findFunction(impl, functionID);
+        if (f == null)
+            throw new SketchConversionException("Unknown function " + functionID);
+
+        List<Parameter> params = f.getParams();
+        return params.get(params.size() - 1).getType();
+    }
+
+    @Override
+    public Object visitRHSFuncCall(RHSFuncCall fc) {
+        ExprVar fresh = freshVar();
+        sketch.compiler.ast.core.typs.Type ty = getReturnType(fc.getFunctionID());
+
+        List<sketch.compiler.ast.core.exprs.Expression> params = fc.getArgs().stream()
+                .map(e -> (sketch.compiler.ast.core.exprs.Expression) e.accept(this))
+                .collect(Collectors.toList());
+        params.add(fresh);
+
+        stmtsToPrepend.add(new StmtVarDecl((FENode) null, ty, fresh.getName(), null));
+        stmtsToPrepend.add(new StmtExpr(new ExprFunCall((FENode) null, fc.getFunctionID(), params)));
+
+        return fresh;
+    }
+
+    @Override
+    public ExprStar visitRHSHole(RHSHole hole) {
+        return new ExprStar(prog, hole.getSize());
+    }
+
+    @Override
+    public ExprVar visitRHSVariable(RHSVariable v) {
+        String varID = v.getID();
+        if (variableToSketchType.containsKey(varID)) {
+            return new ExprVar((FENode) null, v.getID());
+        } else
+            throw new SketchConversionException("visitVariable called for a undefined variable");
+    }
+
+    @Override
+    public ExprConstInt visitRHSConstBool(RHSConstBool b) {
+        return b.getValue() ? ExprConstInt.one : ExprConstInt.zero;
+    }
+
+    @Override
+    public ExprConstInt visitRHSConstInt(RHSConstInt n) {
+        return ExprConstInt.createConstant(n.getValue());
+    }
+
+    @Override
+    public ExprNullPtr visitRHSConstNull(RHSConstNull nullptr) {
+        return ExprNullPtr.nullPtr;
+    }
+
+    public List<Statement> doRHSTerm(RHSTerm t) {
         generatorCxt = new HashMap<>();
+        stmtsToPrepend = new ArrayList<>();
         sketch.compiler.ast.core.exprs.Expression e = (sketch.compiler.ast.core.exprs.Expression) t.accept(this);
 
         List<sketch.compiler.ast.core.typs.Type> types = new ArrayList<>();
@@ -313,8 +394,9 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         }
 
         StmtVarDecl stmtVarDecl = new StmtVarDecl((FENode) null, types, names, inits);
-        StmtReturn stmtReturn = new StmtReturn((FENode) null, e);
-        StmtIfThen stmtIfThen = new StmtIfThen((FENode) null, new ExprStar(stmtReturn, 1), stmtReturn, null);
+        stmtsToPrepend.add(new StmtReturn((FENode) null, e));
+        StmtBlock consBlock = new StmtBlock(stmtsToPrepend);
+        StmtIfThen stmtIfThen = new StmtIfThen((FENode) null, new ExprStar(consBlock, 1), consBlock, null);
 
         List<Statement> stmts;
         if (!names.isEmpty()) {
@@ -328,13 +410,13 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
     @Override
     public Object visitGrammarRule(GrammarRule rule) {
-        String nonterminalID = rule.getNonterminal().getId();
+        String nonterminalID = rule.getNonterminal().getID();
         String generatorID = String.format("%s_gen", nonterminalID);
         sketch.compiler.ast.core.typs.Type returnType = nonterminalToSketchType.get(nonterminalID);
 
         maxCxt = new HashMap<>();
 
-        sketch.compiler.ast.core.Function.FunctionCreator fc = sketch.compiler.ast.core.Function.creator((FEContext) null, generatorID, sketch.compiler.ast.core.Function.FcnType.Generator);
+        sketch.compiler.ast.core.Function.FunctionCreator fc = sketch.compiler.ast.core.Function.creator((FEContext) null, generatorID, Function.FcnType.Generator);
 
         List<Statement> bodyStmts = rule.getRules().stream()
                 .flatMap(t -> doRHSTerm(t).stream())
@@ -352,8 +434,9 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
     @Override
     public sketch.compiler.ast.core.Function visitExampleRule(ExampleRule rule) {
-        String generatorID = String.format("%s_gen", rule.getType().toString());
-        sketch.compiler.ast.core.typs.Type returnType = doType(rule.getType());
+        String nonterminalID = rule.getNonterminal().getID();
+        String generatorID = String.format("%s_gen", nonterminalID);
+        sketch.compiler.ast.core.typs.Type returnType = nonterminalToSketchType.get(nonterminalID);
 
         sketch.compiler.ast.core.Function.FunctionCreator fc = sketch.compiler.ast.core.Function.creator((FEContext) null, generatorID, Function.FcnType.Generator);
         List<Statement> bodyStmts = rule.getRules().stream()
@@ -367,6 +450,11 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         fc.returnType(returnType);
         fc.body(body);
 
-        return fc.create();
+        Function f = fc.create();
+
+        if (!firstExampleGenerators.containsKey(returnType.toString()))
+            firstExampleGenerators.put(returnType.toString(), f);
+
+        return f;
     }
 }

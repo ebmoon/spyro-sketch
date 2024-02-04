@@ -1,6 +1,7 @@
-package spyro.compiler.ast.expr;
+package spyro.compiler.ast.grammar;
 
 import spyro.compiler.ast.SpyroNodeVisitor;
+import spyro.compiler.ast.expr.Expression;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,12 +12,12 @@ import java.util.stream.Collectors;
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
-public class ExprFuncCall extends Expression {
+public class RHSFuncCall extends RHSTerm {
 
     private String functionID;
-    private List<Expression> args;
+    private List<RHSTerm> args;
 
-    public ExprFuncCall(String functionID, List<Expression> args) {
+    public RHSFuncCall(String functionID, List<RHSTerm> args) {
         super();
         this.functionID = String.valueOf(functionID);
         this.args = new ArrayList<>(args);
@@ -26,17 +27,17 @@ public class ExprFuncCall extends Expression {
         return functionID;
     }
 
-    public List<Expression> getArgs() {
+    public List<RHSTerm> getArgs() {
         return args;
     }
 
     @Override
     public Object accept(SpyroNodeVisitor v) {
-        return v.visitExprFuncCall(this);
+        return v.visitRHSFuncCall(this);
     }
 
     public String toString() {
-        String argsString = args.stream().map(Expression::toString)
+        String argsString = args.stream().map(RHSTerm::toString)
                 .collect(Collectors.joining(","));
         return String.format("%s(%s)", functionID, argsString);
     }

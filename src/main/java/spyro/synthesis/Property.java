@@ -13,7 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Class for synthesized property
+ * Class for synthesized property.
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */

@@ -1,4 +1,4 @@
-package spyro.compiler.ast.expr;
+package spyro.compiler.ast.grammar;
 
 import spyro.compiler.ast.SpyroNodeVisitor;
 import spyro.compiler.ast.type.Type;
@@ -9,33 +9,20 @@ import spyro.compiler.ast.type.Type;
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
-public class Variable extends Expression {
+public class Nonterminal extends RHSTerm {
 
     private String id;
     private Type type;
-    private boolean hidden;
 
-    public Variable(Type type, String id) {
+    public Nonterminal(Type type, String id) {
         super();
         this.type = type;
         this.id = String.valueOf(id);
-        this.hidden = false;
-    }
-
-    public Variable(Type type, String id, boolean hidden) {
-        super();
-        this.type = type;
-        this.id = String.valueOf(id);
-        this.hidden = hidden;
     }
 
     @Override
     public Object accept(SpyroNodeVisitor visitor) {
-        return visitor.visitVariable(this);
-    }
-
-    public boolean isHidden() {
-        return hidden;
+        return visitor.visitNonterminal(this);
     }
 
     public String getID() {

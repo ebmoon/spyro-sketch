@@ -30,6 +30,22 @@ public class ExprUnary extends Expression {
         return expr;
     }
 
+    public static String unaryOpToString(UnaryOp op) {
+        switch (op) {
+            case UNOP_NOT:
+            case UNOP_BNOT:
+                return "!";
+            case UNOP_NEG:
+                return "~";
+            default:
+                return "UNKNOWN";
+        }
+    }
+
+    public String toString() {
+        return String.format("(%s %s)", unaryOpToString(op), expr.toString());
+    }
+
     public enum UnaryOp {
         UNOP_NOT, UNOP_BNOT, UNOP_NEG,
         // below expressions are not supported now

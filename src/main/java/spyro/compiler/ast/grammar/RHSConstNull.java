@@ -1,4 +1,4 @@
-package spyro.compiler.ast.expr;
+package spyro.compiler.ast.grammar;
 
 import spyro.compiler.ast.SpyroNodeVisitor;
 
@@ -7,15 +7,15 @@ import spyro.compiler.ast.SpyroNodeVisitor;
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
-public class ConstNull extends Constant {
+public class RHSConstNull extends RHSConstant {
 
-    public ConstNull() {
+    public RHSConstNull() {
         super();
     }
 
     @Override
     public Object accept(SpyroNodeVisitor v) {
-        return v.visitConstNull(this);
+        return v.visitRHSConstNull(this);
     }
 
     public String toString() { return "null"; }

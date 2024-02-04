@@ -64,7 +64,7 @@ public class SpyroMain extends SequentialSketchMain {
         this.options = (SpyroOptions) super.options;
 
         PlatformLocalization.getLocalization().setTempDirs();
-        if(!isDebug)
+        if (!isDebug)
             redirectStderrToNull();
     }
 

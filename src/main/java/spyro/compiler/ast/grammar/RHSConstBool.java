@@ -1,28 +1,28 @@
-package spyro.compiler.ast.expr;
+package spyro.compiler.ast.grammar;
 
 import spyro.compiler.ast.SpyroNodeVisitor;
 
 /**
- * Class for constant integer expression
+ * Class for constant Boolean expression
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
-public class ConstInt extends Constant {
+public class RHSConstBool extends RHSConstant {
 
-    private int value;
+    private boolean value;
 
-    public ConstInt(int value) {
+    public RHSConstBool(boolean value) {
         super();
         this.value = value;
     }
 
     @Override
     public Object accept(SpyroNodeVisitor v) {
-        return v.visitConstInt(this);
+        return v.visitRHSConstBool(this);
     }
 
-    public int getValue() {
-        return this.value;
+    public boolean getValue() {
+        return value;
     }
 
     public String toString() {

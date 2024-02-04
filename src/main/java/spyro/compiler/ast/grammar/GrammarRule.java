@@ -14,11 +14,11 @@ import java.util.List;
  */
 public class GrammarRule extends SpyroNode {
 
-    Variable nonterminal;
-    List<Expression> rules;
+    Nonterminal nonterminal;
+    List<RHSTerm> rules;
 
 
-    public GrammarRule(Variable nonterminal, List<Expression> rules) {
+    public GrammarRule(Nonterminal nonterminal, List<RHSTerm> rules) {
         this.nonterminal = nonterminal;
         this.rules = rules;
     }
@@ -28,11 +28,11 @@ public class GrammarRule extends SpyroNode {
         return v.visitGrammarRule(this);
     }
 
-    public Variable getNonterminal() {
+    public Nonterminal getNonterminal() {
         return nonterminal;
     }
 
-    public List<Expression> getRules() {
+    public List<RHSTerm> getRules() {
         return rules;
     }
 }
