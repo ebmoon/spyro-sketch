@@ -26,7 +26,7 @@ language {
                 | S < S + ??(1) | S <= S + ??(1)
                 | S > S + ??(1) | S >= S + ??(1)
                 | S == S + ??(1) | S != S + ??(1);
-    int S -> len(L) | 0 ;
+    int S -> 0 | len(L) ;
     list L -> l | lout ;
 }
 

@@ -31,6 +31,9 @@ public class RHSFuncCall extends RHSTerm {
         return args;
     }
 
+    public int size() {
+        return 1 + args.stream().mapToInt(RHSTerm::size).sum();
+    }
     @Override
     public Object accept(SpyroNodeVisitor v) {
         return v.visitRHSFuncCall(this);

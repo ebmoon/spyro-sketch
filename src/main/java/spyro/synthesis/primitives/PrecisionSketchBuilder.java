@@ -15,18 +15,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Class to build sketch AST for soundness query
+ * Class to build sketch AST for precision query.
+ * It works as a decorator of SYnthesisSketchBuilder
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
-public class PrecisionSketchBuilder extends SynthesisSketchBuilder {
+public class PrecisionSketchBuilder {
 
+    SynthesisSketchBuilder synth;
     Function precisionBody = null;
 
     public final static String precisionFunctionID = "precision";
 
-    public PrecisionSketchBuilder(CommonSketchBuilder commonBuilder) {
-        super(commonBuilder);
+    public PrecisionSketchBuilder(SynthesisSketchBuilder synth) {
+        this.synth = synth;
     }
 
     private Function getPrecisionBody() {
@@ -34,7 +36,7 @@ public class PrecisionSketchBuilder extends SynthesisSketchBuilder {
             Function.FunctionCreator fc = Function.creator((FEContext) null, precisionFunctionID, Function.FcnType.Harness);
 
             List<Statement> stmts = new ArrayList<>();
-            stmts.add(commonBuilder.getVariablesWithHole());
+            stmts.add(synth.commonBuilder.getVariablesWithHole());
 
             final String tempVarID = "out";
             ExprVar tempVar1 = new ExprVar((FENode) null, tempVarID + "1");
@@ -45,7 +47,7 @@ public class PrecisionSketchBuilder extends SynthesisSketchBuilder {
             stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVar1.getName(), null));
             // synthesized_property(..., out);
             stmts.add(new StmtExpr(new ExprFunCall((FENode) null, Property.phiID,
-                    commonBuilder.appendToVariableAsExprs(tempVar1)))); // obtained_property(... , out);
+                    synth.commonBuilder.appendToVariableAsExprs(tempVar1)))); // obtained_property(... , out);
             // assert out;
             stmts.add(new StmtAssert(tempVar1, false));
 
@@ -53,7 +55,7 @@ public class PrecisionSketchBuilder extends SynthesisSketchBuilder {
             stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVar2.getName(), null));
             // property_conj(..., out);
             stmts.add(new StmtExpr(new ExprFunCall((FENode) null, PropertySet.conjunctionID,
-                    commonBuilder.appendToVariableAsExprs(tempVar2))));
+                    synth.commonBuilder.appendToVariableAsExprs(tempVar2))));
             // assert out;
             stmts.add(new StmtAssert(tempVar2, false));
 
@@ -62,7 +64,7 @@ public class PrecisionSketchBuilder extends SynthesisSketchBuilder {
             stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVar3.getName(), null));
             // property(..., out);
             stmts.add(new StmtExpr(new ExprFunCall((FENode) null, Property.newPhiID,
-                    commonBuilder.appendToVariableAsExprs(tempVar3))));
+                    synth.commonBuilder.appendToVariableAsExprs(tempVar3))));
             // assert !out;
             stmts.add(new StmtAssert(new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, tempVar3), false));
 
@@ -84,16 +86,16 @@ public class PrecisionSketchBuilder extends SynthesisSketchBuilder {
 
         Program prog = Program.emptyProgram();
 
-        List<StructDef> structs = commonBuilder.getStructDefinitions();
-        List<Function> funcs = new ArrayList<Function>(commonBuilder.getFunctions());
+        List<StructDef> structs = synth.commonBuilder.getStructDefinitions();
+        List<Function> funcs = new ArrayList<Function>(synth.commonBuilder.getFunctions());
 
         funcs.addAll(pos.toSketchCode("pos"));
         funcs.addAll(neg.toSketchCode("neg"));
         funcs.add(phi.toSketchCode());
         funcs.addAll(psi.toSketchCode());
-        funcs.addAll(commonBuilder.getExampleGenerators());
-        funcs.addAll(commonBuilder.getPropertyGenerators());
-        funcs.add(getSynthesisBody());
+        funcs.addAll(synth.commonBuilder.getExampleGenerators());
+        funcs.addAll(synth.commonBuilder.getPropertyGenerators());
+        funcs.add(synth.getSynthesisBody());
         funcs.add(getPrecisionBody());
 
         funcs.forEach(func -> func.setPkg(pkgName));

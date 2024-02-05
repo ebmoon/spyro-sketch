@@ -30,6 +30,7 @@ import spyro.synthesis.primitives.*;
 import spyro.util.exceptions.OutputParseException;
 import spyro.util.exceptions.ParseException;
 
+import javax.xml.transform.Result;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -46,15 +47,18 @@ import java.util.List;
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
 public class SpyroMain extends SequentialSketchMain {
-    public static boolean isDebug = false;
+    public static boolean isDebug = true;
     public SpyroOptions options;
 
     private Program prog;
     private Query query;
     private CommonSketchBuilder commonSketchBuilder;
+    private MinimizationSketchBuilder minSketchBuilder;
     private SynthesisSketchBuilder synth;
+    private MinimizationSynthesisSketchBuilder synthMin;
     private SoundnessSketchBuilder soundness;
     private PrecisionSketchBuilder precision;
+    private PrecisionSketchBuilder precisionMin;
     private ImprovementSketchBuilder improvement;
 
     private Property truth;
@@ -155,7 +159,7 @@ public class SpyroMain extends SequentialSketchMain {
             SynthesisResult synthResult = runSketchSolver(sketchCode);
             if (synthResult.solution != null) {
                 Program substitutedCleaned = simplifySynthResult(synthResult);
-                return new SoundnessResultExtractor(substitutedCleaned).extractPositiveExample();
+                return ResultExtractor.extractPositiveExample(substitutedCleaned);
             } else {
                 return null;
             }
@@ -173,7 +177,25 @@ public class SpyroMain extends SequentialSketchMain {
             SynthesisResult synthResult = runSketchSolver(sketchCode);
             if (synthResult.solution != null) {
                 Program substitutedCleaned = simplifySynthResult(synthResult);
-                return new SynthesisResultExtractor(substitutedCleaned).extractProperty();
+                return ResultExtractor.extractProperty(substitutedCleaned);
+            } else {
+                return null;
+            }
+        } catch (SketchNotResolvedException e) {
+            return null;
+        }
+    }
+
+    public Property synthesizeMin(ExampleSet pos, ExampleSet neg) {
+        if (isDebug)
+            System.out.println("Synthesize (Minimize formula)");
+        Program sketchCode = synthMin.synthesisSketchCode(pos, neg);
+
+        try {
+            SynthesisResult synthResult = runSketchSolver(sketchCode);
+            if (synthResult.solution != null) {
+                Program substitutedCleaned = simplifySynthResult(synthResult);
+                return ResultExtractor.extractProperty(substitutedCleaned);
             } else {
                 return null;
             }
@@ -191,8 +213,29 @@ public class SpyroMain extends SequentialSketchMain {
             SynthesisResult synthResult = runSketchSolver(sketchCode);
             if (synthResult.solution != null) {
                 Program substitutedCleaned = simplifySynthResult(synthResult);
-                PrecisionResultExtractor extractor = new PrecisionResultExtractor(substitutedCleaned);
-                return new Pair(extractor.extractProperty(), extractor.extractNegativeExample());
+                return new Pair(
+                        ResultExtractor.extractProperty(substitutedCleaned),
+                        ResultExtractor.extractNegativeExamplePrecision(substitutedCleaned));
+            } else {
+                return null;
+            }
+        } catch (SketchNotResolvedException e) {
+            return null;
+        }
+    }
+
+    public Pair<Property, Example> checkPrecisionMin(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg) {
+        if (isDebug)
+            System.out.println("CheckPrecision (Minimize formula)");
+        Program sketchCode = precisionMin.precisionSketchCode(psi, phi, pos, neg);
+
+        try {
+            SynthesisResult synthResult = runSketchSolver(sketchCode);
+            if (synthResult.solution != null) {
+                Program substitutedCleaned = simplifySynthResult(synthResult);
+                return new Pair(
+                        ResultExtractor.extractProperty(substitutedCleaned),
+                        ResultExtractor.extractNegativeExamplePrecision(substitutedCleaned));
             } else {
                 return null;
             }
@@ -210,8 +253,7 @@ public class SpyroMain extends SequentialSketchMain {
             SynthesisResult synthResult = runSketchSolver(sketchCode);
             if (synthResult.solution != null) {
                 Program substitutedCleaned = simplifySynthResult(synthResult);
-                ImprovementResultExtractor extractor = new ImprovementResultExtractor(substitutedCleaned);
-                return extractor.extractNegativeExample();
+                return ResultExtractor.extractNegativeExampleImprovement(substitutedCleaned);
             } else {
                 return null;
             }
@@ -250,6 +292,36 @@ public class SpyroMain extends SequentialSketchMain {
         }
     }
 
+    public PropertySynthesisResult synthesizeMinimalProperty(PropertySet psi, Property phiInit, ExampleSet pos, ExampleSet negMust) {
+        Property phiE = phiInit;
+        Property phiLastSound = null;
+        ExampleSet neg = negMust.copy();
+
+        while (true) {
+            Example ePos = checkSoundness(phiE);
+            if (ePos != null) {
+                pos.add(ePos);
+                Property phiPrime = synthesizeMin(pos, neg);
+                if (phiPrime != null) {
+                    phiE = phiPrime;
+                } else {
+                    phiE = phiLastSound;
+                    neg = negMust.copy();
+                }
+            } else {
+                negMust = neg.copy();
+                phiLastSound = phiE;
+                Pair<Property, Example> precisionResult = checkPrecisionMin(psi, phiE, pos, neg);
+                if (precisionResult == null) {
+                    return new PropertySynthesisResult(phiE, pos, negMust);
+                } else {
+                    neg.add(precisionResult.getSecond());
+                    phiE = precisionResult.getFirst();
+                }
+            }
+        }
+    }
+
     public PropertySet synthesizeProperties(PropertySet psiInit) {
         PropertySet psi = new PropertySet(commonSketchBuilder);
         ExampleSet pos = new ExampleSet();
@@ -260,6 +332,7 @@ public class SpyroMain extends SequentialSketchMain {
         psi.addAll(psiInit.getProperties());
 
         while (true) {
+            // Find a property improves conjunction as much as possible
             result = synthesizeProperty(psi, truth, pos, new ExampleSet());
             phi = result.prop;
             pos = result.pos;
@@ -276,7 +349,13 @@ public class SpyroMain extends SequentialSketchMain {
                 }
             }
 
-            result = synthesizeProperty(new PropertySet(commonSketchBuilder), phi, pos, negMust);
+            // Synthesize a new candidate, which is minimized
+            // We can always synthesize a property here
+            // because we already have an example satisfying pos and negMust
+            phi = synthesizeMin(pos, negMust);
+
+            // Strengthen the found property to be most precise L-property
+            result = synthesizeMinimalProperty(new PropertySet(commonSketchBuilder), phi, pos, negMust);
             phi = result.prop;
             pos = result.pos;
             psi.add(phi);
@@ -292,11 +371,15 @@ public class SpyroMain extends SequentialSketchMain {
         }
 
         commonSketchBuilder = new CommonSketchBuilder(prog);
+        minSketchBuilder = new MinimizationSketchBuilder(prog);
         query.accept(commonSketchBuilder);
+        query.accept(minSketchBuilder);
 
         synth = new SynthesisSketchBuilder(commonSketchBuilder);
         soundness = new SoundnessSketchBuilder(commonSketchBuilder);
-        precision = new PrecisionSketchBuilder(commonSketchBuilder);
+        precision = new PrecisionSketchBuilder(synth);
+        synthMin = new MinimizationSynthesisSketchBuilder(minSketchBuilder);
+        precisionMin = new PrecisionSketchBuilder(synthMin);
         improvement = new ImprovementSketchBuilder(commonSketchBuilder);
 
         List<Parameter> params = commonSketchBuilder.getExtendedParams("out");
@@ -312,7 +395,7 @@ public class SpyroMain extends SequentialSketchMain {
         }
     }
 
-    static class PropertySynthesisResult {
+    private static class PropertySynthesisResult {
         Property prop;
         ExampleSet pos;
         ExampleSet negMust;

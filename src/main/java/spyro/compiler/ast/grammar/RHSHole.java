@@ -30,6 +30,8 @@ public class RHSHole extends RHSTerm {
         return this.size;
     }
 
+    public int size() { return 1; }
+
     public String toString() {
         if (size == 0) {
             return "??";

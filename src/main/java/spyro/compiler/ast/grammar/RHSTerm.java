@@ -13,4 +13,6 @@ public abstract class RHSTerm extends SpyroNode {
     }
 
     abstract public String toString();
+
+    abstract public int size();
 }

@@ -29,9 +29,9 @@ public class RHSBinary extends RHSTerm {
         return left;
     }
 
-    public RHSTerm getRight() {
-        return right;
-    }
+    public RHSTerm getRight() { return right; }
+
+    public int size() { return 1 + left.size() + right.size(); }
 
     @Override
     public Object accept(SpyroNodeVisitor v) {

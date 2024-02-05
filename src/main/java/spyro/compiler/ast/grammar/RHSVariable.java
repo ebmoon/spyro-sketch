@@ -44,6 +44,8 @@ public class RHSVariable extends RHSTerm {
         return id;
     }
 
+    public int size() { return 1; }
+
     public String toFullString() {
         return String.format("%s %s", type.toString(), id);
     }

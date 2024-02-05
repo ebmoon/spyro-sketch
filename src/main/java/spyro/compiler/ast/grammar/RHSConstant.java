@@ -12,4 +12,6 @@ public abstract class RHSConstant extends RHSTerm {
     public boolean isConstant() {
         return true;
     }
+
+    public int size() { return 1; }
 }

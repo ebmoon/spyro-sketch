@@ -25,6 +25,8 @@ public class Nonterminal extends RHSTerm {
         return visitor.visitNonterminal(this);
     }
 
+    public int size() { return 0; }
+
     public String getID() {
         return id;
     }

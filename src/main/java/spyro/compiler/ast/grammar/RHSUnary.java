@@ -33,6 +33,8 @@ public class RHSUnary extends RHSTerm {
         return expr;
     }
 
+    public int size() { return 1 + expr.size(); }
+
     public String toString() {
         return String.format("(%s %s)", ExprUnary.unaryOpToString(op), expr.toString());
     }

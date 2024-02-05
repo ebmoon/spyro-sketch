@@ -314,7 +314,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
     }
 
     private sketch.compiler.ast.core.typs.Type getReturnType(String functionID) {
-        Function f = CommonResultExtractor.findFunction(impl, functionID);
+        Function f = ResultExtractor.findFunction(impl, functionID);
         if (f == null)
             throw new SketchConversionException("Unknown function " + functionID);
 
@@ -384,7 +384,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
             if (numPrevNonterminals >= value)
                 continue;
 
-            maxCxt.put(key, value);     // This value is new maxmmum
+            maxCxt.put(key, value);     // This value is new maximum
 
             for (int i = numPrevNonterminals; i < value; i++) {
                 String varID = String.format("var_%s_%d", key, i);
