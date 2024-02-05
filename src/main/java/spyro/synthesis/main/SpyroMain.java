@@ -46,7 +46,7 @@ import java.util.List;
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
 public class SpyroMain extends SequentialSketchMain {
-    public static boolean isDebug = true;
+    public static boolean isDebug = false;
     public SpyroOptions options;
 
     private Program prog;

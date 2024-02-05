@@ -20,6 +20,7 @@ signatures {
 // ??(n) denotes arbitrary positive integer of n bits
 // Provide only input arguments to function call
 language {
+    boolean B -> true | AP | AP || AP | AP || AP || AP;
     boolean AP -> is_empty(L) | !is_empty(L) 
                 | equal_list(L, L) | !equal_list(L, L)
                 | S < S + ??(1) | S <= S + ??(1)
