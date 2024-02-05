@@ -33,6 +33,7 @@ public interface SpyroNodeVisitor {
     public Object visitRHSFuncCall(RHSFuncCall fc);
     public Object visitRHSHole(RHSHole hole);
     public Object visitRHSVariable(RHSVariable v);
+    public Object visitRHSAnonFunc(RHSLambda lam);
     public Object visitRHSConstBool(RHSConstBool b);
     public Object visitRHSConstInt(RHSConstInt n);
     public Object visitRHSConstNull(RHSConstNull nullptr);

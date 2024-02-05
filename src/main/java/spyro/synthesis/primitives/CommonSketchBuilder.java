@@ -41,6 +41,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
     List<Function> propertyGenerators;
     List<Function> exampleGenerators;
 
+    Set<String> variableSet;
     Map<String, sketch.compiler.ast.core.typs.Type> variableToSketchType;
     Map<String, sketch.compiler.ast.core.typs.Type> nonterminalToSketchType;
     Map<String, Function> firstExampleGenerators;
@@ -136,6 +137,9 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         cnt = 0;
 
         variables = q.getVariables();
+        variableSet = variables.stream()
+                .map(Variable::getID)
+                .collect(Collectors.toSet());
         variableAsExprs = variables.stream()
                 .map(decl -> new ExprVar((FENode) null, decl.getID()))
                 .collect(Collectors.toList());
@@ -346,10 +350,24 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
     @Override
     public ExprVar visitRHSVariable(RHSVariable v) {
         String varID = v.getID();
-        if (variableToSketchType.containsKey(varID)) {
+        if (variableSet.contains(varID)) {
             return new ExprVar((FENode) null, v.getID());
         } else
             throw new SketchConversionException("visitVariable called for a undefined variable");
+    }
+
+    @Override
+    public ExprLambda visitRHSAnonFunc(RHSLambda lam) {
+        List<ExprVar> params = new ArrayList<>();
+        params.add(new ExprVar((FENode) null, lam.getParam()));
+
+        Set<String> backup = new HashSet<>(variableSet);
+        variableSet.add(lam.getParam());
+        sketch.compiler.ast.core.exprs.Expression body =
+                (sketch.compiler.ast.core.exprs.Expression) lam.getBody().accept(this);
+        variableSet = backup;
+
+        return new ExprLambda((FENode) null, params, body);
     }
 
     @Override

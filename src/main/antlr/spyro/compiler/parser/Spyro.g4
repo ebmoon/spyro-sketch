@@ -34,7 +34,8 @@ declAssumption : expr SEMI ;
 type : ID;
 
 expr
- : LPAREN expr RPAREN						#parenExpr
+ : LPAREN ID RPAREN ARROW expr              #anonFuncExpr
+ | LPAREN expr RPAREN						#parenExpr
  | ID LPAREN (expr (',' expr)*)? RPAREN		#functionExpr
  | MINUS expr                           	#unaryMinusExpr
  | NOT expr                             	#notExpr

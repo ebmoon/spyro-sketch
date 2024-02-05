@@ -12,17 +12,14 @@ import spyro.compiler.ast.type.Type;
  */
 public class RHSVariable extends RHSTerm {
 
-    private String id;
-    private Type type;
+    private final String id;
 
-    public RHSVariable(Type type, String id) {
+    public RHSVariable(String id) {
         super();
-        this.type = type;
         this.id = String.valueOf(id);
     }
 
     public RHSVariable(Variable v) {
-        this.type = v.getType();
         this.id = v.getID();
     }
 
@@ -36,17 +33,9 @@ public class RHSVariable extends RHSTerm {
         return id;
     }
 
-    public Type getType() {
-        return type;
-    }
-
     public String toString() {
         return id;
     }
 
     public int size() { return 1; }
-
-    public String toFullString() {
-        return String.format("%s %s", type.toString(), id);
-    }
 }

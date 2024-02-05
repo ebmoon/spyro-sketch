@@ -22,7 +22,8 @@ import java.util.stream.Collectors;
  */
 public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
 
-    Map<String, Variable> varContext;
+    Map<String, Variable> varContextWithType;
+    Map<String, RHSVariable> varContext;
     Map<String, Nonterminal> nonterminalContext;
 
     @Override
@@ -37,8 +38,10 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
                 .collect(Collectors.toList());
 
         // id -> Variable map
-        varContext = variables.stream()
+        varContextWithType = variables.stream()
                 .collect(Collectors.toMap(Variable::getID, Function.identity()));
+        varContext = variables.stream()
+                .collect(Collectors.toMap(Variable::getID, RHSVariable::new));
 
         List<ExprFuncCall> signatures = ctx.declSignatures().declSig().stream()
                 .map(this::visitDeclSig)
@@ -94,7 +97,7 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
         List<Expression> args = ctx.expr().stream()
                 .map(exprCtx -> ((SpyroParser.AtomExprContext) exprCtx).atom())
                 .map(atomCtx -> ((SpyroParser.IdAtomContext) atomCtx).ID().getText())
-                .map(varID -> varContext.get(varID))
+                .map(varID -> varContextWithType.get(varID))
                 .collect(Collectors.toList());
 
         return new ExprFuncCall(id, args);
@@ -133,6 +136,8 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
             return visitOrExpr((SpyroParser.OrExprContext) ctx);
         else if (ctx instanceof SpyroParser.AtomExprContext)
             return visitAtom(((SpyroParser.AtomExprContext) ctx).atom());
+        else if (ctx instanceof SpyroParser.AnonFuncExprContext)
+            return visitAnonFuncExpr((SpyroParser.AnonFuncExprContext) ctx);
         else
             throw new ParseException("Unknown expression case");
     }
@@ -190,12 +195,23 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
     public RHSTerm visitIdAtom(SpyroParser.IdAtomContext ctx) {
         String id = ctx.ID().getText();
         if (varContext.containsKey(id)) {
-            return new RHSVariable(varContext.get(id));
+            return varContext.get(id);
         } else if (nonterminalContext.containsKey(id)) {
             return nonterminalContext.get(id);
         } else {
             throw new ParseException("Unknown variable " + id);
         }
+    }
+
+    @Override
+    public RHSTerm visitAnonFuncExpr(SpyroParser.AnonFuncExprContext ctx) {
+        String id = ctx.ID().getText();
+
+        varContext.put(id, new RHSVariable(id));
+        RHSTerm expr = visitExpression(ctx.expr());
+        varContext.remove(id);
+
+        return new RHSLambda(id, expr);
     }
 
     @Override

@@ -11,6 +11,11 @@ import spyro.compiler.ast.grammar.RHSTerm;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Subclass of CommonSketchBuilder that constructs formula-minimizing-generators
+ *
+ * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
+ */
 public class MinimizationSketchBuilder extends CommonSketchBuilder {
 
     public final static String sizeVarID = "formula_size";

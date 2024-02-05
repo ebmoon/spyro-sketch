@@ -148,6 +148,13 @@ public interface SpyroVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitRelationalExpr(SpyroParser.RelationalExprContext ctx);
 	/**
+	 * Visit a parse tree produced by the {@code anonFuncExpr}
+	 * labeled alternative in {@link SpyroParser#expr}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitAnonFuncExpr(SpyroParser.AnonFuncExprContext ctx);
+	/**
 	 * Visit a parse tree produced by the {@code parenExpr}
 	 * labeled alternative in {@link SpyroParser#expr}.
 	 * @param ctx the parse tree
