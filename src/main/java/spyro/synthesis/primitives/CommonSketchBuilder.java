@@ -1,8 +1,8 @@
 package spyro.synthesis.primitives;
 
 import sketch.compiler.ast.core.*;
-import sketch.compiler.ast.core.exprs.*;
 import sketch.compiler.ast.core.exprs.Expression;
+import sketch.compiler.ast.core.exprs.*;
 import sketch.compiler.ast.core.stmts.*;
 import sketch.compiler.ast.core.typs.StructDef;
 import sketch.compiler.ast.core.typs.TypeStructRef;
@@ -78,8 +78,14 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         return exampleGenerators;
     }
 
-    public List<sketch.compiler.ast.core.exprs.Expression> getVariableAsExprs() { return variableAsExprs; }
-    public List<Parameter> getVariableAsParams() { return variableAsParams; }
+    public List<sketch.compiler.ast.core.exprs.Expression> getVariableAsExprs() {
+        return variableAsExprs;
+    }
+
+    public List<Parameter> getVariableAsParams() {
+        return variableAsParams;
+    }
+
     public List<Parameter> getExtendedParams(String outputVarID) {
         Parameter outputParam = new Parameter((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, outputVarID, Parameter.REF);
         List<Parameter> extendedParams = new ArrayList<>(variableAsParams);
@@ -360,7 +366,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         return ExprNullPtr.nullPtr;
     }
 
-    public List<Statement> doRHSTerm(RHSTerm t) {
+    public List<Statement> doRHSTerm(RHSTerm t, RHSTermType termType) {
         generatorCxt = new HashMap<>();
         stmtsToPrepend = new ArrayList<>();
         sketch.compiler.ast.core.exprs.Expression e = (sketch.compiler.ast.core.exprs.Expression) t.accept(this);
@@ -383,9 +389,14 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
                 String varID = String.format("var_%s_%d", key, i);
                 String funID = String.format("%s_gen", key);
 
-                List<sketch.compiler.ast.core.exprs.Expression> paramVars = variableAsParams.stream()
-                        .map(param -> new ExprVar((FENode) null, param.getName()))
-                        .collect(Collectors.toList());
+                List<sketch.compiler.ast.core.exprs.Expression> paramVars;
+                if (termType == RHSTermType.RHS_GRAMMAR)
+                    paramVars = variableAsParams.stream()
+                            .map(param -> new ExprVar((FENode) null, param.getName()))
+                            .collect(Collectors.toList());
+                else
+                    paramVars = new ArrayList<>();
+
 
                 names.add(varID);
                 types.add(nonterminalToSketchType.get(key));
@@ -419,7 +430,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         sketch.compiler.ast.core.Function.FunctionCreator fc = sketch.compiler.ast.core.Function.creator((FEContext) null, generatorID, Function.FcnType.Generator);
 
         List<Statement> bodyStmts = rule.getRules().stream()
-                .flatMap(t -> doRHSTerm(t).stream())
+                .flatMap(t -> doRHSTerm(t, RHSTermType.RHS_GRAMMAR).stream())
                 .collect(Collectors.toList());
         // One of production rule must be chosen
         bodyStmts.add(new StmtAssert((FENode) null, new ExprConstInt(0), 0));
@@ -440,7 +451,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
         sketch.compiler.ast.core.Function.FunctionCreator fc = sketch.compiler.ast.core.Function.creator((FEContext) null, generatorID, Function.FcnType.Generator);
         List<Statement> bodyStmts = rule.getRules().stream()
-                .flatMap(t -> doRHSTerm(t).stream())
+                .flatMap(t -> doRHSTerm(t, RHSTermType.RHS_EXAMPLE).stream())
                 .collect(Collectors.toList());
         // One of production rule must be chosen
         bodyStmts.add(new StmtAssert((FENode) null, new ExprConstInt(0), 0));
@@ -456,5 +467,9 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
             firstExampleGenerators.put(returnType.toString(), f);
 
         return f;
+    }
+
+    public enum RHSTermType {
+        RHS_EXAMPLE, RHS_GRAMMAR
     }
 }
