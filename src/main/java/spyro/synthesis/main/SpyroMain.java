@@ -58,14 +58,13 @@ public class SpyroMain extends SequentialSketchMain {
     private ImprovementSketchBuilder improvement;
 
     private Property truth;
+    final private PrintStream oldErr = System.err;
 
     public SpyroMain(String[] args) {
         super(new SpyroOptions(args));
         this.options = (SpyroOptions) super.options;
 
         PlatformLocalization.getLocalization().setTempDirs();
-        if (!isDebug)
-            redirectStderrToNull();
     }
 
     void redirectStderrToNull() {
@@ -75,6 +74,10 @@ public class SpyroMain extends SequentialSketchMain {
                 // DO NOTHING
             }
         }));
+    }
+
+    void restoreStderr() {
+        System.setErr(oldErr);
     }
 
     public static void main(String[] args) {
@@ -126,8 +129,13 @@ public class SpyroMain extends SequentialSketchMain {
     }
 
     private SynthesisResult runSketchSolver(Program prog) {
+        if (!isDebug)
+            redirectStderrToNull();
         prog = preprocAndSemanticCheck(prog);
-        return partialEvalAndSolve(prog);
+        SynthesisResult result = partialEvalAndSolve(prog);
+        if (!isDebug)
+            restoreStderr();
+        return result;
     }
 
     private Program simplifySynthResult(SynthesisResult synthResult) {
