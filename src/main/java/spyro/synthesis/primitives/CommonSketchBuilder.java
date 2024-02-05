@@ -29,6 +29,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
     Program prog;
     Program impl;
+    public final static String pkgName = "Spyro";
 
     List<Variable> variables;
     List<Parameter> variableAsParams;

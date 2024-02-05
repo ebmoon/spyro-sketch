@@ -251,7 +251,6 @@ public class SpyroMain extends SequentialSketchMain {
 
         psi.addAll(psiInit.getProperties());
 
-        // TODO Implement Loop
         while (true) {
             result = synthesizeProperty(psi, truth, pos, new ExampleSet());
             phi = result.prop;

@@ -77,7 +77,7 @@ public class PrecisionSketchBuilder extends SynthesisSketchBuilder {
     }
 
     public Program precisionSketchCode(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg) {
-        final String pkgName = "CheckPrecision";
+        final String pkgName = CommonSketchBuilder.pkgName;
         List<ExprVar> vars = new ArrayList<ExprVar>();
         List<StmtSpAssert> specialAsserts = new ArrayList<StmtSpAssert>();
         List<Package> namespaces = new ArrayList<Package>();
@@ -97,6 +97,7 @@ public class PrecisionSketchBuilder extends SynthesisSketchBuilder {
         funcs.add(getPrecisionBody());
 
         funcs.forEach(func -> func.setPkg(pkgName));
+        structs.forEach(struct -> struct.setPkg(pkgName));
 
         Package pkg = new Package((FENode) null, pkgName, structs, vars, funcs, specialAsserts);
         namespaces.add(pkg);

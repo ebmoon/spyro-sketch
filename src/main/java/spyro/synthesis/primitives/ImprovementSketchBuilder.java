@@ -65,7 +65,7 @@ public class ImprovementSketchBuilder {
     }
 
     public Program improvementSketchCode(PropertySet psi, Property phi) {
-        final String pkgName = "CheckImprovement";
+        final String pkgName = CommonSketchBuilder.pkgName;
         List<ExprVar> vars = new ArrayList<ExprVar>();
         List<StmtSpAssert> specialAsserts = new ArrayList<StmtSpAssert>();
         List<sketch.compiler.ast.core.Package> namespaces = new ArrayList<sketch.compiler.ast.core.Package>();
@@ -81,6 +81,7 @@ public class ImprovementSketchBuilder {
         funcs.add(getImprovementBody());
 
         funcs.forEach(func -> func.setPkg(pkgName));
+        structs.forEach(struct -> struct.setPkg(pkgName));
 
         sketch.compiler.ast.core.Package pkg = new Package((FENode) null, pkgName, structs, vars, funcs, specialAsserts);
         namespaces.add(pkg);

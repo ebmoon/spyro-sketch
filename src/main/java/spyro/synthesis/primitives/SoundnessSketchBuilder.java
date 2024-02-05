@@ -58,7 +58,7 @@ public class SoundnessSketchBuilder {
     }
 
     public Program soundnessSketchCode(Property phi) {
-        final String pkgName = "CheckSoundness";
+        final String pkgName = CommonSketchBuilder.pkgName;
         List<ExprVar> vars = new ArrayList<ExprVar>();
         List<StmtSpAssert> specialAsserts = new ArrayList<StmtSpAssert>();
         List<Package> namespaces = new ArrayList<Package>();
@@ -73,6 +73,7 @@ public class SoundnessSketchBuilder {
         funcs.add(this.getSoundnessBody());
 
         funcs.forEach(func -> func.setPkg(pkgName));
+        structs.forEach(struct -> struct.setPkg(pkgName));
 
         Package pkg = new Package((FENode) null, pkgName, structs, vars, funcs, specialAsserts);
         namespaces.add(pkg);

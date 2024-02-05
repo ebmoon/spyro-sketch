@@ -22,7 +22,9 @@ signatures {
 language {
     boolean AP -> is_empty(L) | !is_empty(L) 
                 | equal_list(L, L) | !equal_list(L, L)
-                | compare(S, S + ??(1));            
+                | S < S + ??(1) | S <= S + ??(1)
+                | S > S + ??(1) | S >= S + ??(1)
+                | S == S + ??(1) | S != S + ??(1);
     int S -> len(L) | 0 ;
     list L -> l | lout ;
 }
@@ -31,7 +33,7 @@ language {
 // Provide only input arguments to function call
 // integer is chosen from arbitrary positive or negative 3-bits integer
 examples {
-    int -> ??(3) | -1 * ??(3) ;
-    list -> nil() | cons(int, list);
+    int IEX -> ??(3) | -1 * ??(3) ;
+    list LEX -> nil() | cons(IEX, LEX);
 }
 

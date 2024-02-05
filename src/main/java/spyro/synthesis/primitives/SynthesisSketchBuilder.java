@@ -30,7 +30,7 @@ public class SynthesisSketchBuilder {
 
     Function getSynthesisBody() {
         if (synthesisBody == null) {
-            Function.FunctionCreator fc = Function.creator((FEContext) null, Property.newPhiID, Function.FcnType.Harness);
+            Function.FunctionCreator fc = Function.creator((FEContext) null, Property.newPhiID, Function.FcnType.Static);
 
             List<Statement> stmts = new ArrayList<>();
 
@@ -53,7 +53,7 @@ public class SynthesisSketchBuilder {
     }
 
     public Program synthesisSketchCode(ExampleSet pos, ExampleSet neg) {
-        String pkgName = "Synthesis";
+        String pkgName = CommonSketchBuilder.pkgName;
         List<ExprVar> vars = new ArrayList<ExprVar>();
         List<StmtSpAssert> specialAsserts = new ArrayList<StmtSpAssert>();
         List<Package> namespaces = new ArrayList<Package>();
@@ -68,6 +68,7 @@ public class SynthesisSketchBuilder {
         funcs.add(getSynthesisBody());
 
         funcs.forEach(func -> func.setPkg(pkgName));
+        structs.forEach(struct -> struct.setPkg(pkgName));
 
         Package pkg = new Package((FENode) null, pkgName, structs, vars, funcs, specialAsserts);
         namespaces.add(pkg);
