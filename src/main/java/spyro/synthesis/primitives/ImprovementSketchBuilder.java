@@ -14,6 +14,7 @@ import spyro.synthesis.Property;
 import spyro.synthesis.PropertySet;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class ImprovementSketchBuilder {
@@ -64,7 +65,7 @@ public class ImprovementSketchBuilder {
         return improvementBody;
     }
 
-    public Program improvementSketchCode(PropertySet psi, Property phi) {
+    public Program improvementSketchCode(PropertySet psi, Property phi, Collection<Function> lambdaFunctions) {
         final String pkgName = CommonSketchBuilder.pkgName;
         List<ExprVar> vars = new ArrayList<ExprVar>();
         List<StmtSpAssert> specialAsserts = new ArrayList<StmtSpAssert>();
@@ -79,6 +80,7 @@ public class ImprovementSketchBuilder {
         funcs.addAll(psi.toSketchCode());
         funcs.add(phi.toSketchCode());
         funcs.add(getImprovementBody());
+        funcs.addAll(lambdaFunctions);
 
         funcs.forEach(func -> func.setPkg(pkgName));
         structs.forEach(struct -> struct.setPkg(pkgName));

@@ -12,6 +12,7 @@ import spyro.synthesis.Property;
 import spyro.synthesis.PropertySet;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -78,7 +79,7 @@ public class PrecisionSketchBuilder {
         return precisionBody;
     }
 
-    public Program precisionSketchCode(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg) {
+    public Program precisionSketchCode(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg, Collection<Function> lambdaFunctions) {
         final String pkgName = CommonSketchBuilder.pkgName;
         List<ExprVar> vars = new ArrayList<ExprVar>();
         List<StmtSpAssert> specialAsserts = new ArrayList<StmtSpAssert>();
@@ -97,6 +98,7 @@ public class PrecisionSketchBuilder {
         funcs.addAll(synth.commonBuilder.getPropertyGenerators());
         funcs.add(synth.getSynthesisBody());
         funcs.add(getPrecisionBody());
+        funcs.addAll(lambdaFunctions);
 
         funcs.forEach(func -> func.setPkg(pkgName));
         structs.forEach(struct -> struct.setPkg(pkgName));

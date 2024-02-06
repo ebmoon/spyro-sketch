@@ -14,6 +14,8 @@ import spyro.synthesis.Property;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ResultExtractor {
 
@@ -112,5 +114,11 @@ public class ResultExtractor {
         negExBody.add(new StmtAssert(body, new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, tempVar), false));
 
         return new Example(new StmtBlock(negExBody));
+    }
+
+    public static Map<String, Function> extractLambdaFunctions(Program result) {
+        return result.getPackages().get(0).getFuncs().stream()
+                .filter(f -> f.getName().contains("lam"))
+                .collect(Collectors.toMap(Function::getName, f -> f));
     }
 }

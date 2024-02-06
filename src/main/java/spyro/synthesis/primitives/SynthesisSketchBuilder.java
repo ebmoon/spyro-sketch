@@ -12,6 +12,7 @@ import spyro.synthesis.Property;
 import spyro.synthesis.PropertySet;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -54,7 +55,7 @@ public class SynthesisSketchBuilder {
         return synthesisBody;
     }
 
-    public Program synthesisSketchCode(ExampleSet pos, ExampleSet neg) {
+    public Program synthesisSketchCode(ExampleSet pos, ExampleSet neg, Collection<Function> lambdaFunctions) {
         String pkgName = CommonSketchBuilder.pkgName;
         List<ExprVar> vars = new ArrayList<ExprVar>();
         List<StmtSpAssert> specialAsserts = new ArrayList<StmtSpAssert>();
@@ -68,6 +69,7 @@ public class SynthesisSketchBuilder {
         funcs.addAll(neg.toSketchCode("neg"));
         funcs.addAll(commonBuilder.getPropertyGenerators());
         funcs.add(getSynthesisBody());
+        funcs.addAll(lambdaFunctions);
 
         funcs.forEach(func -> func.setPkg(pkgName));
         structs.forEach(struct -> struct.setPkg(pkgName));

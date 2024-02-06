@@ -10,6 +10,7 @@ import sketch.compiler.ast.core.typs.StructDef;
 import spyro.synthesis.Property;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -57,7 +58,7 @@ public class SoundnessSketchBuilder {
         return soundnessBody;
     }
 
-    public Program soundnessSketchCode(Property phi) {
+    public Program soundnessSketchCode(Property phi, Collection<Function> lambdaFunctions) {
         final String pkgName = CommonSketchBuilder.pkgName;
         List<ExprVar> vars = new ArrayList<ExprVar>();
         List<StmtSpAssert> specialAsserts = new ArrayList<StmtSpAssert>();
@@ -71,6 +72,7 @@ public class SoundnessSketchBuilder {
         funcs.add(phi.toSketchCode());
         funcs.addAll(commonBuilder.getExampleGenerators());
         funcs.add(this.getSoundnessBody());
+        funcs.addAll(lambdaFunctions);
 
         funcs.forEach(func -> func.setPkg(pkgName));
         structs.forEach(struct -> struct.setPkg(pkgName));
