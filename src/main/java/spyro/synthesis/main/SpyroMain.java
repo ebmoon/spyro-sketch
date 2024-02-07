@@ -47,6 +47,8 @@ import java.util.Map;
  */
 public class SpyroMain extends SequentialSketchMain {
     public static boolean isDebug = true;
+
+    public static boolean isVerbose = true;
     public SpyroOptions options;
 
     private Program prog;
@@ -143,16 +145,10 @@ public class SpyroMain extends SequentialSketchMain {
     private SynthesisResult runSketchSolver(Program prog) {
         if (!isDebug)
             redirectStderrToNull();
-        if (isDebug) {
-            File path = new File(getNewTempFilePath());
-            prog.debugDump(path);
-        }
         prog = preprocAndSemanticCheck(prog);
         SynthesisResult result = partialEvalAndSolve(prog);
         if (!isDebug)
             restoreStderr();
-
-        innerIterator++;
         return result;
     }
 
@@ -166,9 +162,13 @@ public class SpyroMain extends SequentialSketchMain {
 
     public Example checkSoundness(Property phi) {
         if (isDebug)
-            System.out.println("CheckSoundness");
+            System.out.printf("CheckSoundness- %d - %d\n",outerIterator,innerIterator);
         Program sketchCode = soundness.soundnessSketchCode(phi, lambdaFunctions.values());
-
+        if (isVerbose) {
+            File path = new File(getNewTempFilePath());
+            sketchCode.debugDump(path);
+        }
+        innerIterator++;
         try {
             SynthesisResult synthResult = runSketchSolver(sketchCode);
             if (synthResult.solution != null) {
@@ -184,8 +184,15 @@ public class SpyroMain extends SequentialSketchMain {
 
     public Property synthesize(ExampleSet pos, ExampleSet neg) {
         if (isDebug)
-            System.out.println("Synthesize");
+            System.out.printf("Synthesize - %d - %d\n",outerIterator,innerIterator);
+
         Program sketchCode = synth.synthesisSketchCode(pos, neg, lambdaFunctions.values());
+
+        if (isVerbose) {
+            File path = new File(getNewTempFilePath());
+            sketchCode.debugDump(path);
+        }
+        innerIterator++;
 
         try {
             SynthesisResult synthResult = runSketchSolver(sketchCode);
@@ -199,13 +206,20 @@ public class SpyroMain extends SequentialSketchMain {
         } catch (SketchNotResolvedException e) {
             return null;
         }
+
+
     }
 
     public Property synthesizeMin(ExampleSet pos, ExampleSet neg) {
         if (isDebug)
-            System.out.println("Synthesize (Minimize formula)");
+            System.out.printf("Synthesize (Minimize formula) - %d - %d\n",outerIterator,innerIterator);
         Program sketchCode = synthMin.synthesisSketchCode(pos, neg, lambdaFunctions.values());
 
+        if (isVerbose) {
+            File path = new File(getNewTempFilePath());
+            sketchCode.debugDump(path);
+        }
+        innerIterator ++;
         try {
             SynthesisResult synthResult = runSketchSolver(sketchCode);
             if (synthResult.solution != null) {
@@ -218,13 +232,20 @@ public class SpyroMain extends SequentialSketchMain {
         } catch (SketchNotResolvedException e) {
             return null;
         }
+
+
     }
 
     public Pair<Property, Example> checkPrecision(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg) {
         if (isDebug)
-            System.out.println("CheckPrecision");
+            System.out.printf("CheckPrecision - %d - %d\n",outerIterator,innerIterator);
         Program sketchCode = precision.precisionSketchCode(psi, phi, pos, neg, lambdaFunctions.values());
 
+        if (isVerbose) {
+            File path = new File(getNewTempFilePath());
+            sketchCode.debugDump(path);
+        }
+        innerIterator++;
         try {
             SynthesisResult synthResult = runSketchSolver(sketchCode);
             if (synthResult.solution != null) {
@@ -239,13 +260,18 @@ public class SpyroMain extends SequentialSketchMain {
         } catch (SketchNotResolvedException e) {
             return null;
         }
+
     }
 
     public Pair<Property, Example> checkPrecisionMin(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg) {
         if (isDebug)
-            System.out.println("CheckPrecision (Minimize formula)");
+            System.out.printf("CheckPrecision (Minimize formula) - %d - %d\n",outerIterator,innerIterator);
         Program sketchCode = precisionMin.precisionSketchCode(psi, phi, pos, neg, lambdaFunctions.values());
-
+        if (isVerbose) {
+            File path = new File(getNewTempFilePath());
+            sketchCode.debugDump(path);
+        }
+        innerIterator++;
         try {
             SynthesisResult synthResult = runSketchSolver(sketchCode);
             if (synthResult.solution != null) {
@@ -260,13 +286,18 @@ public class SpyroMain extends SequentialSketchMain {
         } catch (SketchNotResolvedException e) {
             return null;
         }
+
     }
 
     public Example checkImprovement(PropertySet psi, Property phi) {
         if (isDebug)
-            System.out.println("CheckImprovement");
+            System.out.printf("CheckImprovement - %d - %d\n",outerIterator,innerIterator);
         Program sketchCode = improvement.improvementSketchCode(psi, phi, lambdaFunctions.values());
-
+        if (isVerbose) {
+            File path = new File(getNewTempFilePath());
+            sketchCode.debugDump(path);
+        }
+        innerIterator++;
         try {
             SynthesisResult synthResult = runSketchSolver(sketchCode);
             if (synthResult.solution != null) {
@@ -278,6 +309,7 @@ public class SpyroMain extends SequentialSketchMain {
         } catch (SketchNotResolvedException e) {
             return null;
         }
+
     }
 
     public PropertySynthesisResult synthesizeProperty(PropertySet psi, Property phiInit, ExampleSet pos, ExampleSet negMust) {
