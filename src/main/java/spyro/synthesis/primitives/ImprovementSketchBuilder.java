@@ -42,7 +42,7 @@ public class ImprovementSketchBuilder {
             stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVar1.getName(), null));
             // synthesized_property(..., out);
             stmts.add(new StmtExpr(new ExprFunCall((FENode) null, Property.phiID,
-                    commonBuilder.appendToVariableAsExprs(tempVar1)))); // obtained_property(... , out);
+                    commonBuilder.appendToVariableAsExprs(tempVar1, false)))); // obtained_property(... , out);
             // assert !out;
             stmts.add(new StmtAssert(new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, tempVar1), false));
 
@@ -50,7 +50,7 @@ public class ImprovementSketchBuilder {
             stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVar2.getName(), null));
             // property_conj(..., out);
             stmts.add(new StmtExpr(new ExprFunCall((FENode) null, PropertySet.conjunctionID,
-                    commonBuilder.appendToVariableAsExprs(tempVar2))));
+                    commonBuilder.appendToVariableAsExprs(tempVar2, false))));
             // assert out;
             stmts.add(new StmtAssert(tempVar2, false));
 

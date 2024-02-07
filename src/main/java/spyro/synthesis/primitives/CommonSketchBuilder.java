@@ -35,6 +35,10 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
     List<Parameter> variableAsParams;
     List<sketch.compiler.ast.core.exprs.Expression> variableAsExprs;
 
+    List<Parameter> visibleVariableAsParams;
+    List<sketch.compiler.ast.core.exprs.Expression> visibleVariableAsExprs;
+
+
     List<ExprFunCall> signatures;
     List<Statement> signatureAsStmts;
 
@@ -80,24 +84,25 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         return exampleGenerators;
     }
 
-    public List<sketch.compiler.ast.core.exprs.Expression> getVariableAsExprs() {
-        return variableAsExprs;
+    public List<sketch.compiler.ast.core.exprs.Expression> getVariableAsExprs(boolean withHidden) {
+        return withHidden ? variableAsExprs : visibleVariableAsExprs;
     }
+
 
     public List<Parameter> getVariableAsParams() {
         return variableAsParams;
     }
 
-    public List<Parameter> getExtendedParams(String outputVarID) {
+    public List<Parameter> getExtendedParams(String outputVarID, boolean withHidden) {
         Parameter outputParam = new Parameter((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, outputVarID, Parameter.REF);
-        List<Parameter> extendedParams = new ArrayList<>(variableAsParams);
+        List<Parameter> extendedParams = new ArrayList<>(withHidden ? variableAsParams : visibleVariableAsParams);
         extendedParams.add(outputParam);
 
         return extendedParams;
     }
 
-    public List<sketch.compiler.ast.core.exprs.Expression> appendToVariableAsExprs(ExprVar v) {
-        List<sketch.compiler.ast.core.exprs.Expression> ret = new ArrayList<>(variableAsExprs);
+    public List<sketch.compiler.ast.core.exprs.Expression> appendToVariableAsExprs(ExprVar v, boolean withHidden) {
+        List<sketch.compiler.ast.core.exprs.Expression> ret = new ArrayList<>(withHidden ? variableAsExprs : visibleVariableAsExprs);
         ret.add(v);
         return ret;
     }
@@ -148,6 +153,16 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
                 .collect(Collectors.toList());
         variableToSketchType = variables.stream()
                 .collect(Collectors.toMap(Variable::getID, decl -> doType(decl.getType())));
+
+        visibleVariableAsExprs = variables.stream()
+                .filter(decl -> !decl.isHidden())
+                .map(decl -> new ExprVar((FENode) null, decl.getID()))
+                .collect(Collectors.toList());
+        visibleVariableAsParams = variables.stream()
+                .filter(decl -> !decl.isHidden())
+                .map(this::variableToParam)
+                .collect(Collectors.toList());
+
 
         signatures = q.getSignatures().stream()
                 .map(sig -> (ExprFunCall) sig.accept(this))
@@ -410,7 +425,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
                 List<sketch.compiler.ast.core.exprs.Expression> paramVars;
                 if (termType == RHSTermType.RHS_GRAMMAR)
-                    paramVars = variableAsParams.stream()
+                    paramVars = visibleVariableAsParams.stream()
                             .map(param -> new ExprVar((FENode) null, param.getName()))
                             .collect(Collectors.toList());
                 else
@@ -455,7 +470,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         bodyStmts.add(new StmtAssert((FENode) null, new ExprConstInt(0), 0));
         Statement body = new StmtBlock((FENode) null, bodyStmts);
 
-        fc.params(variableAsParams);
+        fc.params(visibleVariableAsParams);
         fc.returnType(returnType);
         fc.body(body);
 

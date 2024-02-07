@@ -38,11 +38,11 @@ public class SynthesisSketchBuilder {
             List<Statement> stmts = new ArrayList<>();
 
             final String tempVarID = "out";
-            List<Parameter> params = commonBuilder.getExtendedParams(tempVarID);
+            List<Parameter> params = commonBuilder.getExtendedParams(tempVarID, false);
             ExprVar tempVar = new ExprVar((FENode) null, tempVarID);
             String generatorFunctionName = commonBuilder.getPropertyGenerators().get(0).getName();
 
-            ExprFunCall generatorCall = new ExprFunCall((FENode) null, generatorFunctionName, commonBuilder.variableAsExprs);
+            ExprFunCall generatorCall = new ExprFunCall((FENode) null, generatorFunctionName, commonBuilder.visibleVariableAsExprs);
             stmts.add(new StmtAssign(tempVar, generatorCall));
 
             Statement body = new StmtBlock((FENode) null, stmts);

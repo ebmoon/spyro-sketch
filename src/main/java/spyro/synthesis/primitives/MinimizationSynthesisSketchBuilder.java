@@ -34,12 +34,12 @@ public class MinimizationSynthesisSketchBuilder extends SynthesisSketchBuilder {
             List<Statement> stmts = new ArrayList<>();
 
             final String tempVarID = "out";
-            List<Parameter> params = commonBuilder.getExtendedParams(tempVarID);
+            List<Parameter> params = commonBuilder.getExtendedParams(tempVarID, false);
             Expression sizeVar = new ExprVar((FENode) null, MinimizationSketchBuilder.sizeVarID);
             Expression tempVar = new ExprVar((FENode) null, tempVarID);
             String generatorFunctionName = commonBuilder.getPropertyGenerators().get(0).getName();
 
-            List<Expression> args = new ArrayList<>(commonBuilder.variableAsExprs);
+            List<Expression> args = new ArrayList<>(commonBuilder.visibleVariableAsExprs);
             args.add(sizeVar);
             args.add(tempVar);
 

@@ -43,7 +43,7 @@ public class SoundnessSketchBuilder {
             // boolean out;
             stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVar.getName(), null));
             // synthesized_property(..., out);
-            stmts.add(new StmtExpr(new ExprFunCall((FENode) null, phi, commonBuilder.appendToVariableAsExprs(tempVar))));
+            stmts.add(new StmtExpr(new ExprFunCall((FENode) null, phi, commonBuilder.appendToVariableAsExprs(tempVar, false))));
             // assert !out;
             stmts.add(new StmtAssert(new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, tempVar), false));
 

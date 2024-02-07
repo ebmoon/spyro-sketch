@@ -50,7 +50,7 @@ public class MinimizationSketchBuilder extends CommonSketchBuilder {
                 String funID = String.format("%s_gen", key);
 
                 List<sketch.compiler.ast.core.exprs.Expression> paramVars;
-                paramVars = variableAsParams.stream()
+                paramVars = visibleVariableAsParams.stream()
                         .map(param -> new ExprVar((FENode) null, param.getName()))
                         .collect(Collectors.toList());
                 paramVars.add(new ExprVar((FENode) null, sizeVarID));
@@ -105,7 +105,7 @@ public class MinimizationSketchBuilder extends CommonSketchBuilder {
         bodyStmts.add(new StmtAssert((FENode) null, new ExprConstInt(0), 0));
         Statement body = new StmtBlock((FENode) null, bodyStmts);
 
-        List<Parameter> params = new ArrayList<>(variableAsParams);
+        List<Parameter> params = new ArrayList<>(visibleVariableAsParams);
         params.add(new Parameter((FENode) null, TypePrimitive.inttype, sizeVarID, Parameter.REF));
         params.add(new Parameter((FENode) null, returnType, retVarID, Parameter.REF));
 

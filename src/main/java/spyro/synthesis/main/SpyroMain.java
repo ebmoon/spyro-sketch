@@ -31,10 +31,7 @@ import spyro.util.exceptions.OutputParseException;
 import spyro.util.exceptions.ParseException;
 
 import javax.xml.transform.Result;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintStream;
+import java.io.*;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -49,7 +46,7 @@ import java.util.Map;
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
 public class SpyroMain extends SequentialSketchMain {
-    public static boolean isDebug = false;
+    public static boolean isDebug = true;
     public SpyroOptions options;
 
     private Program prog;
@@ -63,6 +60,10 @@ public class SpyroMain extends SequentialSketchMain {
     private PrecisionSketchBuilder precisionMin;
     private ImprovementSketchBuilder improvement;
     private Map<String, Function> lambdaFunctions;
+
+    private Integer innerIterator = 0, outerIterator = 0;
+
+    private String tempFileDir = "tmp";
 
     private Property truth;
     final private PrintStream oldErr = System.err;
@@ -85,6 +86,10 @@ public class SpyroMain extends SequentialSketchMain {
 
     void restoreStderr() {
         System.setErr(oldErr);
+    }
+
+    String getNewTempFilePath() {
+        return tempFileDir + String.format("/%d_%d.sk",outerIterator,innerIterator);
     }
 
     public static void main(String[] args) {
@@ -138,10 +143,16 @@ public class SpyroMain extends SequentialSketchMain {
     private SynthesisResult runSketchSolver(Program prog) {
         if (!isDebug)
             redirectStderrToNull();
+        if (isDebug) {
+            File path = new File(getNewTempFilePath());
+            prog.debugDump(path);
+        }
         prog = preprocAndSemanticCheck(prog);
         SynthesisResult result = partialEvalAndSolve(prog);
         if (!isDebug)
             restoreStderr();
+
+        innerIterator++;
         return result;
     }
 
@@ -367,6 +378,8 @@ public class SpyroMain extends SequentialSketchMain {
             phi = result.prop;
             pos = result.pos;
             psi.add(phi);
+            outerIterator ++;
+            innerIterator =0;
         }
     }
 
@@ -392,7 +405,7 @@ public class SpyroMain extends SequentialSketchMain {
 
         lambdaFunctions = new HashMap<>();
 
-        List<Parameter> params = commonSketchBuilder.getExtendedParams(Property.outputVarID);
+        List<Parameter> params = commonSketchBuilder.getExtendedParams(Property.outputVarID, false);
         truth = Property.truth(params);
 
         PropertySet psi = new PropertySet(commonSketchBuilder);

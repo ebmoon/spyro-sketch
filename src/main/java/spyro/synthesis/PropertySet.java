@@ -79,8 +79,8 @@ public class PropertySet {
 
             Function.FunctionCreator fc = Function.creator((FEContext) null, conjunctionID, Function.FcnType.Static);
             final String tempVarID = "out";
-            List<Parameter> params = commonBuilder.getExtendedParams(tempVarID);
-            List<Expression> vars = commonBuilder.getVariableAsExprs();
+            List<Parameter> params = commonBuilder.getExtendedParams(tempVarID, false);
+            List<Expression> vars = commonBuilder.getVariableAsExprs(false);
 
             List<Statement> body = new ArrayList<>();
             List<Expression> outVars = new ArrayList<>();

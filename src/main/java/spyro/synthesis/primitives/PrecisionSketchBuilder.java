@@ -48,7 +48,7 @@ public class PrecisionSketchBuilder {
             stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVar1.getName(), null));
             // synthesized_property(..., out);
             stmts.add(new StmtExpr(new ExprFunCall((FENode) null, Property.phiID,
-                    synth.commonBuilder.appendToVariableAsExprs(tempVar1)))); // obtained_property(... , out);
+                    synth.commonBuilder.appendToVariableAsExprs(tempVar1, false)))); // obtained_property(... , out);
             // assert out;
             stmts.add(new StmtAssert(tempVar1, false));
 
@@ -56,7 +56,7 @@ public class PrecisionSketchBuilder {
             stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVar2.getName(), null));
             // property_conj(..., out);
             stmts.add(new StmtExpr(new ExprFunCall((FENode) null, PropertySet.conjunctionID,
-                    synth.commonBuilder.appendToVariableAsExprs(tempVar2))));
+                    synth.commonBuilder.appendToVariableAsExprs(tempVar2,false))));
             // assert out;
             stmts.add(new StmtAssert(tempVar2, false));
 
@@ -65,7 +65,7 @@ public class PrecisionSketchBuilder {
             stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVar3.getName(), null));
             // property(..., out);
             stmts.add(new StmtExpr(new ExprFunCall((FENode) null, Property.newPhiID,
-                    synth.commonBuilder.appendToVariableAsExprs(tempVar3))));
+                    synth.commonBuilder.appendToVariableAsExprs(tempVar3,false))));
             // assert !out;
             stmts.add(new StmtAssert(new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, tempVar3), false));
 
