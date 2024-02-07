@@ -1,7 +1,8 @@
-package spyro.compiler.main.cmdline;
+package spyro.synthesis.main.cmdline;
 
 import sketch.compiler.main.cmdline.SketchOptions;
-import spyro.synthesis.cmdline.PropertyOptions;
+import sketch.util.cli.SketchCliParser;
+import spyro.synthesis.cmdline.SynthesizerOptions;
 import spyro.util.cli.SpyroCliParser;
 
 import java.io.File;
@@ -14,9 +15,11 @@ import java.util.Arrays;
  */
 public class SpyroOptions extends SketchOptions {
     protected static SpyroOptions _singleton;
-    public PropertyOptions propOpts = new PropertyOptions();
+    // public SynthesizerOptions synthOpts = new SynthesizerOptions();
     public String spyroName;
     public File spyroFile;
+
+    public SpyroDebugOptions debugOpts;
 
     public SpyroOptions(String[] inArgs) {
         super(inArgs);
@@ -29,14 +32,20 @@ public class SpyroOptions extends SketchOptions {
         return _singleton;
     }
 
+    @Override
+    public void parseCommandline(SketchCliParser parser) {
+        // DO NOTHING
+    }
+
     public void parseCommandline(SpyroCliParser parser) {
         this.currentArgs = parser.inArgs;
         this.bndOpts.parse(parser);
+        super.debugOpts = debugOpts = new SpyroDebugOptions();
         this.debugOpts.parse(parser);
         this.feOpts.parse(parser);
         this.spmdOpts.parse(parser);
         this.semOpts.parse(parser);
-        this.propOpts.parse(parser);
+        // this.synthOpts.parse(parser);
         args = solverOpts.parse(parser).get_args();
         this.backendArgs = parser.backendArgs;
         this.nativeArgs = parser.nativeArgs;

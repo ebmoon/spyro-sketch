@@ -48,7 +48,7 @@ public class PrecisionSketchBuilder {
             stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVar1.getName(), null));
             // synthesized_property(..., out);
             stmts.add(new StmtExpr(new ExprFunCall((FENode) null, Property.phiID,
-                    synth.commonBuilder.appendToVariableAsExprs(tempVar1, false)))); // obtained_property(... , out);
+                    synth.commonBuilder.appendToVariableAsExprs(tempVar1, false))));
             // assert out;
             stmts.add(new StmtAssert(tempVar1, false));
 

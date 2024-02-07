@@ -29,8 +29,6 @@ public class SynthesisSketchBuilder {
         this.commonBuilder = commonBuilder;
     }
 
-    public CommonSketchBuilder builder() { return commonBuilder; }
-
     Function getSynthesisBody() {
         if (synthesisBody == null) {
             Function.FunctionCreator fc = Function.creator((FEContext) null, Property.newPhiID, Function.FcnType.Static);

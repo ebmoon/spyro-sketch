@@ -42,7 +42,7 @@ public class ImprovementSketchBuilder {
             stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVar1.getName(), null));
             // synthesized_property(..., out);
             stmts.add(new StmtExpr(new ExprFunCall((FENode) null, Property.phiID,
-                    commonBuilder.appendToVariableAsExprs(tempVar1, false)))); // obtained_property(... , out);
+                    commonBuilder.appendToVariableAsExprs(tempVar1, false))));
             // assert !out;
             stmts.add(new StmtAssert(new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, tempVar1), false));
 

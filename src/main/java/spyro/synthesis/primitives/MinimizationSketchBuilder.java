@@ -43,7 +43,8 @@ public class MinimizationSketchBuilder extends CommonSketchBuilder {
             if (numPrevNonterminals >= value)
                 continue;
 
-            maxCxt.put(key, value);     // This value is new maximum
+            // Update max value
+            maxCxt.put(key, value);
 
             for (int i = numPrevNonterminals; i < value; i++) {
                 String varID = String.format("var_%s_%d", key, i);
