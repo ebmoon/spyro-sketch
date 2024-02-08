@@ -17,6 +17,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * Class to build sketch AST for precision query.
+ * It works as a decorator of CommonSketchBuilder
+ *
+ * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
+ */
 public class ImprovementSketchBuilder {
 
     final CommonSketchBuilder commonBuilder;
@@ -42,7 +48,7 @@ public class ImprovementSketchBuilder {
             stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVar1.getName(), null));
             // synthesized_property(..., out);
             stmts.add(new StmtExpr(new ExprFunCall((FENode) null, Property.phiID,
-                    commonBuilder.appendToVariableAsExprs(tempVar1, false)))); // obtained_property(... , out);
+                    commonBuilder.appendToVariableAsExprs(tempVar1, false))));
             // assert !out;
             stmts.add(new StmtAssert(new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, tempVar1), false));
 

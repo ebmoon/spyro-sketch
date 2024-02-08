@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Class to build sketch AST for formula-minimizing-synthesis query
+ * Class to build sketch AST for formula-minimizing-synthesis query.
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */

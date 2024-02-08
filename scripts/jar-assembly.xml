@@ -28,13 +28,4 @@
             <outputDirectory></outputDirectory>
         </fileSet>
     </fileSets>
-
-    <!-- substitute variables -->
-    <files>
-        <file>
-            <source>README</source>
-            <outputDirectory></outputDirectory>
-            <filtered>true</filtered>
-        </file>
-    </files>
 </assembly>

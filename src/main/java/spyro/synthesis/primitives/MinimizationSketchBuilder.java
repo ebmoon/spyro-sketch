@@ -12,7 +12,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Subclass of CommonSketchBuilder that constructs formula-minimizing-generators
+ * Subclass of CommonSketchBuilder that constructs formula-minimizing-generators.
+ * Each generator outputs formula size in addition to formula, and add minimization of the size as objective.
+ * Since each generator has multiple outputs, it must pass outputs as reference variables.
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
@@ -43,7 +45,8 @@ public class MinimizationSketchBuilder extends CommonSketchBuilder {
             if (numPrevNonterminals >= value)
                 continue;
 
-            maxCxt.put(key, value);     // This value is new maximum
+            // Update max value
+            maxCxt.put(key, value);
 
             for (int i = numPrevNonterminals; i < value; i++) {
                 String varID = String.format("var_%s_%d", key, i);

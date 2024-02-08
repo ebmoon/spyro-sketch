@@ -6,7 +6,7 @@
 
     <groupId>com.github.ebmoon</groupId>
     <artifactId>spyro-sketch</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
 
     <name>spyro</name>
     <!-- FIXME change it to the project's website -->
@@ -95,7 +95,7 @@
                             launchers_assembly    same as above but with scripts
                             tar_src_assembly.xml    both frontend and backend source only. -->
                     </descriptors>
-                    <finalName>sygus-sketch-${project.version}</finalName>
+                    <finalName>spyro-sketch-${project.version}</finalName>
                 </configuration>
             </plugin>
 

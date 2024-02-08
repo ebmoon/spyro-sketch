@@ -16,7 +16,8 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Class to build sketch AST for synthesis query
+ * Class to build sketch AST for synthesis query.
+ * It works as decorator of CommonSketchBuilder.
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
@@ -28,8 +29,6 @@ public class SynthesisSketchBuilder {
     public SynthesisSketchBuilder(CommonSketchBuilder commonBuilder) {
         this.commonBuilder = commonBuilder;
     }
-
-    public CommonSketchBuilder builder() { return commonBuilder; }
 
     Function getSynthesisBody() {
         if (synthesisBody == null) {

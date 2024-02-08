@@ -17,6 +17,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+/**
+ * Class to parse synthesis result of each call to sketch
+ *
+ * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
+ */
 public class ResultExtractor {
 
     // For debug

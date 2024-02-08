@@ -57,7 +57,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
     List<Statement> stmtsToPrepend;
     Map<String, Integer> generatorCxt;
     Map<String, Integer> maxCxt;
-    int cnt;
+    int freshVarCount;
 
     public CommonSketchBuilder(Program impl) {
         this.prog = Program.emptyProgram();
@@ -143,8 +143,8 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
     public Program visitQuery(Query q) {
         nonterminalToSketchType = new HashMap<>();
         firstExampleGenerators = new HashMap<>();
+        freshVarCount = 0;
         outputVariableSet = new HashSet<>();
-        cnt = 0;
 
         variables = q.getVariables();
         variableSet = variables.stream()
@@ -214,7 +214,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
     }
 
     private ExprVar freshVar() {
-        return new ExprVar((FENode) null, String.format("fresh_var_%d", cnt++));
+        return new ExprVar((FENode) null, String.format("fresh_var_%d", freshVarCount++));
     }
 
     @Override
@@ -442,7 +442,8 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
             if (numPrevNonterminals >= value)
                 continue;
 
-            maxCxt.put(key, value);     // This value is new maximum
+            // Update max value
+            maxCxt.put(key, value);
 
             for (int i = numPrevNonterminals; i < value; i++) {
                 String varID = String.format("var_%s_%d", key, i);
