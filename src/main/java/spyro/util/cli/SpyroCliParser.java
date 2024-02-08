@@ -28,14 +28,8 @@ public class SpyroCliParser extends SketchCliParser {
     }
 
     @Override
-    protected String getDescription() {
-        return  "\nSketch options\n\n" +
-                super.getDescription();
-    }
-
-    @Override
     public void printHelpAndExit(String error_msg) {
-        super.printHelpAndExit("");
         System.out.println("\n\n[ERROR] [SPYRO] " + error_msg);
+        super.printHelpAndExit("");
     }
 }
