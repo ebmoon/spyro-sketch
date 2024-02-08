@@ -38,6 +38,9 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
     List<Parameter> visibleVariableAsParams;
     List<sketch.compiler.ast.core.exprs.Expression> visibleVariableAsExprs;
 
+    List<sketch.compiler.ast.core.exprs.Expression> inputVariableAsExprs;
+    List<sketch.compiler.ast.core.exprs.Expression> outputVariableAsExprs;
+
 
     List<ExprFunCall> signatures;
     List<Statement> signatureAsStmts;
@@ -46,6 +49,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
     List<Function> exampleGenerators;
 
     Set<String> variableSet;
+    Set<String> outputVariableSet;
     Map<String, sketch.compiler.ast.core.typs.Type> variableToSketchType;
     Map<String, sketch.compiler.ast.core.typs.Type> nonterminalToSketchType;
     Map<String, Function> firstExampleGenerators;
@@ -139,6 +143,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
     public Program visitQuery(Query q) {
         nonterminalToSketchType = new HashMap<>();
         firstExampleGenerators = new HashMap<>();
+        outputVariableSet = new HashSet<>();
         cnt = 0;
 
         variables = q.getVariables();
@@ -170,6 +175,26 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         signatureAsStmts = signatures.stream()
                 .map(sig -> new StmtExpr((FENode) null, sig))
                 .collect(Collectors.toList());
+
+        for(ExprFunCall sig: signatures) {
+            List<Expression> args = sig.getParams();
+            String outVarId = args.get(args.size() - 1).toString();
+            outputVariableSet.add(outVarId);
+        }
+
+        for(Variable var:variables)
+            if(outputVariableSet.contains(var.getID())) var.setOutput();
+
+        inputVariableAsExprs= variables.stream()
+                .filter(decl -> !decl.getOutput())
+                .map(decl -> new ExprVar((FENode) null, decl.getID()))
+                .collect(Collectors.toList());
+
+        outputVariableAsExprs= variables.stream()
+                .filter(Variable::getOutput)
+                .map(decl -> new ExprVar((FENode) null, decl.getID()))
+                .collect(Collectors.toList());
+
 
         nonterminalToSketchType = q.getGrammar().stream()
                 .map(GrammarRule::getNonterminal)

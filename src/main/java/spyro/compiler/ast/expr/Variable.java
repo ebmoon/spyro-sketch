@@ -15,11 +15,14 @@ public class Variable extends Expression {
     private Type type;
     private boolean hidden;
 
+    private boolean output;
+
     public Variable(Type type, String id) {
         super();
         this.type = type;
         this.id = String.valueOf(id);
         this.hidden = false;
+        this.output = false;
     }
 
     public Variable(Type type, String id, boolean hidden) {
@@ -27,6 +30,7 @@ public class Variable extends Expression {
         this.type = type;
         this.id = String.valueOf(id);
         this.hidden = hidden;
+        this.output = false;
     }
 
     @Override
@@ -37,6 +41,10 @@ public class Variable extends Expression {
     public boolean isHidden() {
         return hidden;
     }
+
+    public void setOutput() { output = true; }
+
+    public boolean getOutput() { return output; }
 
     public String getID() {
         return id;
