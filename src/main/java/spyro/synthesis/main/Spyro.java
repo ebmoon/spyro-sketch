@@ -142,17 +142,24 @@ public class Spyro extends SequentialSketchMain {
     }
 
     private SynthesisResult runSketchSolver(Program prog) {
-        if (!isVerbose)
-            redirectStderrToNull();
-        prog = preprocAndSemanticCheck(prog);
-        SynthesisResult result = partialEvalAndSolve(prog);
-        if (!isVerbose)
-            restoreStderr();
-        innerIterator++;
         if (options.debugOpts.dumpSketch) {
             File path = new File(getNewTempFilePath());
             prog.debugDump(path);
         }
+
+        // Redirect error message to null from sketch-backend
+        if (!isVerbose)
+            redirectStderrToNull();
+
+        prog = preprocAndSemanticCheck(prog);
+        SynthesisResult result = partialEvalAndSolve(prog);
+
+        // Restore stderr so that user can see spyro error message
+        if (!isVerbose)
+            restoreStderr();
+
+        innerIterator++;
+
         return result;
     }
 
