@@ -12,7 +12,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Subclass of CommonSketchBuilder that constructs formula-minimizing-generators
+ * Subclass of CommonSketchBuilder that constructs formula-minimizing-generators.
+ * Each generator outputs formula size in addition to formula, and add minimization of the size as objective.
+ * Since each generator has multiple outputs, it must pass outputs as reference variables.
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */

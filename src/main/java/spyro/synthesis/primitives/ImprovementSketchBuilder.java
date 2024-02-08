@@ -17,6 +17,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * Class to build sketch AST for precision query.
+ * It works as a decorator of CommonSketchBuilder
+ *
+ * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
+ */
 public class ImprovementSketchBuilder {
 
     final CommonSketchBuilder commonBuilder;

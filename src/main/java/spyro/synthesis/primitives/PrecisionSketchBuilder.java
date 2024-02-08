@@ -17,7 +17,7 @@ import java.util.List;
 
 /**
  * Class to build sketch AST for precision query.
- * It works as a decorator of SYnthesisSketchBuilder
+ * It works as a decorator of SynthesisSketchBuilder
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
