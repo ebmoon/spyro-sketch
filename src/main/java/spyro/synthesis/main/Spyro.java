@@ -189,13 +189,13 @@ public class Spyro extends SequentialSketchMain {
     }
 
     public Property synthesize(ExampleSet pos, ExampleSet neg) {
-        if (isDebug)
+        if (isVerbose)
             System.out.printf("Synthesize : Property %d - Query %d)\n",outerIterator,innerIterator);
         return synthesize(pos, neg, synth);
     }
 
     public Property synthesizeMin(ExampleSet pos, ExampleSet neg) {
-        if (isDebug)
+        if (isVerbose)
             System.out.printf("Synthesize (Minimize formula) : Property %d - Query %d\n",outerIterator,innerIterator);
         return synthesize(pos, neg, synthMin);
     }
@@ -217,13 +217,13 @@ public class Spyro extends SequentialSketchMain {
     }
 
     public Pair<Property, Example> checkPrecision(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg) {
-        if (isDebug)
+        if (isVerbose)
             System.out.printf("CheckPrecision : Property %d - Query %d\n",outerIterator,innerIterator);
         return checkPrecision(psi, phi, pos, neg, precision);
     }
 
     public Pair<Property, Example> checkPrecisionMin(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg) {
-        if (isDebug)
+        if (isVerbose)
             System.out.printf("CheckPrecision (Minimize formula) : Property %d - Query %d\n",outerIterator,innerIterator);
         return checkPrecision(psi, phi, pos, neg, precisionMin);
     }
@@ -247,7 +247,7 @@ public class Spyro extends SequentialSketchMain {
     }
 
     public Example checkImprovement(PropertySet psi, Property phi) {
-        if (isDebug)
+        if (isVerbose)
             System.out.printf("CheckImprovement : Property %d - Query %d\n",outerIterator,innerIterator);
         Program sketchCode = improvement.improvementSketchCode(psi, phi, lambdaFunctions.values());
         try {
