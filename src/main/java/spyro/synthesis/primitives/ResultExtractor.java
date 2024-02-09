@@ -15,6 +15,7 @@ import spyro.synthesis.Property;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.locks.StampedLock;
 import java.util.stream.Collectors;
 
 /**
@@ -119,6 +120,22 @@ public class ResultExtractor {
         negExBody.add(new StmtAssert(body, new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, tempVar), false));
 
         return new Example(new StmtBlock(negExBody));
+    }
+
+    public static Example extractNegativeExampleCandidate(Program result, int numHiddenWitness) {
+        StmtBlock body = (StmtBlock) findFunction(result, SoundnessUnderSketchBuilder.soundnessUnderFunctionID).getBody();
+        List<Statement> stmts = body.getStmts();
+        int numStmts = stmts.size();
+
+        // Last numHiddenWitness lines are hidden witnesses (counter examples),
+        // then next 3 lines are synthesized property
+        List<Statement> exBody = new ArrayList<>(stmts.subList(0, numStmts - 3 - numHiddenWitness));
+
+        ExprFunCall funCall = (ExprFunCall) ((StmtExpr) stmts.get(numStmts - 2 - numHiddenWitness)).getExpression();
+        List<Expression> params = new ArrayList<>(funCall.getParams());
+        params.remove(params.size() - 1);
+
+        return new Example(exBody, params);
     }
 
     public static Map<String, Function> extractLambdaFunctions(Program result) {

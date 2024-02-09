@@ -27,10 +27,9 @@ import java.util.stream.Collectors;
  */
 public class CommonSketchBuilder implements SpyroNodeVisitor {
 
+    public final static String pkgName = "Spyro";
     Program prog;
     Program impl;
-    public final static String pkgName = "Spyro";
-
     List<Variable> variables;
     List<Parameter> variableAsParams;
     List<sketch.compiler.ast.core.exprs.Expression> variableAsExprs;
@@ -111,12 +110,30 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         return ret;
     }
 
-    public StmtVarDecl getVariablesWithHole() {
+
+    /**
+     * Construct a series of declare statements for variables
+     *
+     * @param varIncluded 0: all variables;
+     *                    1: only visible;
+     *                    2: only hidden;
+     *                    3: only input(Todo);
+     *                    4: only output(Todo)
+     */
+    public StmtVarDecl getVariablesWithHole(int varIncluded) {
         List<sketch.compiler.ast.core.typs.Type> types = new ArrayList<>();
         List<String> names = new ArrayList<>();
         List<sketch.compiler.ast.core.exprs.Expression> inits = new ArrayList<>();
 
         for (Variable v : variables) {
+            if (varIncluded == 1 && v.isHidden())
+                continue;
+            if (varIncluded == 2 && !v.isHidden())
+                continue;
+            if (varIncluded == 3 && v.isOutput())
+                continue;
+            if (varIncluded == 4 && !v.isOutput())
+                continue;
             String varID = v.getID();
             Type ty = v.getType();
             sketch.compiler.ast.core.typs.Type sketchType = doType(ty);
@@ -176,22 +193,22 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
                 .map(sig -> new StmtExpr((FENode) null, sig))
                 .collect(Collectors.toList());
 
-        for(ExprFunCall sig: signatures) {
+        for (ExprFunCall sig : signatures) {
             List<Expression> args = sig.getParams();
             String outVarId = args.get(args.size() - 1).toString();
             outputVariableSet.add(outVarId);
         }
 
-        for(Variable var:variables)
-            if(outputVariableSet.contains(var.getID())) var.setOutput();
+        for (Variable var : variables)
+            if (outputVariableSet.contains(var.getID())) var.setOutput();
 
-        inputVariableAsExprs= variables.stream()
-                .filter(decl -> !decl.getOutput())
+        inputVariableAsExprs = variables.stream()
+                .filter(decl -> !decl.isOutput())
                 .map(decl -> new ExprVar((FENode) null, decl.getID()))
                 .collect(Collectors.toList());
 
-        outputVariableAsExprs= variables.stream()
-                .filter(Variable::getOutput)
+        outputVariableAsExprs = variables.stream()
+                .filter(Variable::isOutput)
                 .map(decl -> new ExprVar((FENode) null, decl.getID()))
                 .collect(Collectors.toList());
 

@@ -37,7 +37,7 @@ public class PrecisionSketchBuilder {
             Function.FunctionCreator fc = Function.creator((FEContext) null, precisionFunctionID, Function.FcnType.Harness);
 
             List<Statement> stmts = new ArrayList<>();
-            stmts.add(synth.commonBuilder.getVariablesWithHole());
+            stmts.add(synth.commonBuilder.getVariablesWithHole(0));
 
             final String tempVarID = "out";
             ExprVar tempVar1 = new ExprVar((FENode) null, tempVarID + "1");

@@ -38,7 +38,7 @@ public class ImprovementSketchBuilder {
             Function.FunctionCreator fc = Function.creator((FEContext) null, improvementFunctionID, Function.FcnType.Harness);
 
             List<Statement> stmts = new ArrayList<>();
-            stmts.add(commonBuilder.getVariablesWithHole());
+            stmts.add(commonBuilder.getVariablesWithHole(0));
 
             final String tempVarID = "out";
             ExprVar tempVar1 = new ExprVar((FENode) null, tempVarID + "1");

@@ -34,7 +34,7 @@ public class SoundnessSketchBuilder {
             Function.FunctionCreator fc = Function.creator((FEContext) null, soundnessFunctionID, Function.FcnType.Harness);
 
             List<Statement> stmts = new ArrayList<>();
-            stmts.add(commonBuilder.getVariablesWithHole());
+            stmts.add(commonBuilder.getVariablesWithHole(0));
             stmts.addAll(commonBuilder.getSignatureAsStmts());
 
             final String tempVarID = "out";

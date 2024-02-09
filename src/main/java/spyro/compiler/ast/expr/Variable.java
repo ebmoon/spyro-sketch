@@ -42,9 +42,12 @@ public class Variable extends Expression {
         return hidden;
     }
 
+    public boolean isOutput() {
+        return output;
+    }
+
     public void setOutput() { output = true; }
 
-    public boolean getOutput() { return output; }
 
     public String getID() {
         return id;
