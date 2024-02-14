@@ -15,8 +15,7 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Class to build sketch AST for precision query.
- * It works as a decorator of CommonSketchBuilder
+ * Class to build sketch AST for checking improvement in over-approx problem.
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
@@ -30,7 +29,46 @@ public class ImprovementSketchBuilder {
         this.commonBuilder = commonBuilder;
     }
 
-    private Function getImprovementBody() {
+    private Function getImprovementUnderBody() {
+        if (improvementBody == null) {
+            Function.FunctionCreator fc = Function.creator((FEContext) null, improvementFunctionID, Function.FcnType.Harness);
+
+            List<Statement> stmts = new ArrayList<>();
+            stmts.add(commonBuilder.getVariableDecls(CommonSketchBuilder.ALL_VAR, CommonSketchBuilder.W_INIT));
+
+            final String tempVarID = "out";
+            ExprVar tempVar1 = new ExprVar((FENode) null, tempVarID + "1");
+            ExprVar tempVar2 = new ExprVar((FENode) null, tempVarID + "2");
+
+            // boolean out1;
+            stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVar1.getName(), null));
+            // synthesized_property(..., out);
+            stmts.add(new StmtExpr(new ExprFunCall((FENode) null, Property.phiID,
+                    commonBuilder.appendToVariableAsExprs(tempVar1, false))));
+            // assert out;
+            stmts.add(new StmtAssert(tempVar1, false));
+
+            // boolean out2
+            stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVar2.getName(), null));
+            // property_disj(..., out2);
+            stmts.add(new StmtExpr(new ExprFunCall((FENode) null,
+                    PropertySet.disjunctionID,
+                    commonBuilder.appendToVariableAsExprs(tempVar2, false))));
+            // assert !out2;
+            stmts.add(new StmtAssert(new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, tempVar2), false));
+
+            Statement body = new StmtBlock((FENode) null, stmts);
+
+            fc.params(new ArrayList<>());
+            fc.body(body);
+
+            improvementBody = fc.create();
+        }
+
+        return improvementBody;
+    }
+
+    private Function getImprovementOverBody() {
         if (improvementBody == null) {
             Function.FunctionCreator fc = Function.creator((FEContext) null, improvementFunctionID, Function.FcnType.Harness);
 
@@ -47,24 +85,16 @@ public class ImprovementSketchBuilder {
             stmts.add(new StmtExpr(new ExprFunCall((FENode) null, Property.phiID,
                     commonBuilder.appendToVariableAsExprs(tempVar1, false))));
             // assert !out;
-            stmts.add(new StmtAssert(
-                    commonBuilder.apporx ?
-                            tempVar1 :
-                            new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, tempVar1),
-                    false));
+            stmts.add(new StmtAssert(new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, tempVar1), false));
 
             // boolean out2
             stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVar2.getName(), null));
-            // property_conj.disj(..., out);
+            // property_conj(..., out2);
             stmts.add(new StmtExpr(new ExprFunCall((FENode) null,
-                    commonBuilder.apporx ? PropertySet.disjunctionID : PropertySet.conjunctionID,
+                    PropertySet.conjunctionID,
                     commonBuilder.appendToVariableAsExprs(tempVar2, false))));
-            // assert out;
-            stmts.add(new StmtAssert(
-                    commonBuilder.apporx ?
-                            new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, tempVar2) :
-                            tempVar2,
-                    false));
+            // assert out2;
+            stmts.add(new StmtAssert(tempVar2, false));
 
             Statement body = new StmtBlock((FENode) null, stmts);
 
@@ -75,6 +105,10 @@ public class ImprovementSketchBuilder {
         }
 
         return improvementBody;
+    }
+
+    private Function getImprovementBody() {
+        return commonBuilder.isUnderProblem ? getImprovementUnderBody() : getImprovementOverBody();
     }
 
     public Program improvementSketchCode(PropertySet psi, Property phi, Collection<Function> lambdaFunctions) {

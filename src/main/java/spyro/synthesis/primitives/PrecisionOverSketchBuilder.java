@@ -21,14 +21,14 @@ import java.util.List;
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
-public class PrecisionSketchBuilder {
+public class PrecisionOverSketchBuilder {
 
     SynthesisSketchBuilder synth;
     Function precisionBody = null;
 
     public final static String precisionFunctionID = "precision";
 
-    public PrecisionSketchBuilder(SynthesisSketchBuilder synth) {
+    public PrecisionOverSketchBuilder(SynthesisSketchBuilder synth) {
         this.synth = synth;
     }
 
@@ -37,7 +37,7 @@ public class PrecisionSketchBuilder {
             Function.FunctionCreator fc = Function.creator((FEContext) null, precisionFunctionID, Function.FcnType.Harness);
 
             List<Statement> stmts = new ArrayList<>();
-            stmts.add(synth.commonBuilder.getVariableDecls(CommonSketchBuilder.ALL_VAR,CommonSketchBuilder.W_INIT));
+            stmts.add(synth.commonBuilder.getVariableDecls(CommonSketchBuilder.ALL_VAR, CommonSketchBuilder.W_INIT));
 
             final String tempVarID = "out";
             ExprVar tempVar1 = new ExprVar((FENode) null, tempVarID + "1");
@@ -78,6 +78,7 @@ public class PrecisionSketchBuilder {
 
         return precisionBody;
     }
+
 
     public Program precisionSketchCode(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg, Collection<Function> lambdaFunctions) {
         final String pkgName = CommonSketchBuilder.pkgName;

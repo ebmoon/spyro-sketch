@@ -52,7 +52,7 @@ public class ResultExtractor {
 
 
     public static Example extractPositiveExample(Program result) {
-        StmtBlock body = (StmtBlock) findFunction(result, SoundnessSketchBuilder.soundnessFunctionID).getBody();
+        StmtBlock body = (StmtBlock) findFunction(result, SoundnessOverSketchBuilder.soundnessFunctionID).getBody();
         List<Statement> stmts = body.getStmts();
         int numStmts = stmts.size();
 
@@ -76,7 +76,7 @@ public class ResultExtractor {
     }
 
     public static Example extractNegativeExamplePrecision(Program result) {
-        StmtBlock body = (StmtBlock) findFunction(result, PrecisionSketchBuilder.precisionFunctionID).getBody();
+        StmtBlock body = (StmtBlock) findFunction(result, PrecisionOverSketchBuilder.precisionFunctionID).getBody();
         List<Statement> stmts = body.getStmts();
         int numStmts = stmts.size();
 
@@ -100,7 +100,7 @@ public class ResultExtractor {
     }
 
     public static Example extractNegativeExampleImprovement(Program result) {
-        StmtBlock body = (StmtBlock) findFunction(result, PrecisionSketchBuilder.precisionFunctionID).getBody();
+        StmtBlock body = (StmtBlock) findFunction(result, PrecisionOverSketchBuilder.precisionFunctionID).getBody();
         List<Statement> stmts = body.getStmts();
         int numStmts = stmts.size();
 
@@ -124,7 +124,7 @@ public class ResultExtractor {
     }
 
     public static Example extractPositiveExamplePrecisionUnder(Program result) {
-        StmtBlock body = (StmtBlock) findFunction(result, PrecisionUnderSketchBuilder.precisionUnderFunctionID).getBody();
+        StmtBlock body = (StmtBlock) findFunction(result, PrecisionUnderSketchBuilder.precisionFunctionID).getBody();
         List<Statement> stmts = body.getStmts();
         int numStmts = stmts.size();
 
@@ -153,7 +153,7 @@ public class ResultExtractor {
         List<Statement> stmts = body.getStmts();
         int numStmts = stmts.size();
 
-        // Last numHiddenWitness lines are hidden witnesses (counter examples),
+        // Last numHiddenWitness lines are hidden witnesses (counter-examples),
         // then next 3 lines are synthesized property
         List<Statement> exBody = new ArrayList<>(stmts.subList(0, numStmts - 3 - numHiddenWitness));
 

@@ -26,8 +26,7 @@ public class PropertySet {
 
     final CommonSketchBuilder commonBuilder;
 
-    List<Function> conjunctionSketchCode = null;
-    List<Function> disjunctionSketchCode = null;
+    List<Function> sketchCode = null;
     List<Property> properties;
 
     public PropertySet(CommonSketchBuilder commonBuilder) {
@@ -50,14 +49,12 @@ public class PropertySet {
 
     public void add(Property phi) {
         properties.add(phi);
-        conjunctionSketchCode = null;
-        disjunctionSketchCode = null;
+        sketchCode = null;
     }
 
     public void addAll(Collection<Property> phis) {
         properties.addAll(phis);
-        conjunctionSketchCode = null;
-        disjunctionSketchCode = null;
+        sketchCode = null;
     }
 
     private Expression conjunction(List<Expression> exprs) {
@@ -93,12 +90,11 @@ public class PropertySet {
     }
 
     public List<Function> toSketchCode() {
-        boolean codeKind = commonBuilder.apporx;
-        List<Function> sketchCode = codeKind ? disjunctionSketchCode : conjunctionSketchCode;
+        boolean isOverProblem = commonBuilder.isUnderProblem;
         if (sketchCode == null) {
             sketchCode = new ArrayList<>();
 
-            Function.FunctionCreator fc = Function.creator((FEContext) null, codeKind ? disjunctionID : conjunctionID, Function.FcnType.Static);
+            Function.FunctionCreator fc = Function.creator((FEContext) null, isOverProblem ? disjunctionID : conjunctionID, Function.FcnType.Static);
             final String tempVarID = "out";
             List<Parameter> params = commonBuilder.getExtendedParams(tempVarID, false);
             List<Expression> vars = commonBuilder.getVariableAsExprs(CommonSketchBuilder.ONLY_VISIBLE);
@@ -118,7 +114,7 @@ public class PropertySet {
             }
 
             ExprVar lastParamVar = new ExprVar((FENode) null, tempVarID);
-            body.add(new StmtAssign(lastParamVar, codeKind ? disjunction(outVars) : conjunction(outVars)));
+            body.add(new StmtAssign(lastParamVar, isOverProblem ? disjunction(outVars) : conjunction(outVars)));
 
             fc.params(params);
             fc.body(new StmtBlock(body));
@@ -128,8 +124,5 @@ public class PropertySet {
 
         return sketchCode;
     }
-
-    public static final boolean CONJUNCTION_CODE = false;
-    public static final boolean DISJUNCTION_CODE = true;
 
 }

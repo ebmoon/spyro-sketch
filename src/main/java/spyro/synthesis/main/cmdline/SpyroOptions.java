@@ -15,7 +15,7 @@ import java.util.Arrays;
  */
 public class SpyroOptions extends SketchOptions {
     protected static SpyroOptions _singleton;
-    // public SynthesizerOptions synthOpts = new SynthesizerOptions();
+    public SynthesizerOptions synthOpts = new SynthesizerOptions();
     public String spyroName;
     public File spyroFile;
 
@@ -45,7 +45,7 @@ public class SpyroOptions extends SketchOptions {
         this.feOpts.parse(parser);
         this.spmdOpts.parse(parser);
         this.semOpts.parse(parser);
-        // this.synthOpts.parse(parser);
+        this.synthOpts.parse(parser);
         args = solverOpts.parse(parser).get_args();
         this.backendArgs = parser.backendArgs;
         this.nativeArgs = parser.nativeArgs;

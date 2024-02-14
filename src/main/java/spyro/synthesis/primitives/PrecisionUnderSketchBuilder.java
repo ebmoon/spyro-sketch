@@ -24,21 +24,22 @@ import java.util.List;
 public class PrecisionUnderSketchBuilder {
 
     SynthesisSketchBuilder synth;
-    Function precisionUnderBody = null;
+    Function precisionBody = null;
 
-    public final static String precisionUnderFunctionID = "precision_under";
+    public final static String precisionFunctionID = "precision";
 
     public PrecisionUnderSketchBuilder(SynthesisSketchBuilder synth) {
         this.synth = synth;
     }
 
-    private Function getPrecisionUnderBody() {
-        if (precisionUnderBody == null) {
-            Function.FunctionCreator fc = Function.creator((FEContext) null, precisionUnderFunctionID, Function.FcnType.Harness);
+
+    private Function getPrecisionBody() {
+        if (precisionBody == null) {
+            Function.FunctionCreator fc = Function.creator((FEContext) null, precisionFunctionID, Function.FcnType.Harness);
 
             List<Statement> stmts = new ArrayList<>();
-            stmts.add(synth.commonBuilder.getVariableDecls(CommonSketchBuilder.ONLY_INPUT,CommonSketchBuilder.W_INIT));
-            stmts.add(synth.commonBuilder.getVariableDecls(CommonSketchBuilder.ONLY_OUTPUT,CommonSketchBuilder.WO_INIT));
+            stmts.add(synth.commonBuilder.getVariableDecls(CommonSketchBuilder.ONLY_INPUT, CommonSketchBuilder.W_INIT));
+            stmts.add(synth.commonBuilder.getVariableDecls(CommonSketchBuilder.ONLY_OUTPUT, CommonSketchBuilder.WO_INIT));
             stmts.addAll(synth.commonBuilder.getSignatureAsStmts());
 
 
@@ -76,10 +77,10 @@ public class PrecisionUnderSketchBuilder {
             fc.params(new ArrayList<>());
             fc.body(body);
 
-            precisionUnderBody = fc.create();
+            precisionBody = fc.create();
         }
 
-        return precisionUnderBody;
+        return precisionBody;
     }
 
     public Program precisionUnderSketchCode(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg, Collection<Function> lambdaFunctions) {
@@ -100,7 +101,7 @@ public class PrecisionUnderSketchBuilder {
         funcs.addAll(synth.commonBuilder.getExampleGenerators());
         funcs.addAll(synth.commonBuilder.getPropertyGenerators());
         funcs.add(synth.getSynthesisBody());
-        funcs.add(getPrecisionUnderBody());
+        funcs.add(getPrecisionBody());
         funcs.addAll(lambdaFunctions);
 
         funcs.forEach(func -> func.setPkg(pkgName));

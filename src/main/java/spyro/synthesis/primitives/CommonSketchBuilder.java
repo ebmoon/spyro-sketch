@@ -29,7 +29,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
     public final static String pkgName = "Spyro";
 
-    public final boolean apporx;
+    public final boolean isUnderProblem;
     Program prog;
     Program impl;
     List<Variable> variables;
@@ -57,17 +57,17 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
     Map<String, sketch.compiler.ast.core.typs.Type> variableToSketchType;
     Map<String, sketch.compiler.ast.core.typs.Type> nonterminalToSketchType;
 
-    Map<String, Function> firstExampleGenerators; // map from **Spyro** type to its generator
+    Map<String, Function> firstExampleGenerators; // map from Spyro type to its generator
 
     List<Statement> stmtsToPrepend;
     Map<String, Integer> generatorCxt;
     Map<String, Integer> maxCxt;
     int freshVarCount;
 
-    public CommonSketchBuilder(Program impl, boolean approx) {
+    public CommonSketchBuilder(Program impl, boolean isUnderProblem) {
         this.prog = Program.emptyProgram();
         this.impl = impl;
-        this.apporx = approx;
+        this.isUnderProblem = isUnderProblem;
     }
 
     public List<StructDef> getStructDefinitions() {
@@ -625,7 +625,4 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
     public static final int WO_INIT = 0;
     public static final int W_INIT = 1;
-
-    public static final boolean OVER_APPROX = false;
-    public static final boolean UNDER_APPROX = true;
 }
