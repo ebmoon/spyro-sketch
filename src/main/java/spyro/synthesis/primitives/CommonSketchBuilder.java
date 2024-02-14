@@ -28,6 +28,8 @@ import java.util.stream.Collectors;
 public class CommonSketchBuilder implements SpyroNodeVisitor {
 
     public final static String pkgName = "Spyro";
+
+    public final boolean apporx;
     Program prog;
     Program impl;
     List<Variable> variables;
@@ -36,6 +38,9 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
     List<Parameter> visibleVariableAsParams;
     List<sketch.compiler.ast.core.exprs.Expression> visibleVariableAsExprs;
+    List<Parameter> hiddenVariableAsParams;
+    List<Parameter> hiddenVariableAsParamsRef;
+    List<sketch.compiler.ast.core.exprs.Expression> hiddenVariableAsExprs;
 
     List<sketch.compiler.ast.core.exprs.Expression> inputVariableAsExprs;
     List<sketch.compiler.ast.core.exprs.Expression> outputVariableAsExprs;
@@ -51,16 +56,18 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
     Set<String> outputVariableSet;
     Map<String, sketch.compiler.ast.core.typs.Type> variableToSketchType;
     Map<String, sketch.compiler.ast.core.typs.Type> nonterminalToSketchType;
-    Map<String, Function> firstExampleGenerators;
+
+    Map<String, Function> firstExampleGenerators; // map from **Spyro** type to its generator
 
     List<Statement> stmtsToPrepend;
     Map<String, Integer> generatorCxt;
     Map<String, Integer> maxCxt;
     int freshVarCount;
 
-    public CommonSketchBuilder(Program impl) {
+    public CommonSketchBuilder(Program impl, boolean approx) {
         this.prog = Program.emptyProgram();
         this.impl = impl;
+        this.apporx = approx;
     }
 
     public List<StructDef> getStructDefinitions() {
@@ -87,10 +94,17 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         return exampleGenerators;
     }
 
-    public List<sketch.compiler.ast.core.exprs.Expression> getVariableAsExprs(boolean withHidden) {
-        return withHidden ? variableAsExprs : visibleVariableAsExprs;
+    public List<Parameter> getVisibleVariableAsParams() {
+        return visibleVariableAsParams;
     }
 
+    public List<Parameter> getHiddenVariableAsParamsRef() {
+        return hiddenVariableAsParamsRef;
+    }
+
+    public List<Expression> getHiddenVariableAsExprs() {
+        return hiddenVariableAsExprs;
+    }
 
     public List<Parameter> getVariableAsParams() {
         return variableAsParams;
@@ -110,29 +124,31 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         return ret;
     }
 
+    public Boolean isOutputVariable(String varId) {
+        return outputVariableSet.contains(varId);
+    }
+
 
     /**
      * Construct a series of declare statements for variables
+     * (Comments: Now we assume output is always visible. Consider v/h and i/o as a 2-bit mask  )
      *
-     * @param varIncluded 0: all variables;
-     *                    1: only visible;
-     *                    2: only hidden;
-     *                    3: only input(Todo);
-     *                    4: only output(Todo)
+     * @param varIncluded 1101: only visible
+     *                    1110: only hidden
+     *                    0111: only input
+     *                    1011: only output
+     * @param withInit    0: without
+     *                    1: with
      */
-    public StmtVarDecl getVariablesWithHole(int varIncluded) {
+    public StmtVarDecl getVariableDecls(int varIncluded, int withInit) {
         List<sketch.compiler.ast.core.typs.Type> types = new ArrayList<>();
         List<String> names = new ArrayList<>();
         List<sketch.compiler.ast.core.exprs.Expression> inits = new ArrayList<>();
 
         for (Variable v : variables) {
-            if (varIncluded == 1 && v.isHidden())
-                continue;
-            if (varIncluded == 2 && !v.isHidden())
-                continue;
-            if (varIncluded == 3 && v.isOutput())
-                continue;
-            if (varIncluded == 4 && !v.isOutput())
+            int h = v.isHidden() ? 1 : 0, o = v.isOutput() ? 1 : 0;
+            int varKind = (1 - h) | (h << 1) | ((1 - o) << 2) | (o << 3);
+            if((varKind & varIncluded) != varKind)
                 continue;
             String varID = v.getID();
             Type ty = v.getType();
@@ -140,16 +156,55 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
             names.add(varID);
             types.add(sketchType);
-            String funId = firstExampleGenerators.get(ty.toString()).getName();
-            inits.add(new ExprFunCall((FENode) null, funId, new ArrayList<>()));
+            if (withInit == W_INIT) {
+                String funId = firstExampleGenerators.get(ty.toString()).getName();
+                inits.add(new ExprFunCall((FENode) null, funId, new ArrayList<>()));
+            } else inits.add(null);
         }
 
         return new StmtVarDecl((FENode) null, types, names, inits);
     }
 
+    public List<StmtAssign> getHiddenVariablesWithHole() {
+        List<StmtAssign> stmts = new ArrayList<>();
+        for (Parameter v : hiddenVariableAsParams) {
+            String funId = firstExampleGenerators.get(v.getType().toString()).getName();
+            stmts.add(new StmtAssign(new ExprVar((FENode) null, v.getName()), new ExprFunCall((FENode) null, funId, new ArrayList<>())));
+        }
+        return stmts;
+    }
+
+    /**
+     * Returns a list of variables converted to expressions
+     *
+     * @param varIncluded 0: all variables;
+     *                    1: only visible;
+     *                    2: only hidden;
+     *                    3: only input
+     *                    4: only output
+     */
+    public List<Expression> getVariableAsExprs(int varIncluded) {
+        if (varIncluded == ALL_VAR)
+            return variableAsExprs;
+        if (varIncluded == ONLY_VISIBLE)
+            return visibleVariableAsExprs;
+        if (varIncluded == ONLY_HIDDEN)
+            return hiddenVariableAsExprs;
+        if (varIncluded == ONLY_INPUT)
+            return inputVariableAsExprs;
+        if (varIncluded == ONLY_OUTPUT)
+            return outputVariableAsExprs;
+        return null;
+    }
+
     protected Parameter variableToParam(Variable var) {
         sketch.compiler.ast.core.typs.Type ty = (sketch.compiler.ast.core.typs.Type) var.getType().accept(this);
         return new Parameter((FENode) null, ty, var.getID());
+    }
+
+    protected Parameter variableToParamRef(Variable var) {
+        sketch.compiler.ast.core.typs.Type ty = (sketch.compiler.ast.core.typs.Type) var.getType().accept(this);
+        return new Parameter((FENode) null, ty, var.getID(), Parameter.REF);
     }
 
     protected sketch.compiler.ast.core.typs.Type doType(Type ty) {
@@ -183,6 +238,18 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         visibleVariableAsParams = variables.stream()
                 .filter(decl -> !decl.isHidden())
                 .map(this::variableToParam)
+                .collect(Collectors.toList());
+        hiddenVariableAsExprs = variables.stream()
+                .filter(Variable::isHidden)
+                .map(decl -> new ExprVar((FENode) null, decl.getID()))
+                .collect(Collectors.toList());
+        hiddenVariableAsParams = variables.stream()
+                .filter(Variable::isHidden)
+                .map(this::variableToParam)
+                .collect(Collectors.toList());
+        hiddenVariableAsParamsRef = variables.stream()
+                .filter(Variable::isHidden)
+                .map(this::variableToParamRef)
                 .collect(Collectors.toList());
 
 
@@ -540,8 +607,8 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
         Function f = fc.create();
 
-        if (!firstExampleGenerators.containsKey(returnType.toString()))
-            firstExampleGenerators.put(returnType.toString(), f);
+        if (!firstExampleGenerators.containsKey(rule.getNonterminal().getType().toString()))
+            firstExampleGenerators.put(rule.getNonterminal().getType().toString(), f);
 
         return f;
     }
@@ -549,4 +616,16 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
     public enum RHSTermType {
         RHS_EXAMPLE, RHS_GRAMMAR
     }
+
+    public static final int ALL_VAR = 15;
+    public static final int ONLY_VISIBLE = 1 | 12;
+    public static final int ONLY_HIDDEN = 2 | 12;
+    public static final int ONLY_INPUT = 4 | 3;
+    public static final int ONLY_OUTPUT = 8 | 3;
+
+    public static final int WO_INIT = 0;
+    public static final int W_INIT = 1;
+
+    public static final boolean OVER_APPROX = false;
+    public static final boolean UNDER_APPROX = true;
 }

@@ -5,7 +5,6 @@ import sketch.compiler.ast.core.FENode;
 import sketch.compiler.ast.core.Function;
 import sketch.compiler.ast.core.Parameter;
 import sketch.compiler.ast.core.exprs.*;
-import sketch.compiler.ast.core.exprs.Expression;
 import sketch.compiler.ast.core.stmts.*;
 import sketch.compiler.ast.core.typs.TypePrimitive;
 import spyro.synthesis.primitives.CommonSketchBuilder;
@@ -13,7 +12,6 @@ import spyro.synthesis.primitives.CommonSketchBuilder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Class for synthesized properties.
@@ -24,8 +22,12 @@ import java.util.stream.Collectors;
 public class PropertySet {
     public final static String conjunctionID = "property_conj";
 
+    public final static String disjunctionID = "property_disj";
+
     final CommonSketchBuilder commonBuilder;
-    List<Function> sketchCode = null;
+
+    List<Function> conjunctionSketchCode = null;
+    List<Function> disjunctionSketchCode = null;
     List<Property> properties;
 
     public PropertySet(CommonSketchBuilder commonBuilder) {
@@ -38,7 +40,9 @@ public class PropertySet {
         this.commonBuilder = commonBuilder;
     }
 
-    public PropertySet copy() { return new PropertySet(commonBuilder, properties); }
+    public PropertySet copy() {
+        return new PropertySet(commonBuilder, properties);
+    }
 
     public List<Property> getProperties() {
         return properties;
@@ -46,12 +50,14 @@ public class PropertySet {
 
     public void add(Property phi) {
         properties.add(phi);
-        sketchCode = null;
+        conjunctionSketchCode = null;
+        disjunctionSketchCode = null;
     }
 
     public void addAll(Collection<Property> phis) {
         properties.addAll(phis);
-        sketchCode = null;
+        conjunctionSketchCode = null;
+        disjunctionSketchCode = null;
     }
 
     private Expression conjunction(List<Expression> exprs) {
@@ -67,6 +73,19 @@ public class PropertySet {
         return e;
     }
 
+    private Expression disjunction(List<Expression> exprs) {
+        if (exprs.isEmpty()) {
+            return ExprConstInt.zero;
+        }
+
+        Expression e = exprs.get(0);
+        for (int i = 1; i < exprs.size(); i++) {
+            e = new ExprBinary(ExprBinary.BINOP_OR, e, exprs.get(i));
+        }
+
+        return e;
+    }
+
     private Expression toFunCall(Function fn, List<Expression> params, Expression outVar) {
         List<Expression> paramsWithOut = new ArrayList<>(params);
         paramsWithOut.add(outVar);
@@ -74,13 +93,15 @@ public class PropertySet {
     }
 
     public List<Function> toSketchCode() {
+        boolean codeKind = commonBuilder.apporx;
+        List<Function> sketchCode = codeKind ? disjunctionSketchCode : conjunctionSketchCode;
         if (sketchCode == null) {
             sketchCode = new ArrayList<>();
 
-            Function.FunctionCreator fc = Function.creator((FEContext) null, conjunctionID, Function.FcnType.Static);
+            Function.FunctionCreator fc = Function.creator((FEContext) null, codeKind ? disjunctionID : conjunctionID, Function.FcnType.Static);
             final String tempVarID = "out";
             List<Parameter> params = commonBuilder.getExtendedParams(tempVarID, false);
-            List<Expression> vars = commonBuilder.getVariableAsExprs(false);
+            List<Expression> vars = commonBuilder.getVariableAsExprs(CommonSketchBuilder.ONLY_VISIBLE);
 
             List<Statement> body = new ArrayList<>();
             List<Expression> outVars = new ArrayList<>();
@@ -97,7 +118,7 @@ public class PropertySet {
             }
 
             ExprVar lastParamVar = new ExprVar((FENode) null, tempVarID);
-            body.add(new StmtAssign(lastParamVar, conjunction(outVars)));
+            body.add(new StmtAssign(lastParamVar, codeKind ? disjunction(outVars) : conjunction(outVars)));
 
             fc.params(params);
             fc.body(new StmtBlock(body));
@@ -107,4 +128,8 @@ public class PropertySet {
 
         return sketchCode;
     }
+
+    public static final boolean CONJUNCTION_CODE = false;
+    public static final boolean DISJUNCTION_CODE = true;
+
 }

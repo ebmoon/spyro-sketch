@@ -1,10 +1,7 @@
 package spyro.synthesis.primitives;
 
-import sketch.compiler.ast.core.FEContext;
-import sketch.compiler.ast.core.FENode;
-import sketch.compiler.ast.core.Function;
 import sketch.compiler.ast.core.Package;
-import sketch.compiler.ast.core.Program;
+import sketch.compiler.ast.core.*;
 import sketch.compiler.ast.core.exprs.ExprFunCall;
 import sketch.compiler.ast.core.exprs.ExprUnary;
 import sketch.compiler.ast.core.exprs.ExprVar;
@@ -38,7 +35,7 @@ public class ImprovementSketchBuilder {
             Function.FunctionCreator fc = Function.creator((FEContext) null, improvementFunctionID, Function.FcnType.Harness);
 
             List<Statement> stmts = new ArrayList<>();
-            stmts.add(commonBuilder.getVariablesWithHole(0));
+            stmts.add(commonBuilder.getVariableDecls(CommonSketchBuilder.ALL_VAR, CommonSketchBuilder.W_INIT));
 
             final String tempVarID = "out";
             ExprVar tempVar1 = new ExprVar((FENode) null, tempVarID + "1");
@@ -50,15 +47,24 @@ public class ImprovementSketchBuilder {
             stmts.add(new StmtExpr(new ExprFunCall((FENode) null, Property.phiID,
                     commonBuilder.appendToVariableAsExprs(tempVar1, false))));
             // assert !out;
-            stmts.add(new StmtAssert(new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, tempVar1), false));
+            stmts.add(new StmtAssert(
+                    commonBuilder.apporx ?
+                            tempVar1 :
+                            new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, tempVar1),
+                    false));
 
             // boolean out2
             stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVar2.getName(), null));
-            // property_conj(..., out);
-            stmts.add(new StmtExpr(new ExprFunCall((FENode) null, PropertySet.conjunctionID,
+            // property_conj.disj(..., out);
+            stmts.add(new StmtExpr(new ExprFunCall((FENode) null,
+                    commonBuilder.apporx ? PropertySet.disjunctionID : PropertySet.conjunctionID,
                     commonBuilder.appendToVariableAsExprs(tempVar2, false))));
             // assert out;
-            stmts.add(new StmtAssert(tempVar2, false));
+            stmts.add(new StmtAssert(
+                    commonBuilder.apporx ?
+                            new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, tempVar2) :
+                            tempVar2,
+                    false));
 
             Statement body = new StmtBlock((FENode) null, stmts);
 

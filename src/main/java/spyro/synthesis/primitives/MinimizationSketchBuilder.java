@@ -4,7 +4,6 @@ import sketch.compiler.ast.core.*;
 import sketch.compiler.ast.core.exprs.*;
 import sketch.compiler.ast.core.stmts.*;
 import sketch.compiler.ast.core.typs.TypePrimitive;
-import spyro.compiler.ast.grammar.ExampleRule;
 import spyro.compiler.ast.grammar.GrammarRule;
 import spyro.compiler.ast.grammar.RHSTerm;
 
@@ -23,8 +22,8 @@ public class MinimizationSketchBuilder extends CommonSketchBuilder {
     public final static String sizeVarID = "formula_size";
     public final static String retVarID = "out";
 
-    public MinimizationSketchBuilder(Program impl) {
-        super(impl);
+    public MinimizationSketchBuilder(Program impl, boolean approx) {
+        super(impl, approx);
     }
 
     public List<Statement> doRHSTermMinimize(RHSTerm t) {

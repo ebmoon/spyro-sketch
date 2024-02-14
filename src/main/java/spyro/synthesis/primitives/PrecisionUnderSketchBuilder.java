@@ -16,28 +16,31 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Class to build sketch AST for precision query.
- * It works as a decorator of SynthesisSketchBuilder
+ * Class to build sketch AST for precision query of under-approximation.
+ * It works as decorator of CommonSketchBuilder.
  *
- * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
+ * @author Xuanyu Peng &lt;xuanyupeng@cs.wisc.edu&gt;
  */
-public class PrecisionSketchBuilder {
+public class PrecisionUnderSketchBuilder {
 
     SynthesisSketchBuilder synth;
-    Function precisionBody = null;
+    Function precisionUnderBody = null;
 
-    public final static String precisionFunctionID = "precision";
+    public final static String precisionUnderFunctionID = "precision_under";
 
-    public PrecisionSketchBuilder(SynthesisSketchBuilder synth) {
+    public PrecisionUnderSketchBuilder(SynthesisSketchBuilder synth) {
         this.synth = synth;
     }
 
-    private Function getPrecisionBody() {
-        if (precisionBody == null) {
-            Function.FunctionCreator fc = Function.creator((FEContext) null, precisionFunctionID, Function.FcnType.Harness);
+    private Function getPrecisionUnderBody() {
+        if (precisionUnderBody == null) {
+            Function.FunctionCreator fc = Function.creator((FEContext) null, precisionUnderFunctionID, Function.FcnType.Harness);
 
             List<Statement> stmts = new ArrayList<>();
-            stmts.add(synth.commonBuilder.getVariableDecls(CommonSketchBuilder.ALL_VAR,CommonSketchBuilder.W_INIT));
+            stmts.add(synth.commonBuilder.getVariableDecls(CommonSketchBuilder.ONLY_INPUT,CommonSketchBuilder.W_INIT));
+            stmts.add(synth.commonBuilder.getVariableDecls(CommonSketchBuilder.ONLY_OUTPUT,CommonSketchBuilder.WO_INIT));
+            stmts.addAll(synth.commonBuilder.getSignatureAsStmts());
+
 
             final String tempVarID = "out";
             ExprVar tempVar1 = new ExprVar((FENode) null, tempVarID + "1");
@@ -49,16 +52,16 @@ public class PrecisionSketchBuilder {
             // synthesized_property(..., out);
             stmts.add(new StmtExpr(new ExprFunCall((FENode) null, Property.phiID,
                     synth.commonBuilder.appendToVariableAsExprs(tempVar1, false))));
-            // assert out;
-            stmts.add(new StmtAssert(tempVar1, false));
+            // assert !out;
+            stmts.add(new StmtAssert(new ExprUnary("!", tempVar1), false));
 
             // boolean out2
             stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVar2.getName(), null));
-            // property_conj(..., out);
-            stmts.add(new StmtExpr(new ExprFunCall((FENode) null, PropertySet.conjunctionID,
+            // property_disj(..., out);
+            stmts.add(new StmtExpr(new ExprFunCall((FENode) null, PropertySet.disjunctionID,
                     synth.commonBuilder.appendToVariableAsExprs(tempVar2,false))));
-            // assert out;
-            stmts.add(new StmtAssert(tempVar2, false));
+            // assert !out;
+            stmts.add(new StmtAssert(new ExprUnary("!", tempVar2), false));
 
 
             // boolean out3
@@ -66,20 +69,20 @@ public class PrecisionSketchBuilder {
             // property(..., out);
             stmts.add(new StmtExpr(new ExprFunCall((FENode) null, Property.newPhiID,
                     synth.commonBuilder.appendToVariableAsExprs(tempVar3,false))));
-            // assert !out;
-            stmts.add(new StmtAssert(new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, tempVar3), false));
+            // assert out;
+            stmts.add(new StmtAssert(tempVar3, false));
 
             Statement body = new StmtBlock((FENode) null, stmts);
             fc.params(new ArrayList<>());
             fc.body(body);
 
-            precisionBody = fc.create();
+            precisionUnderBody = fc.create();
         }
 
-        return precisionBody;
+        return precisionUnderBody;
     }
 
-    public Program precisionSketchCode(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg, Collection<Function> lambdaFunctions) {
+    public Program precisionUnderSketchCode(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg, Collection<Function> lambdaFunctions) {
         final String pkgName = CommonSketchBuilder.pkgName;
         List<ExprVar> vars = new ArrayList<ExprVar>();
         List<StmtSpAssert> specialAsserts = new ArrayList<StmtSpAssert>();
@@ -97,7 +100,7 @@ public class PrecisionSketchBuilder {
         funcs.addAll(synth.commonBuilder.getExampleGenerators());
         funcs.addAll(synth.commonBuilder.getPropertyGenerators());
         funcs.add(synth.getSynthesisBody());
-        funcs.add(getPrecisionBody());
+        funcs.add(getPrecisionUnderBody());
         funcs.addAll(lambdaFunctions);
 
         funcs.forEach(func -> func.setPkg(pkgName));
