@@ -21,23 +21,23 @@ import java.util.List;
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
-public class PrecisionSketchBuilder {
+public class PrecisionOverSketchBuilder {
 
     SynthesisSketchBuilder synth;
     Function precisionBody = null;
 
     public final static String precisionFunctionID = "precision";
 
-    public PrecisionSketchBuilder(SynthesisSketchBuilder synth) {
+    public PrecisionOverSketchBuilder(SynthesisSketchBuilder synth) {
         this.synth = synth;
     }
 
-    private Function getPrecisionBody() {
+    private Function getPrecisionOverBody() {
         if (precisionBody == null) {
             Function.FunctionCreator fc = Function.creator((FEContext) null, precisionFunctionID, Function.FcnType.Harness);
 
             List<Statement> stmts = new ArrayList<>();
-            stmts.add(synth.commonBuilder.getVariableDecls(CommonSketchBuilder.ALL_VAR,CommonSketchBuilder.W_INIT));
+            stmts.add(synth.commonBuilder.getVariableDecls(CommonSketchBuilder.ALL_VAR, CommonSketchBuilder.W_INIT));
 
             final String tempVarID = "out";
             ExprVar tempVar1 = new ExprVar((FENode) null, tempVarID + "1");
@@ -77,6 +77,61 @@ public class PrecisionSketchBuilder {
         }
 
         return precisionBody;
+    }
+
+
+    private Function getPrecisionUnderBody() {
+        if (precisionBody == null) {
+            Function.FunctionCreator fc = Function.creator((FEContext) null, precisionFunctionID, Function.FcnType.Harness);
+
+            List<Statement> stmts = new ArrayList<>();
+            stmts.add(synth.commonBuilder.getVariableDecls(CommonSketchBuilder.ONLY_INPUT, CommonSketchBuilder.W_INIT));
+            stmts.add(synth.commonBuilder.getVariableDecls(CommonSketchBuilder.ONLY_OUTPUT, CommonSketchBuilder.WO_INIT));
+            stmts.addAll(synth.commonBuilder.getSignatureAsStmts());
+
+
+            final String tempVarID = "out";
+            ExprVar tempVar1 = new ExprVar((FENode) null, tempVarID + "1");
+            ExprVar tempVar2 = new ExprVar((FENode) null, tempVarID + "2");
+            ExprVar tempVar3 = new ExprVar((FENode) null, tempVarID + "3");
+
+            // boolean out1;
+            stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVar1.getName(), null));
+            // synthesized_property(..., out);
+            stmts.add(new StmtExpr(new ExprFunCall((FENode) null, Property.phiID,
+                    synth.commonBuilder.appendToVariableAsExprs(tempVar1, false))));
+            // assert !out;
+            stmts.add(new StmtAssert(new ExprUnary("!", tempVar1), false));
+
+            // boolean out2
+            stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVar2.getName(), null));
+            // property_disj(..., out);
+            stmts.add(new StmtExpr(new ExprFunCall((FENode) null, PropertySet.disjunctionID,
+                    synth.commonBuilder.appendToVariableAsExprs(tempVar2,false))));
+            // assert !out;
+            stmts.add(new StmtAssert(new ExprUnary("!", tempVar2), false));
+
+
+            // boolean out3
+            stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVar3.getName(), null));
+            // property(..., out);
+            stmts.add(new StmtExpr(new ExprFunCall((FENode) null, Property.newPhiID,
+                    synth.commonBuilder.appendToVariableAsExprs(tempVar3,false))));
+            // assert out;
+            stmts.add(new StmtAssert(tempVar3, false));
+
+            Statement body = new StmtBlock((FENode) null, stmts);
+            fc.params(new ArrayList<>());
+            fc.body(body);
+
+            precisionBody = fc.create();
+        }
+
+        return precisionBody;
+    }
+
+    private Function getPrecisionBody() {
+        return synth.commonBuilder.isOverProblem ? getPrecisionOverBody() : getPrecisionUnderBody();
     }
 
     public Program precisionSketchCode(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg, Collection<Function> lambdaFunctions) {

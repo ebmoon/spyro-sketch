@@ -15,18 +15,17 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Class to build sketch AST for precision query.
- * It works as a decorator of CommonSketchBuilder
+ * Class to build sketch AST for checking improvement in over-approx problem.
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
-public class ImprovementSketchBuilder {
+public class ImprovementOverSketchBuilder {
 
     final CommonSketchBuilder commonBuilder;
     public final static String improvementFunctionID = "improvement";
     Function improvementBody = null;
 
-    public ImprovementSketchBuilder(CommonSketchBuilder commonBuilder) {
+    public ImprovementOverSketchBuilder(CommonSketchBuilder commonBuilder) {
         this.commonBuilder = commonBuilder;
     }
 
@@ -48,7 +47,7 @@ public class ImprovementSketchBuilder {
                     commonBuilder.appendToVariableAsExprs(tempVar1, false))));
             // assert !out;
             stmts.add(new StmtAssert(
-                    commonBuilder.apporx ?
+                    commonBuilder.isOverProblem ?
                             tempVar1 :
                             new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, tempVar1),
                     false));
@@ -57,11 +56,11 @@ public class ImprovementSketchBuilder {
             stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVar2.getName(), null));
             // property_conj.disj(..., out);
             stmts.add(new StmtExpr(new ExprFunCall((FENode) null,
-                    commonBuilder.apporx ? PropertySet.disjunctionID : PropertySet.conjunctionID,
+                    commonBuilder.isOverProblem ? PropertySet.disjunctionID : PropertySet.conjunctionID,
                     commonBuilder.appendToVariableAsExprs(tempVar2, false))));
             // assert out;
             stmts.add(new StmtAssert(
-                    commonBuilder.apporx ?
+                    commonBuilder.isOverProblem ?
                             new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, tempVar2) :
                             tempVar2,
                     false));
