@@ -50,10 +50,10 @@ public class Spyro extends SequentialSketchMain {
     private CommonSketchBuilder commonSketchBuilder;
     private SynthesisSketchBuilder synth;
     private MinimizationSynthesisSketchBuilder synthMin;
-    private SoundnessSketchBuilder soundness;
+    private SoundnessOverSketchBuilder soundness;
     private SoundnessUnderSketchBuilder soundnessUnder;
-    private PrecisionSketchBuilder precision;
-    private PrecisionSketchBuilder precisionMin;
+    private PrecisionOverSketchBuilder precision;
+    private PrecisionOverSketchBuilder precisionMin;
     private PrecisionUnderSketchBuilder precisionUnder;
     private PrecisionUnderSketchBuilder precisionUnderMin;
     private ImprovementSketchBuilder improvement;
@@ -254,7 +254,7 @@ public class Spyro extends SequentialSketchMain {
         return checkPrecision(psi, phi, pos, neg, precisionMin);
     }
 
-    public Pair<Property, Example> checkPrecision(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg, PrecisionSketchBuilder precision) {
+    public Pair<Property, Example> checkPrecision(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg, PrecisionOverSketchBuilder precision) {
         Program sketchCode = precision.precisionSketchCode(psi, phi, pos, neg, lambdaFunctions.values());
         SynthesisResult synthResult = runSketchSolver(sketchCode);
         if (synthResult != null && synthResult.solution != null) {
@@ -427,7 +427,7 @@ public class Spyro extends SequentialSketchMain {
         }
     }
 
-    public PropertySet synthesizeProperties(PropertySet psiInit) {
+    public PropertySet synthesizeOverProperties(PropertySet psiInit) {
         PropertySet psi = new PropertySet(commonSketchBuilder);
         ExampleSet pos = new ExampleSet();
         ExampleSet negMust;
@@ -459,7 +459,7 @@ public class Spyro extends SequentialSketchMain {
             // because we already have an example satisfying pos and negMust
             phi = synthesizeMin(pos, negMust);
 
-            // Strengthen the found property to be most precise L-property
+            // Strengthen the found property to be most precise L-over-approximation
             result = synthesizeMinimalProperty(new PropertySet(commonSketchBuilder), phi, pos, negMust);
             phi = result.prop;
             pos = result.pos;
@@ -486,7 +486,7 @@ public class Spyro extends SequentialSketchMain {
             neg = result.neg;
 
             // Check if most precise candidates improves property.
-            // If negMust is nonempty, those examples are witness of improvement.
+            // If posMust is nonempty, those examples are witness of improvement.
             if (posMust.isEmpty()) {
                 Example pos = checkImprovement(psi, phi);
                 if (pos != null) {
@@ -498,10 +498,10 @@ public class Spyro extends SequentialSketchMain {
 
             // Synthesize a new candidate, which is minimized
             // We can always synthesize a property here
-            // because we already have an example satisfying pos and negMust
+            // because we already have an example satisfying posMust and neg
             phi = synthesizeMin(posMust, neg);
 
-            // Strengthen the found property to be most precise L-property
+            // Weaken the found property to be most precise L-under-approximation
             result = synthesizeMinimalUnderProperty(new PropertySet(commonSketchBuilder), phi, posMust, neg);
             phi = result.prop;
             neg = result.neg;
@@ -521,18 +521,20 @@ public class Spyro extends SequentialSketchMain {
             throw new ParseException("could not parse program");
         }
 
-        boolean flag = CommonSketchBuilder.UNDER_APPROX;
 
-        commonSketchBuilder = new CommonSketchBuilder(prog, flag);
-        MinimizationSketchBuilder minSketchBuilder = new MinimizationSketchBuilder(prog, flag);
+        boolean isUnderProblem = options.synthOpts.under;
+
+        commonSketchBuilder = new CommonSketchBuilder(prog, isUnderProblem);
+        MinimizationSketchBuilder minSketchBuilder = new MinimizationSketchBuilder(prog, isUnderProblem);
         query.accept(commonSketchBuilder);
         query.accept(minSketchBuilder);
 
         synth = new SynthesisSketchBuilder(commonSketchBuilder);
-        soundness = new SoundnessSketchBuilder(commonSketchBuilder);
-        precision = new PrecisionSketchBuilder(synth);
         synthMin = new MinimizationSynthesisSketchBuilder(minSketchBuilder);
-        precisionMin = new PrecisionSketchBuilder(synthMin);
+
+        soundness = new SoundnessOverSketchBuilder(commonSketchBuilder);
+        precision = new PrecisionOverSketchBuilder(synth);
+        precisionMin = new PrecisionOverSketchBuilder(synthMin);
         improvement = new ImprovementSketchBuilder(commonSketchBuilder);
 
         soundnessUnder = new SoundnessUnderSketchBuilder(commonSketchBuilder);
@@ -547,7 +549,7 @@ public class Spyro extends SequentialSketchMain {
         falsity = Property.falsity(params);
 
         PropertySet psi = new PropertySet(commonSketchBuilder);
-        PropertySet properties = flag ? synthesizeUnderProperties(psi) : synthesizeProperties(psi);
+        PropertySet properties = isUnderProblem ? synthesizeUnderProperties(psi) : synthesizeOverProperties(psi);
 
 
         int idx = 0;

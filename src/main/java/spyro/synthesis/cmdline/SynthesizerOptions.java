@@ -10,7 +10,10 @@ import sketch.util.cli.CliParameter;
  */
 public class SynthesizerOptions extends CliAnnotatedOptionGroup {
 
+    @CliParameter(help = "Synthesize under-approximations instead of over-approximations")
+    public boolean under = false;
+
     public SynthesizerOptions() {
-        super("spyro", "options for property synthesis loop");
+        super("synth", "options for property synthesis loop");
     }
 }

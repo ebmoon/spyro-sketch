@@ -19,13 +19,13 @@ import java.util.List;
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
-public class SoundnessSketchBuilder {
+public class SoundnessOverSketchBuilder {
 
     final CommonSketchBuilder commonBuilder;
     public final static String soundnessFunctionID = "soundness";
     Function soundnessBody = null;
 
-    public SoundnessSketchBuilder(CommonSketchBuilder commonBuilder) {
+    public SoundnessOverSketchBuilder(CommonSketchBuilder commonBuilder) {
         this.commonBuilder = commonBuilder;
     }
 
