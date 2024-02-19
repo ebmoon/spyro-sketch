@@ -12,7 +12,7 @@ void getData(PosInt x, ref int data) {
 }
 
 void hashfunc(int h, int x, PosInt M, ref int ret) {
-    ret = (h * x) % M.data;
+    ret = ((h * x) % M.data + M.data) % M.data;
 }
 
 void prog(ArrayList S, PosInt M, int h, ref boolean collide) {
@@ -48,7 +48,7 @@ void setsizemod(ArrayList arr, PosInt M, ref int ret) {
     for(int i = 0; i < M.data; i++)
         So[i] = 0;
     for(int i = 0; i < arr.size; i++)
-        So[arr.elementData[i] % M.data] = 1;
+        So[(arr.elementData[i] % M.data + M.data) % M.data] = 1;
     ret = 0;
     for(int i = 0; i < M.data; i++)
         ret += So[i];

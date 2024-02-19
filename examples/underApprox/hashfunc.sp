@@ -16,7 +16,7 @@ language {
 }
 
 examples {
-    int IEX  -> ??(4);
+    int IEX  -> ??(4) - 8;
     PosInt PosIntEX-> genPosInt();
     ArrayList ALEX-> newArrayList() | add(ALEX, IEX);
     boolean BEX-> true | false;
