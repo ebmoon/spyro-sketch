@@ -29,6 +29,8 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
     public final static String pkgName = "Spyro";
 
+    public final static String equalityOperatorSuffix = "Equal";
+
     public final boolean isUnderProblem;
     Program prog;
     Program impl;

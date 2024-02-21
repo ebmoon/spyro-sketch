@@ -10,12 +10,8 @@ import sketch.compiler.ast.core.stmts.*;
 import sketch.compiler.ast.core.typs.StructDef;
 import sketch.compiler.ast.core.typs.TypePrimitive;
 import spyro.synthesis.Example;
-import spyro.util.exceptions.SketchConversionException;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Class to build sketch AST for hidden witness query,
@@ -39,7 +35,7 @@ public class HiddenWitnessSketchBuilder {
 
     private Function getHiddenVariableGenerator() {
         if (hiddenVariableGenerator == null) {
-            Function.FunctionCreator fc = Function.creator((FEContext) null, hiddenVariableGeneratorID,Function.FcnType.Static);
+            Function.FunctionCreator fc = Function.creator((FEContext) null, hiddenVariableGeneratorID, Function.FcnType.Static);
             List<Statement> stmts = new ArrayList<>(commonBuilder.getHiddenVariablesWithHole());
             Statement body = new StmtBlock((FENode) null, stmts);
             fc.params(commonBuilder.getHiddenVariableAsParamsRef());
@@ -86,14 +82,20 @@ public class HiddenWitnessSketchBuilder {
         for (Parameter var : visibleVar)
             if (commonBuilder.isOutputVariable(var.getName())) {
                 final String tempVarId = "out_" + var.getName();
+                ExprVar out = new ExprVar((FENode) null, tempVarId);
+                ExprVar op1 = new ExprVar((FENode) null, var.getName());
+                ExprVar op2 = new ExprVar((FENode) null, var.getName() + suffixOfSynthResult);
                 // boolean out_xxx;
                 stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVarId, null));
+
                 if (var.getType() instanceof TypePrimitive) {
-                    stmts.add(new StmtAssign(new ExprVar((FENode) null, tempVarId),
-                            new ExprBinary(ExprBinary.BINOP_EQ, new ExprVar((FENode) null, var.getName()), new ExprVar((FENode) null, var.getName() + suffixOfSynthResult))));
+                    stmts.add(new StmtAssign(out, new ExprBinary(ExprBinary.BINOP_EQ, op1, op2)));
                 } else {
-                    // todo: support struct
-                    throw new SketchConversionException("equality checker needed for user-defined datatype");
+                    String funID = var.getType().toString() + CommonSketchBuilder.equalityOperatorSuffix;
+                    stmts.add(new StmtExpr(new ExprFunCall((FENode) null,
+                            funID,
+                            new ArrayList<>(Arrays.asList(op1, op2, out))
+                    )));
                 }
                 stmts.add(new StmtAssert(new ExprVar((FENode) null, tempVarId), false));
 

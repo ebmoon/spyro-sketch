@@ -13,6 +13,7 @@ import spyro.synthesis.Property;
 import spyro.util.exceptions.SketchConversionException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -185,13 +186,20 @@ public class ResultExtractor {
                 final String tempVarId = "out_" + var.getName();
                 tempVarIdList.add(tempVarId);
                 // boolean out_xxx;
+                ExprVar out = new ExprVar((FENode) null, tempVarId);
+                ExprVar op1 = new ExprVar((FENode) null, var.getName());
+                ExprVar op2 = new ExprVar((FENode) null, var.getName() + suffixOfSynthResult);
+                // boolean out_xxx;
                 stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVarId, null));
+
                 if (var.getType() instanceof TypePrimitive) {
-                    stmts.add(new StmtAssign(new ExprVar((FENode) null, tempVarId),
-                            new ExprBinary(ExprBinary.BINOP_EQ, new ExprVar((FENode) null, var.getName()), new ExprVar((FENode) null, var.getName() + suffixOfSynthResult))));
+                    stmts.add(new StmtAssign(out, new ExprBinary(ExprBinary.BINOP_EQ, op1, op2)));
                 } else {
-                    // todo: support struct
-                    throw new SketchConversionException("equality checker needed for user-defined datatype");
+                    String funID = var.getType().toString() + CommonSketchBuilder.equalityOperatorSuffix;
+                    stmts.add(new StmtExpr(new ExprFunCall((FENode) null,
+                            funID,
+                            new ArrayList<>(Arrays.asList(op1, op2, out))
+                    )));
                 }
             }
 
