@@ -34,7 +34,8 @@ public class SoundnessOverSketchBuilder {
             Function.FunctionCreator fc = Function.creator((FEContext) null, soundnessFunctionID, Function.FcnType.Harness);
 
             List<Statement> stmts = new ArrayList<>();
-            stmts.add(commonBuilder.getVariableDecls(CommonSketchBuilder.ALL_VAR,CommonSketchBuilder.W_INIT));
+            stmts.add(commonBuilder.getVariableDecls(CommonSketchBuilder.ONLY_INPUT,CommonSketchBuilder.W_INIT));
+            stmts.add(commonBuilder.getVariableDecls(CommonSketchBuilder.ONLY_OUTPUT,CommonSketchBuilder.WO_INIT));
             stmts.addAll(commonBuilder.getSignatureAsStmts());
 
             final String tempVarID = "out";
@@ -44,7 +45,7 @@ public class SoundnessOverSketchBuilder {
             // boolean out;
             stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVar.getName(), null));
             // synthesized_property(..., out);
-            stmts.add(new StmtExpr(new ExprFunCall((FENode) null, phi, commonBuilder.appendToVariableAsExprs(tempVar, false))));
+            stmts.add(new StmtExpr(new ExprFunCall((FENode) null, phi, commonBuilder.getVariableAsExprs(CommonSketchBuilder.ONLY_VISIBLE, tempVarID))));
             // assert !out;
             stmts.add(new StmtAssert(new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, tempVar), false));
 

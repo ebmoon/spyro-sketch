@@ -44,7 +44,7 @@ public class ImprovementSketchBuilder {
             stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVar1.getName(), null));
             // synthesized_property(..., out);
             stmts.add(new StmtExpr(new ExprFunCall((FENode) null, Property.phiID,
-                    commonBuilder.appendToVariableAsExprs(tempVar1, false))));
+                    commonBuilder.getVariableAsExprs(CommonSketchBuilder.ONLY_VISIBLE, tempVar1.getName()))));
             // assert out;
             stmts.add(new StmtAssert(tempVar1, false));
 
@@ -53,7 +53,7 @@ public class ImprovementSketchBuilder {
             // property_disj(..., out2);
             stmts.add(new StmtExpr(new ExprFunCall((FENode) null,
                     PropertySet.disjunctionID,
-                    commonBuilder.appendToVariableAsExprs(tempVar2, false))));
+                    commonBuilder.getVariableAsExprs(CommonSketchBuilder.ONLY_VISIBLE, tempVar2.getName()))));
             // assert !out2;
             stmts.add(new StmtAssert(new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, tempVar2), false));
 
@@ -83,7 +83,7 @@ public class ImprovementSketchBuilder {
             stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVar1.getName(), null));
             // synthesized_property(..., out);
             stmts.add(new StmtExpr(new ExprFunCall((FENode) null, Property.phiID,
-                    commonBuilder.appendToVariableAsExprs(tempVar1, false))));
+                    commonBuilder.getVariableAsExprs(CommonSketchBuilder.ONLY_VISIBLE, tempVar1.getName()))));
             // assert !out;
             stmts.add(new StmtAssert(new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, tempVar1), false));
 
@@ -92,7 +92,7 @@ public class ImprovementSketchBuilder {
             // property_conj(..., out2);
             stmts.add(new StmtExpr(new ExprFunCall((FENode) null,
                     PropertySet.conjunctionID,
-                    commonBuilder.appendToVariableAsExprs(tempVar2, false))));
+                    commonBuilder.getVariableAsExprs(CommonSketchBuilder.ONLY_VISIBLE, tempVar2.getName()))));
             // assert out2;
             stmts.add(new StmtAssert(tempVar2, false));
 

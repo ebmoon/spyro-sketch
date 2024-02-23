@@ -22,7 +22,7 @@ import java.util.*;
  */
 public class HiddenWitnessSketchBuilder {
     public final static String hiddenWitnessFunctionID = "hidden_witness";
-    public final static String hiddenVariableGeneratorID = "gen_hidden_variables_wrapper";
+    public final static String hiddenVariableGeneratorID = "gen_hidden_variables";
     public final static String suffixOfSynthResult = "_of_the_example";
     final CommonSketchBuilder commonBuilder;
     Function hiddenWitnessBody = null;
@@ -38,7 +38,7 @@ public class HiddenWitnessSketchBuilder {
             Function.FunctionCreator fc = Function.creator((FEContext) null, hiddenVariableGeneratorID, Function.FcnType.Static);
             List<Statement> stmts = new ArrayList<>(commonBuilder.getHiddenVariablesWithHole());
             Statement body = new StmtBlock((FENode) null, stmts);
-            fc.params(commonBuilder.getHiddenVariableAsParamsRef());
+            fc.params(commonBuilder.getHiddenVarAsParamsRef());
             fc.body(body);
             hiddenVariableGenerator = fc.create();
         }
@@ -54,12 +54,12 @@ public class HiddenWitnessSketchBuilder {
         // declare fresh hidden variables
         stmts.add(commonBuilder.getVariableDecls(CommonSketchBuilder.ONLY_HIDDEN, CommonSketchBuilder.WO_INIT));
         // set the hidden variables by generated value
-        stmts.add(new StmtExpr(new ExprFunCall((FENode) null, hiddenVariableGeneratorID, commonBuilder.getHiddenVariableAsExprs())));
+        stmts.add(new StmtExpr(new ExprFunCall((FENode) null, hiddenVariableGeneratorID, commonBuilder.getVariableAsExprs(CommonSketchBuilder.ONLY_HIDDEN, null))));
 
         // example
         stmts.addAll(e.getInitialCode());
         Map<Parameter, Expression> visibleVarToResultName = new HashMap<>();
-        List<Parameter> visibleVar = commonBuilder.getVisibleVariableAsParams();
+        List<Parameter> visibleVar = commonBuilder.getVariableAsParams(CommonSketchBuilder.ONLY_VISIBLE, null);
         for (int i = 0, sz = visibleVar.size(); i < sz; i++) {
             visibleVarToResultName.put(visibleVar.get(i), e.getVarList().get(i));
         }
@@ -73,33 +73,32 @@ public class HiddenWitnessSketchBuilder {
         }
 
         // declare fresh output variables
-        stmts.add(commonBuilder.getVariableDecls(CommonSketchBuilder.ONLY_OUTPUT, CommonSketchBuilder.WO_INIT));
+        stmts.add(commonBuilder.getVariableDecls(CommonSketchBuilder.ONLY_OUTPUT & CommonSketchBuilder.ONLY_VISIBLE, CommonSketchBuilder.WO_INIT));
 
         // Signature
         stmts.addAll(commonBuilder.getSignatureAsStmts());
 
         // equality check for output variables
-        for (Parameter var : visibleVar)
-            if (commonBuilder.isOutputVariable(var.getName())) {
-                final String tempVarId = "out_" + var.getName();
-                ExprVar out = new ExprVar((FENode) null, tempVarId);
-                ExprVar op1 = new ExprVar((FENode) null, var.getName());
-                ExprVar op2 = new ExprVar((FENode) null, var.getName() + suffixOfSynthResult);
-                // boolean out_xxx;
-                stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVarId, null));
+        for (Parameter var : commonBuilder.getVariableAsParams(CommonSketchBuilder.ONLY_VISIBLE & CommonSketchBuilder.ONLY_OUTPUT, null)) {
+            final String tempVarId = "out_" + var.getName();
+            ExprVar out = new ExprVar((FENode) null, tempVarId);
+            ExprVar op1 = new ExprVar((FENode) null, var.getName());
+            ExprVar op2 = new ExprVar((FENode) null, var.getName() + suffixOfSynthResult);
+            // boolean out_xxx;
+            stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVarId, null));
 
-                if (var.getType() instanceof TypePrimitive) {
-                    stmts.add(new StmtAssign(out, new ExprBinary(ExprBinary.BINOP_EQ, op1, op2)));
-                } else {
-                    String funID = var.getType().toString() + CommonSketchBuilder.equalityOperatorSuffix;
-                    stmts.add(new StmtExpr(new ExprFunCall((FENode) null,
-                            funID,
-                            new ArrayList<>(Arrays.asList(op1, op2, out))
-                    )));
-                }
-                stmts.add(new StmtAssert(new ExprVar((FENode) null, tempVarId), false));
-
+            if (var.getType() instanceof TypePrimitive) {
+                stmts.add(new StmtAssign(out, new ExprBinary(ExprBinary.BINOP_EQ, op1, op2)));
+            } else {
+                String funID = var.getType().toString() + CommonSketchBuilder.equalityOperatorSuffix;
+                stmts.add(new StmtExpr(new ExprFunCall((FENode) null,
+                        funID,
+                        new ArrayList<>(Arrays.asList(op1, op2, out))
+                )));
             }
+            stmts.add(new StmtAssert(new ExprVar((FENode) null, tempVarId), false));
+
+        }
 
         Statement body = new StmtBlock((FENode) null, stmts);
 

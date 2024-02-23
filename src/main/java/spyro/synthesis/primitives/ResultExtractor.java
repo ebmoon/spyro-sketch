@@ -10,7 +10,6 @@ import sketch.compiler.ast.core.typs.TypePrimitive;
 import spyro.synthesis.Example;
 import spyro.synthesis.HiddenValue;
 import spyro.synthesis.Property;
-import spyro.util.exceptions.SketchConversionException;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -168,40 +167,42 @@ public class ResultExtractor {
     public static HiddenValue extractHiddenValue(Program result, CommonSketchBuilder builder) {
         StmtBlock body = (StmtBlock) findFunction(result, HiddenWitnessSketchBuilder.hiddenVariableGeneratorID).getBody();
         List<Statement> stmts = new ArrayList<>();
+
+        // Declare hidden variables and assign them with the value of the witness
         stmts.add(builder.getVariableDecls(CommonSketchBuilder.ONLY_HIDDEN, CommonSketchBuilder.WO_INIT));
         stmts.addAll(body.getStmts());
 
-        List<Parameter> visibleVar = builder.getVisibleVariableAsParams();
-        for (Parameter var : visibleVar)
-            if (builder.isOutputVariable(var.getName())) {
-                stmts.add(new StmtVarDecl((FENode) null, var.getType(), var.getName() + suffixOfSynthResult,
-                        new ExprVar((FENode) null, var.getName())));
-            }
+        // Store the output value of the given example (compared with output value obtained by running the query)
+        List<Parameter> visibleOutputVar = builder.getVariableAsParams(CommonSketchBuilder.ONLY_VISIBLE & CommonSketchBuilder.ONLY_OUTPUT, null);
+        for (Parameter var : visibleOutputVar)
+            stmts.add(new StmtVarDecl((FENode) null, var.getType(), var.getName() + suffixOfSynthResult,
+                    new ExprVar((FENode) null, var.getName())));
 
+
+        // run the query
         stmts.addAll(builder.getSignatureAsStmts());
 
+        // Check whether the output of query and example are equal
         List<String> tempVarIdList = new ArrayList<>();
-        for (Parameter var : visibleVar)
-            if (builder.isOutputVariable(var.getName())) {
-                final String tempVarId = "out_" + var.getName();
-                tempVarIdList.add(tempVarId);
-                // boolean out_xxx;
-                ExprVar out = new ExprVar((FENode) null, tempVarId);
-                ExprVar op1 = new ExprVar((FENode) null, var.getName());
-                ExprVar op2 = new ExprVar((FENode) null, var.getName() + suffixOfSynthResult);
-                // boolean out_xxx;
-                stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVarId, null));
+        for (Parameter var : visibleOutputVar) {
+            final String tempVarId = "out_" + var.getName();
+            tempVarIdList.add(tempVarId);
+            ExprVar out = new ExprVar((FENode) null, tempVarId);
+            ExprVar op1 = new ExprVar((FENode) null, var.getName());
+            ExprVar op2 = new ExprVar((FENode) null, var.getName() + suffixOfSynthResult);
+            // boolean out_xxx;
+            stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVarId, null));
 
-                if (var.getType() instanceof TypePrimitive) {
-                    stmts.add(new StmtAssign(out, new ExprBinary(ExprBinary.BINOP_EQ, op1, op2)));
-                } else {
-                    String funID = var.getType().toString() + CommonSketchBuilder.equalityOperatorSuffix;
-                    stmts.add(new StmtExpr(new ExprFunCall((FENode) null,
-                            funID,
-                            new ArrayList<>(Arrays.asList(op1, op2, out))
-                    )));
-                }
+            if (var.getType() instanceof TypePrimitive) {
+                stmts.add(new StmtAssign(out, new ExprBinary(ExprBinary.BINOP_EQ, op1, op2)));
+            } else {
+                String funID = var.getType().toString() + CommonSketchBuilder.equalityOperatorSuffix;
+                stmts.add(new StmtExpr(new ExprFunCall((FENode) null,
+                        funID,
+                        new ArrayList<>(Arrays.asList(op1, op2, out))
+                )));
             }
+        }
 
 //         assert(!(out_x && ...))
         Expression assertCondition = ExprConstInt.one;

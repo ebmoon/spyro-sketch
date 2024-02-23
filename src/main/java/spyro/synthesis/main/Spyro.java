@@ -45,6 +45,7 @@ import java.util.Map;
 public class Spyro extends SequentialSketchMain {
     public static boolean isDebug = false;
     public boolean isVerbose;
+    public boolean printSolvingTrace = true;
     public SpyroOptions options;
 
     private CommonSketchBuilder commonSketchBuilder;
@@ -75,7 +76,6 @@ public class Spyro extends SequentialSketchMain {
         super(new SpyroOptions(args));
         this.options = (SpyroOptions) super.options;
         isVerbose = this.options.debugOpts.verbosity > 1;
-
         PlatformLocalization.getLocalization().setTempDirs();
         Path tempPath = Paths.get(tempFileDir);
         if (!Files.isDirectory(tempPath)) {
@@ -189,19 +189,23 @@ public class Spyro extends SequentialSketchMain {
     }
 
     public Example checkSoundness(Property phi) {
-        if (isVerbose)
+        if (isVerbose || printSolvingTrace)
             System.out.printf("CheckSoundness : Property %d - Query %d\n", outerIterator, innerIterator);
         Program sketchCode = soundness.soundnessSketchCode(phi, lambdaFunctions.values());
         Program substitutedCleaned = runAndSimplify(sketchCode);
         if (substitutedCleaned != null) {
+            if (printSolvingTrace)
+                System.out.println("Sound.");
             return ResultExtractor.extractPositiveExample(substitutedCleaned);
         } else {
+            if (printSolvingTrace)
+                System.out.println("Unsound.");
             return null;
         }
     }
 
     public Example checkSoundnessUnder(Property phi) {
-        if (isVerbose)
+        if (isVerbose || printSolvingTrace)
             System.out.printf("CheckSoundnessUnder : Property %d - Query %d\n", outerIterator, innerIterator);
 
         if (reuseHiddenValue == false)
@@ -216,22 +220,27 @@ public class Spyro extends SequentialSketchMain {
                 if (substitutedCleaned != null) {
                     HiddenValue hiddenValue = ResultExtractor.extractHiddenValue(substitutedCleaned, commonSketchBuilder);
                     hSet.add(hiddenValue);
-                } else
+                } else {
+                    if (printSolvingTrace)
+                        System.out.println("Unsound.");
                     return negExCandidate;
+                }
             } else {
+                if (printSolvingTrace)
+                    System.out.println("Sound");
                 return null;
             }
         }
     }
 
     public Property synthesize(ExampleSet pos, ExampleSet neg) {
-        if (isVerbose)
-            System.out.printf("Synthesize : Property %d - Query %d)\n", outerIterator, innerIterator);
+        if (isVerbose || printSolvingTrace)
+            System.out.printf("Synthesize : Property %d - Query %d\n", outerIterator, innerIterator);
         return synthesize(pos, neg, synth);
     }
 
     public Property synthesizeMin(ExampleSet pos, ExampleSet neg) {
-        if (isVerbose)
+        if (isVerbose || printSolvingTrace)
             System.out.printf("Synthesize (Minimize formula) : Property %d - Query %d\n", outerIterator, innerIterator);
         return synthesize(pos, neg, synthMin);
     }
@@ -240,21 +249,25 @@ public class Spyro extends SequentialSketchMain {
         Program sketchCode = synth.synthesisSketchCode(pos, neg, lambdaFunctions.values());
         Program substitutedCleaned = runAndSimplify(sketchCode);
         if (substitutedCleaned != null) {
+            if (printSolvingTrace)
+                System.out.println("Success.");
             lambdaFunctions.putAll(ResultExtractor.extractLambdaFunctions(substitutedCleaned));
             return ResultExtractor.extractProperty(substitutedCleaned);
         } else {
+            if (printSolvingTrace)
+                System.out.println("Failed.");
             return null;
         }
     }
 
     public Pair<Property, Example> checkPrecision(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg) {
-        if (isVerbose)
+        if (isVerbose || printSolvingTrace)
             System.out.printf("CheckPrecision : Property %d - Query %d\n", outerIterator, innerIterator);
         return checkPrecision(psi, phi, pos, neg, precision);
     }
 
     public Pair<Property, Example> checkPrecisionMin(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg) {
-        if (isVerbose)
+        if (isVerbose || printSolvingTrace)
             System.out.printf("CheckPrecision (Minimize formula) : Property %d - Query %d\n", outerIterator, innerIterator);
         return checkPrecision(psi, phi, pos, neg, precisionMin);
     }
@@ -264,22 +277,26 @@ public class Spyro extends SequentialSketchMain {
         Program substitutedCleaned = runAndSimplify(sketchCode);
         if (substitutedCleaned != null) {
             lambdaFunctions = ResultExtractor.extractLambdaFunctions(substitutedCleaned);
+            if (printSolvingTrace)
+                System.out.println("Precise.");
             return new Pair<Property, Example>(
                     ResultExtractor.extractProperty(substitutedCleaned),
                     ResultExtractor.extractNegativeExamplePrecision(substitutedCleaned));
         } else {
+            if (printSolvingTrace)
+                System.out.println("Not Precise.");
             return null;
         }
     }
 
     public Pair<Property, Example> checkPrecisionUnder(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg) {
-        if (isDebug)
+        if (isVerbose || printSolvingTrace)
             System.out.printf("CheckPrecisionUnder : Property %d - Query %d\n", outerIterator, innerIterator);
         return checkPrecisionUnder(psi, phi, pos, neg, precisionUnder);
     }
 
     public Pair<Property, Example> checkPrecisionUnderMin(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg) {
-        if (isDebug)
+        if (isVerbose || printSolvingTrace)
             System.out.printf("CheckPrecisionUnder (Minimize formula): Property %d - Query %d\n", outerIterator, innerIterator);
         return checkPrecisionUnder(psi, phi, pos, neg, precisionUnderMin);
     }
@@ -288,23 +305,31 @@ public class Spyro extends SequentialSketchMain {
         Program sketchCode = builder.precisionUnderSketchCode(psi, phi, pos, neg, lambdaFunctions.values());
         Program substitutedCleaned = runAndSimplify(sketchCode);
         if (substitutedCleaned != null) {
+            if (printSolvingTrace)
+                System.out.println("Not Precise.");
             lambdaFunctions = ResultExtractor.extractLambdaFunctions(substitutedCleaned);
             return new Pair<Property, Example>(
                     ResultExtractor.extractProperty(substitutedCleaned),
                     ResultExtractor.extractPositiveExamplePrecisionUnder(substitutedCleaned));
         } else {
+            if (printSolvingTrace)
+                System.out.println("Precise.");
             return null;
         }
     }
 
     public Example checkImprovement(PropertySet psi, Property phi) {
-        if (isVerbose)
+        if (isVerbose || printSolvingTrace)
             System.out.printf("CheckImprovement : Property %d - Query %d\n", outerIterator, innerIterator);
         Program sketchCode = improvement.improvementSketchCode(psi, phi, lambdaFunctions.values());
         Program substitutedCleaned = runAndSimplify(sketchCode);
         if (substitutedCleaned != null) {
+            if (printSolvingTrace)
+                System.out.println("Improved.");
             return ResultExtractor.extractNegativeExampleImprovement(substitutedCleaned);
         } else {
+            if (printSolvingTrace)
+                System.out.println("Not Improved.");
             return null;
         }
     }
@@ -548,7 +573,7 @@ public class Spyro extends SequentialSketchMain {
 
         hSet = new HiddenValueSet();
 
-        List<Parameter> params = commonSketchBuilder.getExtendedParams(Property.outputVarID, false);
+        List<Parameter> params = commonSketchBuilder.getVariableAsParams(CommonSketchBuilder.ONLY_VISIBLE,  Property.outputVarID);
         truth = Property.truth(params);
         falsity = Property.falsity(params);
 

@@ -1,0 +1,29 @@
+struct Strategy {
+    boolean[3] f;
+}
+
+generator void genStrategy(ref Strategy P) {
+    P = new Strategy();
+    P.f[0] = ??(1);
+    P.f[1] = ??(1);
+    P.f[2] = ??(1);
+}
+
+void prog(Strategy P0, Strategy P1, ref boolean winner) {
+    int[2][2][3] delta = {{{0, 1},{0, 0}},{{2, 2},{0, 0}},{{2, 2},{2, 2}}};
+    boolean[3] safe = {1, 1, 0};
+    int s = 0;
+    winner = 0;
+    int bnd = 10;
+    while (bnd-- > 0) {
+        if(!safe[s]) {
+            winner = 1;
+            return ;
+        }
+        s = delta[s][P0.f[s]][P1.f[s]];
+    }
+}
+
+void decision(Strategy P, int s, boolean t, ref boolean out) {
+    out = (P.f[s] == t);
+}

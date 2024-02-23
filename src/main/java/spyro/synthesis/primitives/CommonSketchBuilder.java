@@ -35,18 +35,10 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
     Program prog;
     Program impl;
     List<Variable> variables;
-    List<Parameter> variableAsParams;
-    List<sketch.compiler.ast.core.exprs.Expression> variableAsExprs;
 
-    List<Parameter> visibleVariableAsParams;
-    List<sketch.compiler.ast.core.exprs.Expression> visibleVariableAsExprs;
-    List<Parameter> hiddenVariableAsParams;
-    List<Parameter> hiddenVariableAsParamsRef;
-    List<sketch.compiler.ast.core.exprs.Expression> hiddenVariableAsExprs;
-
-    List<sketch.compiler.ast.core.exprs.Expression> inputVariableAsExprs;
-    List<sketch.compiler.ast.core.exprs.Expression> outputVariableAsExprs;
-
+    Map<Integer, List<Expression>> varAsExprs;
+    Map<Integer, List<Parameter>> varAsParams;
+    List<Parameter> hiddenVarAsParamsRef;
 
     List<ExprFunCall> signatures;
     List<Statement> signatureAsStmts;
@@ -96,36 +88,6 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         return exampleGenerators;
     }
 
-    public List<Parameter> getVisibleVariableAsParams() {
-        return visibleVariableAsParams;
-    }
-
-    public List<Parameter> getHiddenVariableAsParamsRef() {
-        return hiddenVariableAsParamsRef;
-    }
-
-    public List<Expression> getHiddenVariableAsExprs() {
-        return hiddenVariableAsExprs;
-    }
-
-    public List<Parameter> getVariableAsParams() {
-        return variableAsParams;
-    }
-
-    public List<Parameter> getExtendedParams(String outputVarID, boolean withHidden) {
-        Parameter outputParam = new Parameter((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, outputVarID, Parameter.REF);
-        List<Parameter> extendedParams = new ArrayList<>(withHidden ? variableAsParams : visibleVariableAsParams);
-        extendedParams.add(outputParam);
-
-        return extendedParams;
-    }
-
-    public List<sketch.compiler.ast.core.exprs.Expression> appendToVariableAsExprs(ExprVar v, boolean withHidden) {
-        List<sketch.compiler.ast.core.exprs.Expression> ret = new ArrayList<>(withHidden ? variableAsExprs : visibleVariableAsExprs);
-        ret.add(v);
-        return ret;
-    }
-
     public Boolean isOutputVariable(String varId) {
         return outputVariableSet.contains(varId);
     }
@@ -167,46 +129,85 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         return new StmtVarDecl((FENode) null, types, names, inits);
     }
 
+    /**
+     * Returns a list of variables converted to expressions
+     *
+     * @param varIncluded 1101: only visible
+     *                    1110: only hidden
+     *                    0111: only input
+     *                    1011: only output
+     */
+    public List<Expression> getVariableAsExprs(int varIncluded, String extendedOutputID) {
+        List<Expression> exprs = varAsExprs.get(varIncluded);
+        if(exprs == null) {
+            exprs = new ArrayList<>();
+            for (Variable v : variables) {
+                int h = v.isHidden() ? 1 : 0, o = v.isOutput() ? 1 : 0;
+                int varKind = (1 - h) | (h << 1) | ((1 - o) << 2) | (o << 3);
+                if ((varKind & varIncluded) != varKind)
+                    continue;
+                String varID = v.getID();
+                exprs.add(new ExprVar((FENode) null, varID));
+            }
+            varAsExprs.put(varIncluded, exprs);
+        }
+        if(extendedOutputID != null) {
+            exprs = new ArrayList<>(exprs);
+            exprs.add(new ExprVar((FENode) null, extendedOutputID));
+        }
+        return exprs;
+    }
+
+    /**
+     * Returns a list of variables converted to parameters
+     *
+     * @param varIncluded 1101: only visible
+     *                    1110: only hidden
+     *                    0111: only input
+     *                    1011: only output
+     */
+    public List<Parameter> getVariableAsParams(int varIncluded, String extendedOutputID) {
+        List<Parameter> params = varAsParams.get(varIncluded);
+        if(params == null) {
+            params = new ArrayList<>();
+            for (Variable v : variables) {
+                int h = v.isHidden() ? 1 : 0, o = v.isOutput() ? 1 : 0;
+                int varKind = (1 - h) | (h << 1) | ((1 - o) << 2) | (o << 3);
+                if ((varKind & varIncluded) != varKind)
+                    continue;
+                params.add(variableToParam(v, false));
+            }
+            varAsParams.put(varIncluded, params);
+        }
+        if(extendedOutputID != null) {
+            params = new ArrayList<>(params);
+            params.add(new Parameter((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, extendedOutputID, Parameter.REF));
+        }
+        return params;
+    }
+
     public List<StmtAssign> getHiddenVariablesWithHole() {
         List<StmtAssign> stmts = new ArrayList<>();
-        for (Parameter v : hiddenVariableAsParams) {
+        for (Parameter v : getVariableAsParams(ONLY_HIDDEN, null)) {
             String funId = firstExampleGenerators.get(v.getType().toString()).getName();
             stmts.add(new StmtAssign(new ExprVar((FENode) null, v.getName()), new ExprFunCall((FENode) null, funId, new ArrayList<>())));
         }
         return stmts;
     }
 
-    /**
-     * Returns a list of variables converted to expressions
-     *
-     * @param varIncluded 0: all variables;
-     *                    1: only visible;
-     *                    2: only hidden;
-     *                    3: only input
-     *                    4: only output
-     */
-    public List<Expression> getVariableAsExprs(int varIncluded) {
-        if (varIncluded == ALL_VAR)
-            return variableAsExprs;
-        if (varIncluded == ONLY_VISIBLE)
-            return visibleVariableAsExprs;
-        if (varIncluded == ONLY_HIDDEN)
-            return hiddenVariableAsExprs;
-        if (varIncluded == ONLY_INPUT)
-            return inputVariableAsExprs;
-        if (varIncluded == ONLY_OUTPUT)
-            return outputVariableAsExprs;
-        return null;
+    public List<Parameter> getHiddenVarAsParamsRef() {
+        if(hiddenVarAsParamsRef == null) {
+            hiddenVarAsParamsRef = variables.stream()
+                    .filter(Variable::isHidden)
+                    .map(v -> variableToParam(v, true))
+                    .collect(Collectors.toList());
+        }
+        return hiddenVarAsParamsRef;
     }
 
-    protected Parameter variableToParam(Variable var) {
+    protected Parameter variableToParam(Variable var, boolean isRef) {
         sketch.compiler.ast.core.typs.Type ty = (sketch.compiler.ast.core.typs.Type) var.getType().accept(this);
-        return new Parameter((FENode) null, ty, var.getID());
-    }
-
-    protected Parameter variableToParamRef(Variable var) {
-        sketch.compiler.ast.core.typs.Type ty = (sketch.compiler.ast.core.typs.Type) var.getType().accept(this);
-        return new Parameter((FENode) null, ty, var.getID(), Parameter.REF);
+        return new Parameter((FENode) null, ty, var.getID(), isRef? Parameter.REF : Parameter.IN );
     }
 
     protected sketch.compiler.ast.core.typs.Type doType(Type ty) {
@@ -219,41 +220,15 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         firstExampleGenerators = new HashMap<>();
         freshVarCount = 0;
         outputVariableSet = new HashSet<>();
+        varAsExprs = new HashMap<>();
+        varAsParams = new HashMap<>();
 
         variables = q.getVariables();
         variableSet = variables.stream()
                 .map(Variable::getID)
                 .collect(Collectors.toSet());
-        variableAsExprs = variables.stream()
-                .map(decl -> new ExprVar((FENode) null, decl.getID()))
-                .collect(Collectors.toList());
-        variableAsParams = variables.stream()
-                .map(this::variableToParam)
-                .collect(Collectors.toList());
         variableToSketchType = variables.stream()
                 .collect(Collectors.toMap(Variable::getID, decl -> doType(decl.getType())));
-
-        visibleVariableAsExprs = variables.stream()
-                .filter(decl -> !decl.isHidden())
-                .map(decl -> new ExprVar((FENode) null, decl.getID()))
-                .collect(Collectors.toList());
-        visibleVariableAsParams = variables.stream()
-                .filter(decl -> !decl.isHidden())
-                .map(this::variableToParam)
-                .collect(Collectors.toList());
-        hiddenVariableAsExprs = variables.stream()
-                .filter(Variable::isHidden)
-                .map(decl -> new ExprVar((FENode) null, decl.getID()))
-                .collect(Collectors.toList());
-        hiddenVariableAsParams = variables.stream()
-                .filter(Variable::isHidden)
-                .map(this::variableToParam)
-                .collect(Collectors.toList());
-        hiddenVariableAsParamsRef = variables.stream()
-                .filter(Variable::isHidden)
-                .map(this::variableToParamRef)
-                .collect(Collectors.toList());
-
 
         signatures = q.getSignatures().stream()
                 .map(sig -> (ExprFunCall) sig.accept(this))
@@ -270,16 +245,6 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
         for (Variable var : variables)
             if (outputVariableSet.contains(var.getID())) var.setOutput();
-
-        inputVariableAsExprs = variables.stream()
-                .filter(decl -> !decl.isOutput())
-                .map(decl -> new ExprVar((FENode) null, decl.getID()))
-                .collect(Collectors.toList());
-
-        outputVariableAsExprs = variables.stream()
-                .filter(Variable::isOutput)
-                .map(decl -> new ExprVar((FENode) null, decl.getID()))
-                .collect(Collectors.toList());
 
 
         nonterminalToSketchType = q.getGrammar().stream()
@@ -537,9 +502,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
                 List<sketch.compiler.ast.core.exprs.Expression> paramVars;
                 if (termType == RHSTermType.RHS_GRAMMAR)
-                    paramVars = visibleVariableAsParams.stream()
-                            .map(param -> new ExprVar((FENode) null, param.getName()))
-                            .collect(Collectors.toList());
+                    paramVars = getVariableAsExprs(ONLY_VISIBLE, null);
                 else
                     paramVars = new ArrayList<>();
 
@@ -582,7 +545,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         bodyStmts.add(new StmtAssert((FENode) null, new ExprConstInt(0), 0));
         Statement body = new StmtBlock((FENode) null, bodyStmts);
 
-        fc.params(visibleVariableAsParams);
+        fc.params(getVariableAsParams(ONLY_VISIBLE, null));
         fc.returnType(returnType);
         fc.body(body);
 
