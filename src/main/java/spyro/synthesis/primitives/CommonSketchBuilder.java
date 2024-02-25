@@ -57,6 +57,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
     Map<String, Integer> generatorCxt;
     Map<String, Integer> maxCxt;
     int freshVarCount;
+    int hiddenNum;
 
     public CommonSketchBuilder(Program impl, boolean isUnderProblem) {
         this.prog = Program.emptyProgram();
@@ -104,7 +105,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
      * @param withInit    0: without
      *                    1: with
      */
-    public StmtVarDecl getVariableDecls(int varIncluded, int withInit) {
+    public Statement getVariableDecls(int varIncluded, int withInit) {
         List<sketch.compiler.ast.core.typs.Type> types = new ArrayList<>();
         List<String> names = new ArrayList<>();
         List<sketch.compiler.ast.core.exprs.Expression> inits = new ArrayList<>();
@@ -125,6 +126,9 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
                 inits.add(new ExprFunCall((FENode) null, funId, new ArrayList<>()));
             } else inits.add(null);
         }
+
+        if(types.isEmpty())
+            return new StmtEmpty((FENode) null);
 
         return new StmtVarDecl((FENode) null, types, names, inits);
     }
@@ -205,6 +209,10 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         return hiddenVarAsParamsRef;
     }
 
+    public boolean hasHidden() {
+        return hiddenNum > 0;
+    }
+
     protected Parameter variableToParam(Variable var, boolean isRef) {
         sketch.compiler.ast.core.typs.Type ty = (sketch.compiler.ast.core.typs.Type) var.getType().accept(this);
         return new Parameter((FENode) null, ty, var.getID(), isRef? Parameter.REF : Parameter.IN );
@@ -246,7 +254,6 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         for (Variable var : variables)
             if (outputVariableSet.contains(var.getID())) var.setOutput();
 
-
         nonterminalToSketchType = q.getGrammar().stream()
                 .map(GrammarRule::getNonterminal)
                 .collect(Collectors.toMap(Nonterminal::getID, n -> this.doType(n.getType())));
@@ -261,12 +268,15 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
                 .map(rule -> (Function) rule.accept(this))
                 .collect(Collectors.toList());
 
+        hiddenNum = getVariableAsExprs(ONLY_HIDDEN,null).size();
+
         return null;
     }
 
     private ExprVar freshVar() {
         return new ExprVar((FENode) null, String.format("fresh_var_%d", freshVarCount++));
     }
+
 
     @Override
     public sketch.compiler.ast.core.exprs.Expression visitVariable(Variable v) {

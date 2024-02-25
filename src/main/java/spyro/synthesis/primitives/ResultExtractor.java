@@ -165,12 +165,13 @@ public class ResultExtractor {
     }
 
     public static HiddenValue extractHiddenValue(Program result, CommonSketchBuilder builder) {
-        StmtBlock body = (StmtBlock) findFunction(result, HiddenWitnessSketchBuilder.hiddenVariableGeneratorID).getBody();
+        Statement body = findFunction(result, HiddenWitnessSketchBuilder.hiddenVariableGeneratorID).getBody();
         List<Statement> stmts = new ArrayList<>();
 
         // Declare hidden variables and assign them with the value of the witness
         stmts.add(builder.getVariableDecls(CommonSketchBuilder.ONLY_HIDDEN, CommonSketchBuilder.WO_INIT));
-        stmts.addAll(body.getStmts());
+        if (body instanceof StmtBlock)
+            stmts.addAll(((StmtBlock) body).getStmts());
 
         // Store the output value of the given example (compared with output value obtained by running the query)
         List<Parameter> visibleOutputVar = builder.getVariableAsParams(CommonSketchBuilder.ONLY_VISIBLE & CommonSketchBuilder.ONLY_OUTPUT, null);

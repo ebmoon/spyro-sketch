@@ -37,6 +37,7 @@ public class HiddenWitnessSketchBuilder {
         if (hiddenVariableGenerator == null) {
             Function.FunctionCreator fc = Function.creator((FEContext) null, hiddenVariableGeneratorID, Function.FcnType.Static);
             List<Statement> stmts = new ArrayList<>(commonBuilder.getHiddenVariablesWithHole());
+            stmts.add(new StmtEmpty((FENode) null));
             Statement body = new StmtBlock((FENode) null, stmts);
             fc.params(commonBuilder.getHiddenVarAsParamsRef());
             fc.body(body);
