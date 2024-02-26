@@ -113,7 +113,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         for (Variable v : variables) {
             int h = v.isHidden() ? 1 : 0, o = v.isOutput() ? 1 : 0;
             int varKind = (1 - h) | (h << 1) | ((1 - o) << 2) | (o << 3);
-            if((varKind & varIncluded) != varKind)
+            if ((varKind & varIncluded) != varKind)
                 continue;
             String varID = v.getID();
             Type ty = v.getType();
@@ -122,12 +122,15 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
             names.add(varID);
             types.add(sketchType);
             if (withInit == W_INIT) {
-                String funId = firstExampleGenerators.get(ty.toString()).getName();
+                Function generator = firstExampleGenerators.get(ty.toString());
+                if (generator == null)
+                    throw new SketchConversionException(String.format("Missed generator for type %s.", ty.toString()));
+                String funId = generator.getName();
                 inits.add(new ExprFunCall((FENode) null, funId, new ArrayList<>()));
             } else inits.add(null);
         }
 
-        if(types.isEmpty())
+        if (types.isEmpty())
             return new StmtEmpty((FENode) null);
 
         return new StmtVarDecl((FENode) null, types, names, inits);
@@ -143,7 +146,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
      */
     public List<Expression> getVariableAsExprs(int varIncluded, String extendedOutputID) {
         List<Expression> exprs = varAsExprs.get(varIncluded);
-        if(exprs == null) {
+        if (exprs == null) {
             exprs = new ArrayList<>();
             for (Variable v : variables) {
                 int h = v.isHidden() ? 1 : 0, o = v.isOutput() ? 1 : 0;
@@ -155,7 +158,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
             }
             varAsExprs.put(varIncluded, exprs);
         }
-        if(extendedOutputID != null) {
+        if (extendedOutputID != null) {
             exprs = new ArrayList<>(exprs);
             exprs.add(new ExprVar((FENode) null, extendedOutputID));
         }
@@ -172,7 +175,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
      */
     public List<Parameter> getVariableAsParams(int varIncluded, String extendedOutputID) {
         List<Parameter> params = varAsParams.get(varIncluded);
-        if(params == null) {
+        if (params == null) {
             params = new ArrayList<>();
             for (Variable v : variables) {
                 int h = v.isHidden() ? 1 : 0, o = v.isOutput() ? 1 : 0;
@@ -183,7 +186,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
             }
             varAsParams.put(varIncluded, params);
         }
-        if(extendedOutputID != null) {
+        if (extendedOutputID != null) {
             params = new ArrayList<>(params);
             params.add(new Parameter((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, extendedOutputID, Parameter.REF));
         }
@@ -192,15 +195,22 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
     public List<StmtAssign> getHiddenVariablesWithHole() {
         List<StmtAssign> stmts = new ArrayList<>();
-        for (Parameter v : getVariableAsParams(ONLY_HIDDEN, null)) {
-            String funId = firstExampleGenerators.get(v.getType().toString()).getName();
-            stmts.add(new StmtAssign(new ExprVar((FENode) null, v.getName()), new ExprFunCall((FENode) null, funId, new ArrayList<>())));
-        }
+
+        for (Variable v : variables)
+            if (v.isHidden()) {
+                String varID = v.getID();
+                Type ty = v.getType();
+                Function generator = firstExampleGenerators.get(ty.toString());
+                if (generator == null)
+                    throw new SketchConversionException(String.format("Missed generator for type %s.", ty.toString()));
+                String funId = generator.getName();
+                stmts.add(new StmtAssign(new ExprVar((FENode) null, varID), new ExprFunCall((FENode) null, funId, new ArrayList<>())));
+            }
         return stmts;
     }
 
     public List<Parameter> getHiddenVarAsParamsRef() {
-        if(hiddenVarAsParamsRef == null) {
+        if (hiddenVarAsParamsRef == null) {
             hiddenVarAsParamsRef = variables.stream()
                     .filter(Variable::isHidden)
                     .map(v -> variableToParam(v, true))
@@ -215,7 +225,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
     protected Parameter variableToParam(Variable var, boolean isRef) {
         sketch.compiler.ast.core.typs.Type ty = (sketch.compiler.ast.core.typs.Type) var.getType().accept(this);
-        return new Parameter((FENode) null, ty, var.getID(), isRef? Parameter.REF : Parameter.IN );
+        return new Parameter((FENode) null, ty, var.getID(), isRef ? Parameter.REF : Parameter.IN);
     }
 
     protected sketch.compiler.ast.core.typs.Type doType(Type ty) {
@@ -268,7 +278,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
                 .map(rule -> (Function) rule.accept(this))
                 .collect(Collectors.toList());
 
-        hiddenNum = getVariableAsExprs(ONLY_HIDDEN,null).size();
+        hiddenNum = getVariableAsExprs(ONLY_HIDDEN, null).size();
 
         return null;
     }
