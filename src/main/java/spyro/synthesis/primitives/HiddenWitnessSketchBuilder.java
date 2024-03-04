@@ -73,6 +73,10 @@ public class HiddenWitnessSketchBuilder {
             stmts.add(new StmtVarDecl((FENode) null, entry.getKey().getType(), declId, entry.getValue()));
         }
 
+        // assert precondition
+        stmts.addAll(commonBuilder.getAssumptionAsStmts());
+        stmts.add(new StmtAssert(new ExprVar((FENode) null, CommonSketchBuilder.assumpitonConjunctionId), false));
+
         // declare fresh output variables
         stmts.add(commonBuilder.getVariableDecls(CommonSketchBuilder.ONLY_OUTPUT & CommonSketchBuilder.ONLY_VISIBLE, CommonSketchBuilder.WO_INIT));
 

@@ -10,11 +10,9 @@ import sketch.compiler.ast.core.typs.TypePrimitive;
 import spyro.synthesis.Example;
 import spyro.synthesis.HiddenValue;
 import spyro.synthesis.Property;
+import spyro.util.exceptions.ResultExtractException;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -43,6 +41,21 @@ public class ResultExtractor {
                 return func;
 
         return null;
+    }
+
+    public static Integer findStatement(List<Statement> stmts, String funName) {
+        for (int i = 0, numStmts = stmts.size(); i < numStmts; i++) {
+            Statement stmt = stmts.get(i);
+            if (stmt instanceof StmtExpr) {
+                Expression expr = ((StmtExpr) stmt).getExpression();
+                if (expr instanceof ExprFunCall) {
+                    ExprFunCall funCall = (ExprFunCall) expr;
+                    if (Objects.equals(funCall.getName(), funName))
+                        return i;
+                }
+            }
+        }
+        throw new ResultExtractException(String.format("Cannot find function call %s in the code", funName));
     }
 
     public static Property extractProperty(Program result) {
@@ -151,13 +164,15 @@ public class ResultExtractor {
     public static Example extractNegativeExampleCandidate(Program result, int numHiddenWitness) {
         StmtBlock body = (StmtBlock) findFunction(result, SoundnessUnderSketchBuilder.soundnessUnderFunctionID).getBody();
         List<Statement> stmts = body.getStmts();
+        int loc = findStatement(stmts, Property.phiID);
         int numStmts = stmts.size();
 
-        // Last numHiddenWitness lines are hidden witnesses (counter-examples),
+        // From the rear of the code to the front,
+        // the last `numHiddenWitness` lines are hidden witnesses (counter-examples),
         // then next 3 lines are synthesized property
-        List<Statement> exBody = new ArrayList<>(stmts.subList(0, numStmts - 3 - numHiddenWitness));
+        List<Statement> exBody = new ArrayList<>(stmts.subList(0, loc - 1));
 
-        ExprFunCall funCall = (ExprFunCall) ((StmtExpr) stmts.get(numStmts - 2)).getExpression();
+        ExprFunCall funCall = (ExprFunCall) ((StmtExpr) stmts.get(loc)).getExpression();
         List<Expression> params = new ArrayList<>(funCall.getParams());
         params.remove(params.size() - 1);
 
@@ -205,8 +220,9 @@ public class ResultExtractor {
             }
         }
 
-//         assert(!(out_x && ...))
-        Expression assertCondition = ExprConstInt.one;
+//         assert(!(asp && out_1 && out_2 && ...))
+        stmts.addAll(builder.getAssumptionAsStmts());
+        Expression assertCondition = new ExprVar((FENode) null, CommonSketchBuilder.assumpitonConjunctionId);
         for (String Id : tempVarIdList)
             assertCondition = new ExprBinary(ExprBinary.BINOP_AND, assertCondition, new ExprVar((FENode) null, Id));
         assertCondition = new ExprUnary((FENode) null, ExprUnary.UNOP_NOT, assertCondition);

@@ -30,6 +30,8 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
     public final static String pkgName = "Spyro";
 
     public final static String equalityOperatorSuffix = "Equal";
+    public final static String assumptionOutVarPrefix = "asp_out_";
+    public final static String assumpitonConjunctionId = "asp_conj";
 
     public final boolean isUnderProblem;
     Program prog;
@@ -42,6 +44,8 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
     List<ExprFunCall> signatures;
     List<Statement> signatureAsStmts;
+    List<ExprFunCall> assumptions;
+    List<Statement> assumptionAsStmts;
 
     List<Function> propertyGenerators;
     List<Function> exampleGenerators;
@@ -79,6 +83,39 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
     public List<Statement> getSignatureAsStmts() {
         return signatureAsStmts;
+    }
+
+    public List<Statement> getAssumptionAsStmts() {
+        if (assumptionAsStmts == null) {
+            List<Statement> stmts = new ArrayList<>();
+            List<Expression> exprs = new ArrayList<>();
+            for (int i = 0, sz = assumptions.size(); i < sz; i++) {
+                ExprFunCall asp = assumptions.get(i);
+                String varId = assumptionOutVarPrefix + i;
+                ExprVar var = new ExprVar((FENode) null, varId);
+                stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, varId, null));
+
+                List<Expression> params = new ArrayList<>(asp.getParams());
+                params.add(var);
+                stmts.add(new StmtExpr((FENode) null, new ExprFunCall((FENode) null, asp.getName(), params)));
+                exprs.add(var);
+//                stmts.add(new StmtAssume((FENode) null,
+//                        new ExprVar((FENode) null, varId),
+//                        "asp" + i));
+            }
+
+            Expression aspConj = ExprConstInt.zero;
+            if(!exprs.isEmpty()) {
+                aspConj = exprs.get(0);
+                for (int i = 1; i < exprs.size(); i++) {
+                    aspConj = new sketch.compiler.ast.core.exprs.ExprBinary(sketch.compiler.ast.core.exprs.ExprBinary.BINOP_AND, aspConj, exprs.get(i));
+                }
+            }
+            stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, assumpitonConjunctionId, aspConj));
+
+            assumptionAsStmts = stmts;
+        }
+        return assumptionAsStmts;
     }
 
     public List<Function> getPropertyGenerators() {
@@ -260,6 +297,11 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
             String outVarId = args.get(args.size() - 1).toString();
             outputVariableSet.add(outVarId);
         }
+
+        assumptions = q.getAssumptions().stream()
+                .map(asp -> (ExprFunCall) asp.accept(this))
+                .collect(Collectors.toList());
+
 
         for (Variable var : variables)
             if (outputVariableSet.contains(var.getID())) var.setOutput();
@@ -494,6 +536,12 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
     @Override
     public ExprNullPtr visitRHSConstNull(RHSConstNull nullptr) {
         return ExprNullPtr.nullPtr;
+    }
+
+    public ExprFunCall doAssumption(ExprFunCall asp, int cnt) {
+        List<Expression> params = new ArrayList<>(asp.getParams());
+        params.add(new ExprVar((FENode) null, assumptionOutVarPrefix + cnt));
+        return new ExprFunCall((FENode) null, asp.getName(), params);
     }
 
     public List<Statement> doRHSTerm(RHSTerm t, RHSTermType termType) {

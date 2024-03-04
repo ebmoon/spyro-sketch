@@ -27,7 +27,7 @@ declExamples : EXAMPLES LBRACE declExampleRule* RBRACE ;
 
 declExampleRule : type ID ARROW (expr ('|' expr)*) SEMI ;
 
-declAssumptions : ASSUMPTIONS LBRACE declAssumption RBRACE SEMI ;
+declAssumptions : ASSUMPTIONS LBRACE declAssumption+ RBRACE ;
 
 declAssumption : expr SEMI ;
 

@@ -39,6 +39,10 @@ public class PrecisionUnderSketchBuilder {
 
             List<Statement> stmts = new ArrayList<>();
             stmts.add(synth.commonBuilder.getVariableDecls(CommonSketchBuilder.ONLY_INPUT, CommonSketchBuilder.W_INIT));
+            // assert precondition
+            stmts.addAll(synth.commonBuilder.getAssumptionAsStmts());
+            stmts.add(new StmtAssert(new ExprVar((FENode) null, CommonSketchBuilder.assumpitonConjunctionId), false));
+
             stmts.add(synth.commonBuilder.getVariableDecls(CommonSketchBuilder.ONLY_OUTPUT, CommonSketchBuilder.WO_INIT));
             stmts.addAll(synth.commonBuilder.getSignatureAsStmts());
 

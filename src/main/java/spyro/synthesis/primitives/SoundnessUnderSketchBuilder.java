@@ -1,9 +1,8 @@
 package spyro.synthesis.primitives;
 
-import sketch.compiler.ast.core.*;
 import sketch.compiler.ast.core.Package;
+import sketch.compiler.ast.core.*;
 import sketch.compiler.ast.core.exprs.ExprFunCall;
-import sketch.compiler.ast.core.exprs.ExprUnary;
 import sketch.compiler.ast.core.exprs.ExprVar;
 import sketch.compiler.ast.core.stmts.*;
 import sketch.compiler.ast.core.typs.StructDef;
@@ -26,41 +25,41 @@ public class SoundnessUnderSketchBuilder {
 
     final CommonSketchBuilder commonBuilder;
     public final static String soundnessUnderFunctionID = "soundnessUnder";
-    public final static String hiddenWitnessPrefix= "counter_example_";
+    public final static String hiddenWitnessPrefix = "counter_example_";
 
     public SoundnessUnderSketchBuilder(CommonSketchBuilder commonBuilder) {
         this.commonBuilder = commonBuilder;
     }
 
     private Function getSoundnessUnderBody(HiddenValueSet H) {
-            Function.FunctionCreator fc = Function.creator((FEContext) null, soundnessUnderFunctionID, Function.FcnType.Harness);
+        Function.FunctionCreator fc = Function.creator((FEContext) null, soundnessUnderFunctionID, Function.FcnType.Harness);
 
-            List<Statement> stmts = new ArrayList<>();
-            stmts.add(commonBuilder.getVariableDecls(CommonSketchBuilder.ONLY_VISIBLE,CommonSketchBuilder.W_INIT));
+        List<Statement> stmts = new ArrayList<>();
+        stmts.add(commonBuilder.getVariableDecls(CommonSketchBuilder.ONLY_VISIBLE, CommonSketchBuilder.W_INIT));
 
-            // ce_i(e)
-            for(int i = 0, sz = H.getHiddenValues().size(); i<sz;i++) {
-                String ceID = hiddenWitnessPrefix + i;
-                stmts.add(new StmtExpr(new ExprFunCall((FENode) null, ceID, commonBuilder.getVariableAsExprs(CommonSketchBuilder.ONLY_VISIBLE, null))));
-            }
+        final String tempVarID = "out";
+        final String phi = Property.phiID;
+        ExprVar tempVar = new ExprVar((FENode) null, tempVarID);
 
-            final String tempVarID = "out";
-            final String phi = Property.phiID;
-            ExprVar tempVar = new ExprVar((FENode) null, tempVarID);
+        // boolean out;
+        stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVar.getName(), null));
+        // synthesized_property(..., out);
+        stmts.add(new StmtExpr(new ExprFunCall((FENode) null, phi, commonBuilder.getVariableAsExprs(CommonSketchBuilder.ONLY_VISIBLE, tempVarID))));
+        // assert out;
+        stmts.add(new StmtAssert(tempVar, false));
 
-            // boolean out;
-            stmts.add(new StmtVarDecl((FENode) null, sketch.compiler.ast.core.typs.TypePrimitive.bittype, tempVar.getName(), null));
-            // synthesized_property(..., out);
-            stmts.add(new StmtExpr(new ExprFunCall((FENode) null, phi, commonBuilder.getVariableAsExprs(CommonSketchBuilder.ONLY_VISIBLE, tempVarID))));
-            // assert out;
-            stmts.add(new StmtAssert(tempVar, false));
+        // ce_i(e)
+        for (int i = 0, sz = H.getHiddenValues().size(); i < sz; i++) {
+            String ceID = hiddenWitnessPrefix + i;
+            stmts.add(new StmtExpr(new ExprFunCall((FENode) null, ceID, commonBuilder.getVariableAsExprs(CommonSketchBuilder.ONLY_VISIBLE, null))));
+        }
 
-            Statement body = new StmtBlock((FENode) null, stmts);
+        Statement body = new StmtBlock((FENode) null, stmts);
 
-            fc.params(new ArrayList<>());
-            fc.body(body);
+        fc.params(new ArrayList<>());
+        fc.body(body);
 
-            return fc.create();
+        return fc.create();
     }
 
     public Program soundnessUnderSketchCode(Property phi, HiddenValueSet H, Collection<Function> lambdaFunctions) {
@@ -76,7 +75,7 @@ public class SoundnessUnderSketchBuilder {
 
         funcs.add(phi.toSketchCode());
         funcs.addAll(commonBuilder.getExampleGenerators());
-        funcs.addAll(H.toSketchCode(hiddenWitnessPrefix, commonBuilder.getVariableAsParams(CommonSketchBuilder.ONLY_VISIBLE,null)));
+        funcs.addAll(H.toSketchCode(hiddenWitnessPrefix, commonBuilder.getVariableAsParams(CommonSketchBuilder.ONLY_VISIBLE, null)));
         funcs.add(this.getSoundnessUnderBody(H));
         funcs.addAll(lambdaFunctions);
 

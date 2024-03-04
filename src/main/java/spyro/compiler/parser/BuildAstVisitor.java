@@ -52,7 +52,14 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
 
         List<ExampleRule> examples = visitExamples(ctx.declExamples());
 
-        return new Query(variables, signatures, grammar, examples);
+        if(ctx.declAssumptions() == null)
+            return new Query(variables, signatures, grammar, examples);
+
+        List<ExprFuncCall> assumptions = ctx.declAssumptions().declAssumption().stream()
+                .map(this::visitDeclAssumption)
+                .collect(Collectors.toList());
+
+        return new Query(variables, signatures, grammar, examples, assumptions);
     }
 
     public Variable visitDeclVar(SpyroParser.DeclVarContext ctx) {
@@ -350,7 +357,7 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
     public List<ExampleRule> visitExamples(SpyroParser.DeclExamplesContext ctx) {
         List<SpyroParser.DeclExampleRuleContext> ruleContexts = ctx.declExampleRule();
 
-        // Construct an context with nonterminals
+        // Construct a context with nonterminals
         nonterminalContext = new HashMap<>();
         for (SpyroParser.DeclExampleRuleContext ruleContext : ruleContexts) {
             String nonterminalID = ruleContext.ID().getText();
@@ -390,4 +397,26 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
 
         return new ExampleRule(nonterminal, rules);
     }
+    public ExprFuncCall visitDeclAssumption(SpyroParser.DeclAssumptionContext ctx) {
+        SpyroParser.ExprContext expr = ctx.expr();
+        if (expr instanceof SpyroParser.FunctionExprContext) {
+            return visitAssumptionFunc((SpyroParser.FunctionExprContext) expr);
+        } else {
+            throw new ParseException("Signature must be a form of function call");
+        }
+    }
+
+    public ExprFuncCall visitAssumptionFunc(SpyroParser.FunctionExprContext ctx) {
+        String id = ctx.ID().getText();
+
+        // It only allows variables as argument
+        List<Expression> args = ctx.expr().stream()
+                .map(exprCtx -> ((SpyroParser.AtomExprContext) exprCtx).atom())
+                .map(atomCtx -> ((SpyroParser.IdAtomContext) atomCtx).ID().getText())
+                .map(varID -> varContextWithType.get(varID))
+                .collect(Collectors.toList());
+
+        return new ExprFuncCall(id, args);
+    }
+
 }

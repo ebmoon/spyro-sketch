@@ -4,7 +4,7 @@ struct PosInt{
 
 generator void genPosInt(ref PosInt x)
 {
-    x = new PosInt(data = ??(3) + 1);
+    x = new PosInt(data = ??(3) + 2);
 }
 
 void getData(PosInt x, ref int data) {

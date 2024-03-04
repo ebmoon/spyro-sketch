@@ -5,6 +5,7 @@ import spyro.compiler.ast.expr.Variable;
 import spyro.compiler.ast.grammar.ExampleRule;
 import spyro.compiler.ast.grammar.GrammarRule;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -19,6 +20,7 @@ public class Query extends SpyroNode {
     private List<ExprFuncCall> signatures;
     private List<GrammarRule> grammar;
     private List<ExampleRule> examples;
+    private List<ExprFuncCall> assumptions;
 
     public Query(List<Variable> variables, List<ExprFuncCall> signatures,
                  List<GrammarRule> grammar, List<ExampleRule> examples
@@ -28,6 +30,14 @@ public class Query extends SpyroNode {
         this.signatures = signatures;
         this.grammar = grammar;
         this.examples = examples;
+        this.assumptions = new ArrayList<>();
+    }
+
+    public Query(List<Variable> variables, List<ExprFuncCall> signatures,
+                 List<GrammarRule> grammar, List<ExampleRule> examples, List<ExprFuncCall> assupmtions
+    ) {
+        this(variables, signatures, grammar, examples);
+        this.assumptions = assupmtions;
     }
 
     @Override
@@ -49,5 +59,9 @@ public class Query extends SpyroNode {
 
     public List<ExampleRule> getExamples() {
         return this.examples;
+    }
+
+    public List<ExprFuncCall> getAssumptions() {
+        return assumptions;
     }
 }

@@ -1,0 +1,6 @@
+void prog(int y, ref int x){
+    if(y == 0)
+        x = 1;
+    else
+        x = y;
+}
