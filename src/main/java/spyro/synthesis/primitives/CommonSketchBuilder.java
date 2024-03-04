@@ -104,7 +104,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 //                        "asp" + i));
             }
 
-            Expression aspConj = ExprConstInt.zero;
+            Expression aspConj = ExprConstInt.one;
             if(!exprs.isEmpty()) {
                 aspConj = exprs.get(0);
                 for (int i = 1; i < exprs.size(); i++) {
