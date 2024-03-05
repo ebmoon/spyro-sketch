@@ -10,7 +10,7 @@ signatures {
 }
 
 language {
-    boolean B -> true | AP | AP || AP | AP || AP || AP;
+    boolean B -> false | AP | AP && AP | AP && AP && AP;
     boolean AP -> C * x + C * o + C < 0
      | C * x + C * o + C > 0
      | C * x + C * o + C <= 0

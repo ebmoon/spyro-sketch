@@ -16,7 +16,7 @@ signatures {
 }
 
 language {
-    boolean B -> true | AP | AP || AP | AP || AP || AP;
+    boolean B -> false | AP | AP && AP | AP && AP && AP;
     boolean AP -> I < I | I <= I | I == I | I != I
                 | is_empty(ST) | !is_empty(ST)
                 | stack_equal(ST, ST) | !stack_equal(ST, ST);
