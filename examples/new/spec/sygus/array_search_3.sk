@@ -1,0 +1,11 @@
+void f(int x1, int x2, int x3, int k, ref int out){
+    if (k < x1) {
+        out = 0;
+    } else if (k < x2) {
+        out = 1;
+    } else if (k < x3) {
+        out = 2;
+    } else {
+        out = 3;
+    }
+}

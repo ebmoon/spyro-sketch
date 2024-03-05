@@ -3,9 +3,6 @@ struct list {
 	list tl;
 }
 
-// Implementation of all the functions
-
-// The return value of function is passed by reference
 void nil(ref list ret) {
     ret = null;
 }
@@ -16,52 +13,46 @@ void cons(int hd, list tl, ref list ret) {
     ret.tl = tl;
 }
 
-// Only consider the case when l is not null (empty)
 void head(list l, ref int ret) {
     assert (l != null);
 
     ret = l.hd;
 }
 
-// Only consider the case when l is not null (empty)
 void tail(list l, ref list ret) {
     assert (l != null);
 
     ret = l.tl;
 }
 
-void list_copy(list l, ref list ret) {
-    if (l == null) {
-        ret = null;
-    } else {
-        ret = new list();
-        ret.hd = l.hd;
+void min(list l, ref int ret) {
+    assert (l != null);
 
-        list tl_copy;
-        list_copy(l.tl, tl_copy);
-        ret.tl = tl_copy;
+    if (l.tl != null) {
+        min(l.tl, ret);
+        if (l.hd < ret) {
+            ret = l.hd;
+        }
+    } else {
+        ret = l.hd;
     }
 }
 
-void snoc(list l, int val, ref list ret) {
+void forall(fun f, list l, ref boolean ret) {
     if (l == null) {
-        ret = new list();
-        ret.hd = val;
-        ret.tl = null;
+        ret = true;
     } else {
-        ret = new list();
-        ret.hd = l.hd;
-        snoc(l.tl, val, ret.tl);
+        forall(f, l.tl, ret);
+        ret = ret && f(l.hd);
     }
 }
 
-void reverse(list l, ref list ret) {
+void exists(fun f, list l, ref boolean ret) {
     if (l == null) {
-        ret = null;
+        ret = false;
     } else {
-        list tl_reverse;
-        reverse(l.tl, tl_reverse);
-        snoc(tl_reverse, l.hd, ret);
+        exists(f, l.tl, ret);
+        ret = ret || f(l.hd);
     }
 }
 
@@ -85,8 +76,4 @@ void equal_list(list l1, list l2, ref boolean ret) {
         equal_list(l1.tl, l2.tl, ret);
         ret = l1.hd == l2.hd && ret;
     }
-}
-
-void list_equal(list l1, list l2, ref boolean ret) {
-    equal_list(l1, l2, ret);
 }

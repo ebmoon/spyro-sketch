@@ -3,9 +3,6 @@ struct list {
 	list tl;
 }
 
-// Implementation of all the functions
-
-// The return value of function is passed by reference
 void nil(ref list ret) {
     ret = null;
 }
@@ -16,14 +13,12 @@ void cons(int hd, list tl, ref list ret) {
     ret.tl = tl;
 }
 
-// Only consider the case when l is not null (empty)
 void head(list l, ref int ret) {
     assert (l != null);
 
     ret = l.hd;
 }
 
-// Only consider the case when l is not null (empty)
 void tail(list l, ref list ret) {
     assert (l != null);
 
@@ -43,25 +38,13 @@ void list_copy(list l, ref list ret) {
     }
 }
 
-void snoc(list l, int val, ref list ret) {
-    if (l == null) {
-        ret = new list();
-        ret.hd = val;
-        ret.tl = null;
+void append(list l1, list l2, ref list ret) {
+    if (l1 == null) {
+        ret = l2;
     } else {
-        ret = new list();
-        ret.hd = l.hd;
-        snoc(l.tl, val, ret.tl);
-    }
-}
-
-void reverse(list l, ref list ret) {
-    if (l == null) {
-        ret = null;
-    } else {
-        list tl_reverse;
-        reverse(l.tl, tl_reverse);
-        snoc(tl_reverse, l.hd, ret);
+        list tl_append;
+        append(l1.tl, l2, tl_append);
+        cons(l1.hd, tl_append, ret);
     }
 }
 

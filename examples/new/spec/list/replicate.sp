@@ -1,11 +1,35 @@
+//@Description
+
+var {
+    int n;
+    int val;
+    list lout;
+}
+
+relation {
+    replicate(n, val, lout);
+}
+
+generator {
+    boolean AP -> is_empty(L) | !is_empty(L)
+                | compare(S, S + ??(1))
+                | forall((x) -> compare(x, I), L)
+                | exists((x) -> compare(x, I), L);
+    int I -> val ;
+    int S -> len(L) | n | 0 ;
+    list L -> lout ;
+}
+
+example {
+    int -> ??(3) | -1 * ??(3) ;
+    list -> nil() | cons(int, list);
+}
+
 struct list {
     int hd;
 	list tl;
 }
 
-// Implementation of all the functions
-
-// The return value of function is passed by reference
 void nil(ref list ret) {
     ret = null;
 }
@@ -16,14 +40,12 @@ void cons(int hd, list tl, ref list ret) {
     ret.tl = tl;
 }
 
-// Only consider the case when l is not null (empty)
 void head(list l, ref int ret) {
     assert (l != null);
 
     ret = l.hd;
 }
 
-// Only consider the case when l is not null (empty)
 void tail(list l, ref list ret) {
     assert (l != null);
 
@@ -43,25 +65,33 @@ void list_copy(list l, ref list ret) {
     }
 }
 
-void snoc(list l, int val, ref list ret) {
-    if (l == null) {
+void replicate(int n, int val, ref list ret) {
+    assert (n >= 0);
+    if (n > 0) {
         ret = new list();
+
         ret.hd = val;
-        ret.tl = null;
+        replicate(n-1, val, ret.tl);
     } else {
-        ret = new list();
-        ret.hd = l.hd;
-        snoc(l.tl, val, ret.tl);
+        ret = null;
     }
 }
 
-void reverse(list l, ref list ret) {
+void forall(fun f, list l, ref boolean ret) {
     if (l == null) {
-        ret = null;
+        ret = true;
     } else {
-        list tl_reverse;
-        reverse(l.tl, tl_reverse);
-        snoc(tl_reverse, l.hd, ret);
+        forall(f, l.tl, ret);
+        ret = ret && f(l.hd);
+    }
+}
+
+void exists(fun f, list l, ref boolean ret) {
+    if (l == null) {
+        ret = false;
+    } else {
+        exists(f, l.tl, ret);
+        ret = ret || f(l.hd);
     }
 }
 
@@ -85,8 +115,4 @@ void equal_list(list l1, list l2, ref boolean ret) {
         equal_list(l1.tl, l2.tl, ret);
         ret = l1.hd == l2.hd && ret;
     }
-}
-
-void list_equal(list l1, list l2, ref boolean ret) {
-    equal_list(l1, l2, ret);
 }

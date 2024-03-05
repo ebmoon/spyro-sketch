@@ -1,0 +1,7 @@
+void max2(int x, int y, ref int out){
+    if (x > y) {
+        out = x;
+    } else {
+        out = y;
+    }
+}

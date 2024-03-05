@@ -1,0 +1,7 @@
+void f(int x, int y, ref int out){
+    if (x > y) {
+        out = x - y;
+    } else {
+        out = y - x;
+    }
+}
