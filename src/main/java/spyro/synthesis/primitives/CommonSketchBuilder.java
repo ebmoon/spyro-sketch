@@ -29,7 +29,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
     public final static String pkgName = "Spyro";
 
-    public final static String equalityOperatorSuffix = "Equal";
+    public final static String equalityOperatorSuffix = "_equal";
     public final static String assumptionOutVarPrefix = "asp_out_";
     public final static String assumpitonConjunctionId = "asp_conj";
 
@@ -105,7 +105,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
             }
 
             Expression aspConj = ExprConstInt.one;
-            if(!exprs.isEmpty()) {
+            if (!exprs.isEmpty()) {
                 aspConj = exprs.get(0);
                 for (int i = 1; i < exprs.size(); i++) {
                     aspConj = new sketch.compiler.ast.core.exprs.ExprBinary(sketch.compiler.ast.core.exprs.ExprBinary.BINOP_AND, aspConj, exprs.get(i));
@@ -269,6 +269,22 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         return (sketch.compiler.ast.core.typs.Type) ty.accept(this);
     }
 
+    protected void setOutputVar(ExprFunCall sig) {
+        for (Function func : getFunctions())
+            if (func.getName().equals(sig.getName())) {
+                List<Expression> args = sig.getParams();
+                List<Parameter> params = func.getParams();
+                int sz = args.size();
+                if (sz != params.size())
+                    throw new SketchConversionException("Number of parameters mismatch for " + sig.getName() + "().");
+                for (int i = 0; i < sz; i++)
+                    if(params.get(i).getPtype() == Parameter.REF)
+                        outputVariableSet.add(args.get(i).toString());
+                return ;
+            }
+        throw new SketchConversionException("Cannot find implementation for " + sig.getName() + "().");
+    }
+
     @Override
     public Program visitQuery(Query q) {
         nonterminalToSketchType = new HashMap<>();
@@ -292,17 +308,12 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
                 .map(sig -> new StmtExpr((FENode) null, sig))
                 .collect(Collectors.toList());
 
-        for (ExprFunCall sig : signatures) {
-            List<Expression> args = sig.getParams();
-            String outVarId = args.get(args.size() - 1).toString();
-            outputVariableSet.add(outVarId);
-        }
-
         assumptions = q.getAssumptions().stream()
                 .map(asp -> (ExprFunCall) asp.accept(this))
                 .collect(Collectors.toList());
 
-
+        for (ExprFunCall sig : signatures)
+            setOutputVar(sig);
         for (Variable var : variables)
             if (outputVariableSet.contains(var.getID())) var.setOutput();
 
