@@ -66,8 +66,6 @@ public class Spyro extends SequentialSketchMain {
 
     private final static String tempFileDir = "tmp";
 
-    private final static boolean reuseHiddenValue = false;
-
     private Property truth, falsity;
     final private PrintStream oldErr = System.err;
 
@@ -207,7 +205,7 @@ public class Spyro extends SequentialSketchMain {
         if (isVerbose)
             System.out.printf("CheckSoundnessUnder : Property %d - Query %d\n", outerIterator, innerIterator);
 
-        if (reuseHiddenValue == false)
+        if (options.synthOpts.noReuseHidden)
             hSet = new HiddenValueSet();
         while (true) {
             Program synthCandidateSketchCode = soundnessUnder.soundnessUnderSketchCode(phi, hSet, lambdaFunctions.values());
