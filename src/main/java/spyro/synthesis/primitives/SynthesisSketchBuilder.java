@@ -32,7 +32,7 @@ public class SynthesisSketchBuilder {
 
     Function getSynthesisBody() {
         if (synthesisBody == null) {
-            Function.FunctionCreator fc = Function.creator((FEContext) null, Property.newPhiID, Function.FcnType.Static);
+            Function.FunctionCreator fc = Function.creator((FENode) null, Property.newPhiID, Function.FcnType.Static);
 
             List<Statement> stmts = new ArrayList<>();
 

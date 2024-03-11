@@ -11,9 +11,11 @@ program : declVariables declSignatures declLanguage declExamples declAssumptions
 declVariables : VARIABLES LBRACE declVar+ RBRACE ;
 
 declVar 
- : type ID SEMI				#declVisibleVar 
- | HIDDENVAR type ID SEMI	#declHiddenVar
+ : type ID exGenNote? SEMI	                #declVisibleVar
+ | HIDDENVAR type ID exGenNote? SEMI	    #declHiddenVar
  ; 
+
+exGenNote : LARROW ID;
 
 declSignatures : SIGNATURES LBRACE declSig+ RBRACE ;
 
@@ -86,6 +88,7 @@ LBRACE : '{';
 RBRACE : '}';
 
 ARROW : '->';
+LARROW : '<-';
 
 HIDDENVAR : 'hidden';
 TRUE : 'true';

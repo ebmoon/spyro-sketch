@@ -34,7 +34,7 @@ public class PrecisionOverSketchBuilder {
 
     private Function getPrecisionBody() {
         if (precisionBody == null) {
-            Function.FunctionCreator fc = Function.creator((FEContext) null, precisionFunctionID, Function.FcnType.Harness);
+            Function.FunctionCreator fc = Function.creator((FENode) null, precisionFunctionID, Function.FcnType.Harness);
 
             List<Statement> stmts = new ArrayList<>();
             stmts.add(synth.commonBuilder.getVariableDecls(CommonSketchBuilder.ALL_VAR, CommonSketchBuilder.W_INIT));

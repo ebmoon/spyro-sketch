@@ -32,7 +32,7 @@ public class SoundnessUnderSketchBuilder {
     }
 
     private Function getSoundnessUnderBody(HiddenValueSet H) {
-        Function.FunctionCreator fc = Function.creator((FEContext) null, soundnessUnderFunctionID, Function.FcnType.Harness);
+        Function.FunctionCreator fc = Function.creator((FENode) null, soundnessUnderFunctionID, Function.FcnType.Harness);
 
         List<Statement> stmts = new ArrayList<>();
         stmts.add(commonBuilder.getVariableDecls(CommonSketchBuilder.ONLY_VISIBLE, CommonSketchBuilder.W_INIT));

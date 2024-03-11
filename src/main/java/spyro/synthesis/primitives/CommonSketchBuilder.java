@@ -148,8 +148,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         List<sketch.compiler.ast.core.exprs.Expression> inits = new ArrayList<>();
 
         for (Variable v : variables) {
-            int h = v.isHidden() ? 1 : 0, o = v.isOutput() ? 1 : 0;
-            int varKind = (1 - h) | (h << 1) | ((1 - o) << 2) | (o << 3);
+            int varKind = v.varKind();
             if ((varKind & varIncluded) != varKind)
                 continue;
             String varID = v.getID();
@@ -159,11 +158,14 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
             names.add(varID);
             types.add(sketchType);
             if (withInit == W_INIT) {
-                Function generator = firstExampleGenerators.get(ty.toString());
-                if (generator == null)
-                    throw new SketchConversionException(String.format("Missed generator for type %s.", ty.toString()));
-                String funId = generator.getName();
-                inits.add(new ExprFunCall((FENode) null, funId, new ArrayList<>()));
+                String funID = v.getGeneratorID();
+                if (funID == null) {
+                    Function generator = firstExampleGenerators.get(ty.toString());
+                    if (generator == null)
+                        throw new SketchConversionException(String.format("Missed generator for type %s.", ty.toString()));
+                    funID = generator.getName();
+                }
+                inits.add(new ExprFunCall((FENode) null, funID, new ArrayList<>()));
             } else inits.add(null);
         }
 
@@ -186,8 +188,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         if (exprs == null) {
             exprs = new ArrayList<>();
             for (Variable v : variables) {
-                int h = v.isHidden() ? 1 : 0, o = v.isOutput() ? 1 : 0;
-                int varKind = (1 - h) | (h << 1) | ((1 - o) << 2) | (o << 3);
+                int varKind = v.varKind();
                 if ((varKind & varIncluded) != varKind)
                     continue;
                 String varID = v.getID();
@@ -237,11 +238,14 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
             if (v.isHidden()) {
                 String varID = v.getID();
                 Type ty = v.getType();
-                Function generator = firstExampleGenerators.get(ty.toString());
-                if (generator == null)
-                    throw new SketchConversionException(String.format("Missed generator for type %s.", ty.toString()));
-                String funId = generator.getName();
-                stmts.add(new StmtAssign(new ExprVar((FENode) null, varID), new ExprFunCall((FENode) null, funId, new ArrayList<>())));
+                String funID = v.getGeneratorID();
+                if (funID == null) {
+                    Function generator = firstExampleGenerators.get(ty.toString());
+                    if (generator == null)
+                        throw new SketchConversionException(String.format("Missed generator for type %s.", ty.toString()));
+                    funID = generator.getName();
+                }
+                stmts.add(new StmtAssign(new ExprVar((FENode) null, varID), new ExprFunCall((FENode) null, funID, new ArrayList<>())));
             }
         return stmts;
     }
@@ -352,7 +356,12 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
     @Override
     public ExprStar visitHole(Hole hole) {
-        return new ExprStar(prog, hole.getSize());
+        int size = hole.getSize();
+        if (size > 0) {
+            return new ExprStar(prog, size);
+        } else {
+            return new ExprStar(prog);
+        }
     }
 
     @Override
@@ -508,7 +517,12 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
     @Override
     public ExprStar visitRHSHole(RHSHole hole) {
-        return new ExprStar(prog, hole.getSize());
+        int size = hole.getSize();
+        if (size > 0) {
+            return new ExprStar(prog, size);
+        } else {
+            return new ExprStar(prog);
+        }
     }
 
     @Override
@@ -615,8 +629,7 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
 
         maxCxt = new HashMap<>();
 
-        sketch.compiler.ast.core.Function.FunctionCreator fc = sketch.compiler.ast.core.Function.creator((FEContext) null, generatorID, Function.FcnType.Generator);
-
+        sketch.compiler.ast.core.Function.FunctionCreator fc = sketch.compiler.ast.core.Function.creator((FENode) null, generatorID, Function.FcnType.Generator);
         List<Statement> bodyStmts = rule.getRules().stream()
                 .flatMap(t -> doRHSTerm(t, RHSTermType.RHS_GRAMMAR).stream())
                 .collect(Collectors.toList());
@@ -637,7 +650,9 @@ public class CommonSketchBuilder implements SpyroNodeVisitor {
         String generatorID = String.format("%s_gen", nonterminalID);
         sketch.compiler.ast.core.typs.Type returnType = nonterminalToSketchType.get(nonterminalID);
 
-        sketch.compiler.ast.core.Function.FunctionCreator fc = sketch.compiler.ast.core.Function.creator((FEContext) null, generatorID, Function.FcnType.Generator);
+        maxCxt = new HashMap<>();
+
+        sketch.compiler.ast.core.Function.FunctionCreator fc = sketch.compiler.ast.core.Function.creator((FENode) null, generatorID, Function.FcnType.Generator);
         List<Statement> bodyStmts = rule.getRules().stream()
                 .flatMap(t -> doRHSTerm(t, RHSTermType.RHS_EXAMPLE).stream())
                 .collect(Collectors.toList());

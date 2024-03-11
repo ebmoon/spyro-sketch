@@ -45,6 +45,12 @@ public interface SpyroVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitDeclHiddenVar(SpyroParser.DeclHiddenVarContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link SpyroParser#exGenNote}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitExGenNote(SpyroParser.ExGenNoteContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link SpyroParser#declSignatures}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

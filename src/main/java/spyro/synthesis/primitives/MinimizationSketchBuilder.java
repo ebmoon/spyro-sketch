@@ -98,7 +98,7 @@ public class MinimizationSketchBuilder extends CommonSketchBuilder {
 
         maxCxt = new HashMap<>();
 
-        sketch.compiler.ast.core.Function.FunctionCreator fc = sketch.compiler.ast.core.Function.creator((FEContext) null, generatorID, Function.FcnType.Generator);
+        sketch.compiler.ast.core.Function.FunctionCreator fc = sketch.compiler.ast.core.Function.creator((FENode) null, generatorID, Function.FcnType.Generator);
 
         List<Statement> bodyStmts = rule.getRules().stream()
                 .flatMap(t -> doRHSTermMinimize(t).stream())

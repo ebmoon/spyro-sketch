@@ -35,7 +35,7 @@ public class HiddenWitnessSketchBuilder {
 
     private Function getHiddenVariableGenerator() {
         if (hiddenVariableGenerator == null) {
-            Function.FunctionCreator fc = Function.creator((FEContext) null, hiddenVariableGeneratorID, Function.FcnType.Static);
+            Function.FunctionCreator fc = Function.creator((FENode) null, hiddenVariableGeneratorID, Function.FcnType.Static);
             List<Statement> stmts = new ArrayList<>(commonBuilder.getHiddenVariablesWithHole());
             stmts.add(new StmtEmpty((FENode) null));
             Statement body = new StmtBlock((FENode) null, stmts);
@@ -48,7 +48,7 @@ public class HiddenWitnessSketchBuilder {
 
 
     private Function getHiddenWitnessBody(Example e) {
-        Function.FunctionCreator fc = Function.creator((FEContext) null, hiddenWitnessFunctionID, Function.FcnType.Harness);
+        Function.FunctionCreator fc = Function.creator((FENode) null, hiddenWitnessFunctionID, Function.FcnType.Harness);
 
         List<Statement> stmts = new ArrayList<>();
 

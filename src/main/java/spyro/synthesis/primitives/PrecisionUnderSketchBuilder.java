@@ -35,7 +35,7 @@ public class PrecisionUnderSketchBuilder {
 
     private Function getPrecisionBody() {
         if (precisionBody == null) {
-            Function.FunctionCreator fc = Function.creator((FEContext) null, precisionFunctionID, Function.FcnType.Harness);
+            Function.FunctionCreator fc = Function.creator((FENode) null, precisionFunctionID, Function.FcnType.Harness);
 
             List<Statement> stmts = new ArrayList<>();
             stmts.add(synth.commonBuilder.getVariableDecls(CommonSketchBuilder.ONLY_INPUT, CommonSketchBuilder.W_INIT));

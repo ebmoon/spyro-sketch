@@ -1,27 +1,18 @@
-//@Description Toy benchmarks to show complex recursive generators.
-
-var {
+variables {
     int x;
     int o;
 }
 
-relation {
+signatures {
     abs(x, o);
 }
 
-generator {
-    boolean AP -> compare(I, I) ;
+language {
+    boolean D -> true | AP | AP || AP | AP || AP || AP ;
+    boolean AP -> I < I | I <= I | I != I | I == I ;
     int I -> x | -x | o | -o | 0 ;
 }
 
-example {
-    int -> ?? | -1 * ?? ;
-}
-
-void abs(int x, ref int out){
-    if (x < 0) {
-        out = -x;
-    } else {
-        out = x;
-    }
+examples {
+    int IEX -> ?? | -1 * ?? ;
 }

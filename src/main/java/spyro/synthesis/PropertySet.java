@@ -94,7 +94,7 @@ public class PropertySet {
         if (sketchCode == null) {
             sketchCode = new ArrayList<>();
 
-            Function.FunctionCreator fc = Function.creator((FEContext) null, isOverProblem ? disjunctionID : conjunctionID, Function.FcnType.Static);
+            Function.FunctionCreator fc = Function.creator((FENode) null, isOverProblem ? disjunctionID : conjunctionID, Function.FcnType.Static);
             final String tempVarID = "out";
             List<Parameter> params = commonBuilder.getVariableAsParams(CommonSketchBuilder.ONLY_VISIBLE, tempVarID);
             List<Expression> vars = commonBuilder.getVariableAsExprs(CommonSketchBuilder.ONLY_VISIBLE, null);

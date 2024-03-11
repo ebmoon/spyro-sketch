@@ -75,16 +75,26 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
     public Variable visitDeclVisibleVar(SpyroParser.DeclVisibleVarContext ctx) {
         Type type = visitType(ctx.type());
         String id = ctx.ID().getText();
+        SpyroParser.ExGenNoteContext exgen = ctx.exGenNote();
 
-        return new Variable(type, id);
+        if (exgen == null) {
+            return new Variable(type, id);
+        } else {
+            return new Variable(type, id, exgen.ID().getText());
+        }
     }
 
     @Override
     public Variable visitDeclHiddenVar(SpyroParser.DeclHiddenVarContext ctx) {
         Type type = visitType(ctx.type());
         String id = ctx.ID().getText();
+        SpyroParser.ExGenNoteContext exgen = ctx.exGenNote();
 
-        return new Variable(type, id, true);
+        if (exgen == null) {
+            return new Variable(type, id, true);
+        } else {
+            return new Variable(type, id, exgen.ID().getText(), true);
+        }
     }
 
     @Override
@@ -400,23 +410,9 @@ public class BuildAstVisitor extends SpyroBaseVisitor<SpyroNode> {
     public ExprFuncCall visitDeclAssumption(SpyroParser.DeclAssumptionContext ctx) {
         SpyroParser.ExprContext expr = ctx.expr();
         if (expr instanceof SpyroParser.FunctionExprContext) {
-            return visitAssumptionFunc((SpyroParser.FunctionExprContext) expr);
+            return visitSignature((SpyroParser.FunctionExprContext) expr);
         } else {
-            throw new ParseException("Signature must be a form of function call");
+            throw new ParseException("Assumption must be given as a boolean function");
         }
     }
-
-    public ExprFuncCall visitAssumptionFunc(SpyroParser.FunctionExprContext ctx) {
-        String id = ctx.ID().getText();
-
-        // It only allows variables as argument
-        List<Expression> args = ctx.expr().stream()
-                .map(exprCtx -> ((SpyroParser.AtomExprContext) exprCtx).atom())
-                .map(atomCtx -> ((SpyroParser.IdAtomContext) atomCtx).ID().getText())
-                .map(varID -> varContextWithType.get(varID))
-                .collect(Collectors.toList());
-
-        return new ExprFuncCall(id, args);
-    }
-
 }

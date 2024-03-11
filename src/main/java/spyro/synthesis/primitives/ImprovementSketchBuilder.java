@@ -31,7 +31,7 @@ public class ImprovementSketchBuilder {
 
     private Function getImprovementUnderBody() {
         if (improvementBody == null) {
-            Function.FunctionCreator fc = Function.creator((FEContext) null, improvementFunctionID, Function.FcnType.Harness);
+            Function.FunctionCreator fc = Function.creator((FENode) null, improvementFunctionID, Function.FcnType.Harness);
 
             List<Statement> stmts = new ArrayList<>();
             stmts.add(commonBuilder.getVariableDecls(CommonSketchBuilder.ALL_VAR, CommonSketchBuilder.W_INIT));
@@ -70,7 +70,7 @@ public class ImprovementSketchBuilder {
 
     private Function getImprovementOverBody() {
         if (improvementBody == null) {
-            Function.FunctionCreator fc = Function.creator((FEContext) null, improvementFunctionID, Function.FcnType.Harness);
+            Function.FunctionCreator fc = Function.creator((FENode) null, improvementFunctionID, Function.FcnType.Harness);
 
             List<Statement> stmts = new ArrayList<>();
             stmts.add(commonBuilder.getVariableDecls(CommonSketchBuilder.ALL_VAR, CommonSketchBuilder.W_INIT));
