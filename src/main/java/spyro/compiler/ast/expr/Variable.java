@@ -29,7 +29,7 @@ public class Variable extends Expression {
 
     public Variable(Type type, String id, String generatorID) {
         this(type, id);
-        this.generatorID = generatorID;
+        this.generatorID = String.format("%s_gen", generatorID);
     }
 
     public Variable(Type type, String id, boolean hidden) {
@@ -39,7 +39,7 @@ public class Variable extends Expression {
 
     public Variable(Type type, String id, String generatorID, boolean hidden) {
         this(type, id, hidden);
-        this.generatorID = generatorID;
+        this.generatorID = String.format("%s_gen", generatorID);
     }
 
     @Override
