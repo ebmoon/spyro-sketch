@@ -1,7 +1,0 @@
-void abs(int x, ref int out){
-    if (x < 0) {
-        out = -x;
-    } else {
-        out = x;
-    }
-}

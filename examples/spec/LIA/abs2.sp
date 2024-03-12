@@ -10,12 +10,17 @@ signatures {
 }
 
 language {
-    boolean D -> true | AP | AP || AP | AP || AP || AP ;
-    boolean AP -> LHS < 0 | LHS <= 0 | LHS > 0 | LHS >= 0 | LHS == 0 | LHS != 0;
-    int LHS -> C * x + C * o + C;
+    boolean B -> true | AP | AP || AP | AP || AP || AP;
+    boolean AP -> C * x + C * o + C < 0
+     | C * x + C * o + C > 0
+     | C * x + C * o + C <= 0
+     | C * x + C * o + C >= 0
+     | C * x + C * o + C == 0
+     | C * x + C * o + C != 0;
     int C -> ??(3) - 3 ;
 }
 
 examples {
-    int IEX -> ?? | -1 * ??;
+    int IEX -> ??(5) | -1 * ??(5) ;
 }
+
