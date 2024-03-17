@@ -11,6 +11,7 @@ signatures {
 }
 
 language {
+    boolean B -> true | AP | AP || AP | AP || AP || AP;
     boolean AP -> S == S + S + ??(1) | S != S + S + ??(1) | S <= S + S + ??(1)
                 | S >= S + S + ??(1) | S < S + S + ??(1) | S > S + S + ??(1)
                 | is_empty(L) | !is_empty(L) 

@@ -13,7 +13,7 @@ relation {
 generator {
     boolean AP -> is_empty(L) | !is_empty(L)
                 | compare(S, S + ??(1))
-                | forall((x) -> compare(x, I), L) 
+                | forall((x) -> compare(x, I), L)
                 | exists((x) -> compare(x, I), L);
     list L -> l ;
     int S -> len(L) | 0 | -1 | idx_out ;
@@ -67,7 +67,7 @@ void forall(fun f, list l, ref boolean ret) {
     if (l == null) {
         ret = true;
     } else {
-        forall(f, l.tl, ret);        
+        forall(f, l.tl, ret);
         ret = ret && f(l.hd);
     }
 }

@@ -1,4 +1,4 @@
-//@Description 
+//@Description
 
 var {
     list l;
@@ -11,10 +11,10 @@ relation {
 }
 
 generator {
-    boolean AP -> is_empty(L) | !is_empty(L) 
+    boolean AP -> is_empty(L) | !is_empty(L)
                 | equal_list(L, L) | !equal_list(L, L)
                 | compare(S, S + ??(1))
-                | forall((x) -> compare(x, I), L) 
+                | forall((x) -> compare(x, I), L)
                 | exists((x) -> compare(x, I), L);
     int I -> val ;
     int S -> len(L) | 0 ;
@@ -63,7 +63,7 @@ void list_copy(list l, ref list ret) {
         list tl_copy;
         list_copy(l.tl, tl_copy);
         ret.tl = tl_copy;
-    } 
+    }
 }
 
 void snoc(list l, int val, ref list ret) {
@@ -91,7 +91,7 @@ void forall(fun f, list l, ref boolean ret) {
     if (l == null) {
         ret = true;
     } else {
-        forall(f, l.tl, ret);        
+        forall(f, l.tl, ret);
         ret = ret && f(l.hd);
     }
 }

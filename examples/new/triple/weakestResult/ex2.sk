@@ -1,4 +1,6 @@
-void prog(int y, ref int x){
+void prog(int y, ref int x, ref boolean ok){
+    ok = 1;
+    if(!(y >= 0)) {ok = 0; return;}
     if(y == 0)
         x = 1;
     else

@@ -1,7 +1,7 @@
 //@Description array_search_3.sl of SyGuS array track.
 //recommend option --num-atoms-max 5
 
-var {
+variables {
     int x1;
     int x2;
     int x3;
@@ -9,28 +9,18 @@ var {
     int o;
 }
 
-relation {
+signatures {
     f(x1, x2, x3, k, o);
 }
 
-generator {
-    boolean AP -> compare(I, I) | compare(S, S);
+language {
+    boolean B -> true | AP | AP || AP | AP || AP || AP | AP || AP || AP || AP;
+    boolean AP -> I < I | I <= I | I == I | I != I | S < S | S <= S | S == S | S != S;
     int S -> 0 | 1 | 2 | 3 | o;
     int I -> x1 | x2 | x3 | k;
 }
 
-example {
-    int -> ??(4) | -1 * ??(4) ;
+examples {
+    int IEX -> ??(4) | -1 * ??(4) ;
 }
 
-void f(int x1, int x2, int x3, int k, ref int out){
-    if (k < x1) {
-        out = 0;
-    } else if (k < x2) {
-        out = 1;
-    } else if (k < x3) {
-        out = 2;
-    } else {
-        out = 3;
-    }
-}
