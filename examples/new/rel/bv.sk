@@ -1,0 +1,83 @@
+void flip_1(BV a, int h, ref BV b) {
+    b = new BV(bv = a.bv);
+    for(int i = h; i < h + 4; i++) {
+        int idx = i % 4;
+        if(b.bv[idx] == 1) {
+            b.bv[idx] = 0;
+            return ;
+        }
+    }
+}
+
+void flip_0(BV a, int h, ref BV b) {
+    b = new BV(bv = a.bv);
+    for(int i = h; i < h + 4; i++) {
+        int idx = i % 4;
+        if(b.bv[idx] == 0) {
+            b.bv[idx] = 1;
+            return ;
+        }
+    }
+}
+
+void remain_1(BV a, int h, ref BV b) {
+    zero(b);
+    for(int i = h; i < h + 4; i++) {
+        int idx = i % 4;
+        if(a.bv[idx] == 1) {
+            b.bv[idx] = 1;
+            return ;
+        }
+    }
+}
+
+
+
+
+struct BV{
+    bit[4] bv;
+}
+
+generator void genBV(ref BV bv) {
+    bv = new BV(bv = {??(1),??(1),??(1),??(1)});
+}
+
+void BV_equal(BV a, BV b, ref boolean ret) {
+    ret = a.bv == b.bv;
+}
+
+
+
+
+
+void zero(ref BV o) {
+    o = new BV(bv = {0, 0, 0, 0});
+}
+
+void and(BV a, BV b, ref BV o) {
+    o = new BV(bv = a.bv & b.bv);
+}
+
+void or(BV a, BV b, ref BV o) {
+    o = new BV(bv = a.bv | b.bv);
+}
+
+void xor(BV a, BV b, ref BV o) {
+    o = new BV(bv = a.bv ^ b.bv);
+}
+
+void neg(BV a, ref BV o) {
+    o = new BV(bv = !a.bv);
+}
+
+void add1(BV a, ref BV o) {
+    o = new BV(bv = a.bv + {0, 0, 0, 1});
+}
+
+void sub1(BV a, ref BV o) {
+    o = new BV(bv = a.bv + {1, 1, 1, 1});
+}
+
+void subset(BV a, BV b, ref boolean ret) {
+    ret = (a.bv & b.bv) == a.bv;
+}

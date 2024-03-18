@@ -1,26 +1,13 @@
-struct PosInt{
-    int data;
+void hashfunc(int h, int x, int M, ref int ret) {
+    ret = ((h * x) % M + M) % M;
 }
 
-generator void genPosInt(ref PosInt x)
-{
-    x = new PosInt(data = ??(3) + 2);
-}
-
-void getData(PosInt x, ref int data) {
-    data = x.data;
-}
-
-void hashfunc(int h, int x, PosInt M, ref int ret) {
-    ret = ((h * x) % M.data + M.data) % M.data;
-}
-
-void prog(ArrayList S, PosInt M, int h, ref boolean collide) {
+void prog(ArrayList S, int M, int h, ref boolean collide) {
 //    if (h % M.data == 0)
 //        h = h + 1;
-    assert(h % M.data != 0);
-    boolean[M.data] So;
-    for(int i = 0; i < M.data; i++)
+    assert(h % M != 0);
+    boolean[M] So;
+    for(int i = 0; i < M; i++)
         So[i] = 0;
     collide = false;
     for(int i = 0; i < S.size; i++)
@@ -33,10 +20,10 @@ void prog(ArrayList S, PosInt M, int h, ref boolean collide) {
     }
 }
 
-void isPrime(PosInt M, ref boolean ret) {
+void isPrime(int M, ref boolean ret) {
     ret = true;
-    for(int i = 2; i*i <= M.data; i++)
-        if(M.data % i == 0)
+    for(int i = 2; i*i <= M; i++)
+        if(M % i == 0)
             ret = false;
 }
 
@@ -44,14 +31,14 @@ void setsize(ArrayList arr, ref int ret) {
     ret = arr.size;
 }
 
-void setsizemod(ArrayList arr, PosInt M, ref int ret) {
-    boolean[M.data] So;
-    for(int i = 0; i < M.data; i++)
+void setsizemod(ArrayList arr, int M, ref int ret) {
+    boolean[M] So;
+    for(int i = 0; i < M; i++)
         So[i] = 0;
     for(int i = 0; i < arr.size; i++)
-        So[(arr.elementData[i] % M.data + M.data) % M.data] = 1;
+        So[(arr.elementData[i] % M + M) % M] = 1;
     ret = 0;
-    for(int i = 0; i < M.data; i++)
+    for(int i = 0; i < M; i++)
         ret += So[i];
 }
 

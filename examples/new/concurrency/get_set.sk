@@ -1,0 +1,49 @@
+/* Thread 0 */
+// 0: t <- Get()
+// 1: Set(t+1)
+
+/* Thread 1 */
+// 0: t <- Get()
+// 1: Set(t-1)
+
+struct RandomBits {
+    boolean[20] d;
+}
+
+generator void genRandomBits(ref RandomBits h)
+{
+    h = new RandomBits(
+        d = { ??(1), ??(1), ??(1), ??(1), ??(1)
+            , ??(1), ??(1), ??(1), ??(1), ??(1)
+            , ??(1), ??(1), ??(1), ??(1), ??(1)
+            , ??(1), ??(1), ??(1), ??(1), ??(1)});
+}
+
+void scheduler(int n0, int n1, RandomBits h, ref int t) {
+    t = 0;
+    int pc0 = 0, pc1 = 0, t0, t1;
+    for(int i = 0; i < (n0 + n1) * 2; i++) {
+        boolean turn = h.d[i];
+        if((turn == 1 && pc1 == n1 * 2) || (turn == 0 && pc0 == n0 * 2))
+            turn = !turn;
+
+        if(turn == 0) {
+            if(pc0 % 2 == 0) {
+                t0 = t;
+            }
+            if(pc0 % 2 == 1) {
+                t = t0 + 1;
+            }
+            pc0++;
+        }
+        else {
+            if(pc1 % 2 == 0) {
+                t1 = t;
+            }
+            if(pc1 % 2 == 1) {
+                t = t1 - 1;
+            }
+            pc1++;
+        }
+    }
+}

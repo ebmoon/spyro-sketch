@@ -1,0 +1,27 @@
+void is_prime_buggy(int x, ref boolean out) {
+    for(int i = 2; i * i < x; i++) {
+        if(x % i == 0) {
+            out = false;
+            return ;
+        }
+    }
+    out = true;
+}
+
+void is_prime_correct(int x, ref boolean out) {
+    for(int i = 2; i * i <= x; i++) {
+        if(x % i == 0) {
+            out = false;
+            return ;
+        }
+    }
+    out = true;
+}
+
+void eq(boolean a, boolean b, ref boolean out) {
+    out = a == b;
+}
+
+generator void genInt(ref int x) {
+    x = ??(5);
+}

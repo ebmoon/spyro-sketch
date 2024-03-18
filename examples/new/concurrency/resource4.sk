@@ -1,0 +1,96 @@
+// --bnd-unroll-amnt 16
+
+struct RandomBits {
+    boolean[16] data;
+}
+
+generator void genRandomBits(ref RandomBits h)
+{
+    h = new RandomBits();
+    h.data[0] = ??(1);
+    h.data[1] = ??(1);
+    h.data[2] = ??(1);
+    h.data[3] = ??(1);
+    h.data[4] = ??(1);
+    h.data[5] = ??(1);
+    h.data[6] = ??(1);
+    h.data[7] = ??(1);
+    h.data[8] = ??(1);
+    h.data[9] = ??(1);
+    h.data[10] = ??(1);
+    h.data[11] = ??(1);
+    h.data[12] = ??(1);
+    h.data[13] = ??(1);
+    h.data[14] = ??(1);
+    h.data[15] = ??(1);
+}
+
+struct Thread {
+    int sz;
+    int[sz] resType;
+    int[sz] resAmount;
+}
+
+
+
+void available(Thread th, int pc, int[3] resRemain, ref boolean safe) {
+    if (pc >= th.sz)
+        safe = false;
+    else
+        safe = (th.resAmount[pc] <= resRemain[th.resType[pc]]);
+}
+
+void scheduler(int amountA, int amountB, int amountC, RandomBits h, ref boolean ok, ref boolean deadlock){
+
+    ok = 1;
+
+    Thread th0 = new Thread(
+        sz = 8,
+        resType = {0, 1, 2, 1, 0, 1, 2, 1},
+        resAmount = {1, 1, 1, 1, 1, 1, 1, 1}
+    );
+
+    Thread th1 = new Thread(
+        sz = 8,
+        resType = {1, 2, 1, 0, 1, 2, 1, 0},
+        resAmount = {1, 1, 1, 1, 1, 1, 1, 1}
+    );
+
+    int pc0 = 0, pc1 = 0;
+    int[3] resRemain = {amountA, amountB, amountC};
+    int[3] tot0 = {0, 0, 0}, tot1 = {0, 0, 0};
+
+    while(pc0 < th0.sz || pc1 < th1.sz) {
+        boolean alloc0, alloc1;
+        available(th0, pc0, resRemain, alloc0);
+        available(th1, pc1, resRemain, alloc1);
+        if(!alloc0 && !alloc1) {
+            deadlock = true;
+            return ;
+        }
+        if(h.data[pc0 + pc1] == 0) {
+            if(!alloc0) { ok = 0; return; }
+            tot0[th0.resType[pc0]] += th0.resAmount[pc0];
+            resRemain[th0.resType[pc0]] -= th0.resAmount[pc0];
+            pc0 += 1;
+            if(pc0 == th0.sz) {
+                resRemain[0] += tot0[0];
+                resRemain[1] += tot0[1];
+                resRemain[2] += tot0[2];
+            }
+        }
+        else {
+            if(!alloc1) { ok = 0; return; }
+            tot1[th1.resType[pc1]] += th1.resAmount[pc1];
+            resRemain[th1.resType[pc1]] -= th1.resAmount[pc1];
+            pc1 += 1;
+            if(pc1 == th1.sz) {
+                resRemain[0] += tot1[0];
+                resRemain[1] += tot1[1];
+                resRemain[2] += tot1[2];
+            }
+        }
+    }
+
+    deadlock = false;
+}

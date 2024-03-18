@@ -1,0 +1,47 @@
+// Player 0:
+//  0 -> nop, 1 -> -1
+// Player 1:
+//  0 -> *2, 1 -> +1
+
+struct Strategy {
+    boolean[5] f;
+}
+
+generator void genStrategy(ref Strategy P) {
+    P = new Strategy(f = {??(1), ??(1), ??(1), ??(1), ??(1)});
+}
+
+void prog(Strategy P0, Strategy P1, int init, ref boolean win) {
+    int s = init;
+    for(int bnd = 10; bnd > 0; bnd--) {
+        if(P0.f[s] == 0) {
+           // nop;
+        }
+        else {
+            s = s - 1;
+        }
+
+        if(s < 0 || s >= 5) {
+            win = false;
+            return ;
+        }
+
+        if(P1.f[s] == 0) {
+            s = s * 2;
+        }
+        else {
+            s = s + 1;
+        }
+
+        if(s < 0 || s >= 5) {
+            win = false;
+            return ;
+        }
+
+    }
+    win = true;
+}
+
+void decision(Strategy P, int s, boolean t, ref boolean out) {
+    out = (P.f[s] == t);
+}

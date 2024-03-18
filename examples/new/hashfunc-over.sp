@@ -10,7 +10,7 @@ signatures {
 }
 
 language {
-    boolean B -> false | AP | AP && AP | AP && AP && AP;
+    boolean B -> true | AP | AP || AP | AP || AP || AP;
     boolean AP -> isPrime(M) | !isPrime(M) | N == N | N != N | N < N | N <= N | collide == true | collide == false;
     int N -> setsize(S) | setsizemod(S, M) | 0 | 1 | M;
 }
