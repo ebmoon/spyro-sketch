@@ -45,6 +45,7 @@ import java.util.Map;
 public class Spyro extends SequentialSketchMain {
     public static boolean isDebug = false;
     public boolean isVerbose;
+    public boolean isSketchVerbose;
     public SpyroOptions options;
 
     private CommonSketchBuilder commonSketchBuilder;
@@ -68,11 +69,16 @@ public class Spyro extends SequentialSketchMain {
 
     private Property truth, falsity;
     final private PrintStream oldErr = System.err;
+    final private PrintStream oldOut = System.out;
 
     public Spyro(String[] args) {
         super(new SpyroOptions(args));
         this.options = (SpyroOptions) super.options;
-        isVerbose = this.options.debugOpts.verbosity > 1;
+        this.isVerbose = this.options.debugOpts.verbosity > 1;
+        this.isSketchVerbose = this.options.debugOpts.verbosity > 2;
+        if (isSketchVerbose)
+            this.options.debugOpts.verbosity = this.options.debugOpts.verbosity - 1;
+
         PlatformLocalization.getLocalization().setTempDirs();
         Path tempPath = Paths.get(tempFileDir);
         if (!Files.isDirectory(tempPath)) {
@@ -93,9 +99,20 @@ public class Spyro extends SequentialSketchMain {
         }));
     }
 
+    void redirectStdoutToNull() {
+        System.setOut(new PrintStream(new OutputStream() {
+            @Override
+            public void write(int b) {
+                // DO NOTHING
+            }
+        }));
+    }
+
     void restoreStderr() {
         System.setErr(oldErr);
     }
+
+    void restoreStdout() { System.setOut(oldOut); }
 
     String getNewTempFilePath() {
         return tempFileDir + String.format("/%d_%d.sk", outerIterator, innerIterator);
@@ -154,6 +171,9 @@ public class Spyro extends SequentialSketchMain {
         if (!isVerbose)
             redirectStderrToNull();
 
+        if (!isSketchVerbose)
+            redirectStdoutToNull();
+
         SynthesisResult result;
         try {
             result = partialEvalAndSolve(prog);
@@ -164,6 +184,9 @@ public class Spyro extends SequentialSketchMain {
         // Restore stderr so that user can see spyro error message
         if (!isVerbose)
             restoreStderr();
+
+        if (!isSketchVerbose)
+            restoreStdout();
 
         innerIterator++;
 
@@ -192,11 +215,11 @@ public class Spyro extends SequentialSketchMain {
         Program substitutedCleaned = runAndSimplify(sketchCode);
         if (substitutedCleaned != null) {
             if (isVerbose)
-                System.out.println("Sound.");
+                System.out.println("Unsound.");
             return ResultExtractor.extractPositiveExample(substitutedCleaned);
         } else {
             if (isVerbose)
-                System.out.println("Unsound.");
+                System.out.println("Sound.");
             return null;
         }
     }
@@ -247,7 +270,7 @@ public class Spyro extends SequentialSketchMain {
         Program substitutedCleaned = runAndSimplify(sketchCode);
         if (substitutedCleaned != null) {
             if (isVerbose)
-                System.out.println("Success.");
+                System.out.println("Succeeded.");
             lambdaFunctions.putAll(ResultExtractor.extractLambdaFunctions(substitutedCleaned));
             return ResultExtractor.extractProperty(substitutedCleaned);
         } else {
@@ -275,13 +298,13 @@ public class Spyro extends SequentialSketchMain {
         if (substitutedCleaned != null) {
             lambdaFunctions = ResultExtractor.extractLambdaFunctions(substitutedCleaned);
             if (isVerbose)
-                System.out.println("Precise.");
+                System.out.println("Not Precise.");
             return new Pair<Property, Example>(
                     ResultExtractor.extractProperty(substitutedCleaned),
                     ResultExtractor.extractNegativeExamplePrecision(substitutedCleaned));
         } else {
             if (isVerbose)
-                System.out.println("Not Precise.");
+                System.out.println("Precise.");
             return null;
         }
     }
