@@ -161,15 +161,16 @@ public class ResultExtractor {
     }
 
 
-    public static Example extractNegativeExampleCandidate(Program result, int numHiddenWitness) {
-        StmtBlock body = (StmtBlock) findFunction(result, SoundnessUnderSketchBuilder.soundnessUnderFunctionID).getBody();
+    public static Example extractNegativeExampleCandidate(Program result, String functionName) {
+//        StmtBlock body = (StmtBlock) findFunction(result, SoundnessUnderSketchBuilder.soundnessUnderFunctionID).getBody();
+        StmtBlock body = (StmtBlock) findFunction(result, functionName).getBody();
         List<Statement> stmts = body.getStmts();
         int loc = findStatement(stmts, Property.phiID);
         int numStmts = stmts.size();
 
         // From the rear of the code to the front,
         // the last `numHiddenWitness` lines are hidden witnesses (counter-examples),
-        // then next 3 lines are synthesized property
+        // then next 3(for soundnessUnder) or 9(for precisionOver) lines are synthesized property
         List<Statement> exBody = new ArrayList<>(stmts.subList(0, loc - 1));
 
         ExprFunCall funCall = (ExprFunCall) ((StmtExpr) stmts.get(loc)).getExpression();
