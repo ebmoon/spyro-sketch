@@ -21,14 +21,14 @@ import java.util.List;
  *
  * @author Kanghee Park &lt;khpark@cs.wisc.edu&gt;
  */
-public class PrecisionOverSketchBuilder {
+public class PrecisionOldOverSketchBuilder {
 
     SynthesisSketchBuilder synth;
     Function precisionBody = null;
 
     public final static String precisionFunctionID = "precision";
 
-    public PrecisionOverSketchBuilder(SynthesisSketchBuilder synth) {
+    public PrecisionOldOverSketchBuilder(SynthesisSketchBuilder synth) {
         this.synth = synth;
     }
 

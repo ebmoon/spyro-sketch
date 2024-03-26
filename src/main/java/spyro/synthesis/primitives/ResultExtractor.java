@@ -89,7 +89,7 @@ public class ResultExtractor {
     }
 
     public static Example extractNegativeExamplePrecision(Program result) {
-        StmtBlock body = (StmtBlock) findFunction(result, PrecisionOverSketchBuilder.precisionFunctionID).getBody();
+        StmtBlock body = (StmtBlock) findFunction(result, PrecisionOldOverSketchBuilder.precisionFunctionID).getBody();
         List<Statement> stmts = body.getStmts();
         int numStmts = stmts.size();
 
@@ -113,7 +113,7 @@ public class ResultExtractor {
     }
 
     public static Example extractNegativeExampleImprovement(Program result) {
-        StmtBlock body = (StmtBlock) findFunction(result, PrecisionOverSketchBuilder.precisionFunctionID).getBody();
+        StmtBlock body = (StmtBlock) findFunction(result, PrecisionOldOverSketchBuilder.precisionFunctionID).getBody();
         List<Statement> stmts = body.getStmts();
         int numStmts = stmts.size();
 

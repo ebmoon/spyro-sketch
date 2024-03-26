@@ -53,8 +53,8 @@ public class Spyro extends SequentialSketchMain {
     private MinimizationSynthesisSketchBuilder synthMin;
     private SoundnessOverSketchBuilder soundness;
     private SoundnessUnderSketchBuilder soundnessUnder;
-    private PrecisionOverSketchBuilder precision;
-    private PrecisionOverSketchBuilder precisionMin;
+    private PrecisionOldOverSketchBuilder precisionOld;
+    private PrecisionOldOverSketchBuilder precisionOldMin;
     private PrecisionUnderSketchBuilder precisionUnder;
     private PrecisionUnderSketchBuilder precisionUnderMin;
     private ImprovementSketchBuilder improvement;
@@ -247,7 +247,7 @@ public class Spyro extends SequentialSketchMain {
                 }
             } else {
                 if (isVerbose)
-                    System.out.println("Sound");
+                    System.out.println("Sound.");
                 return null;
             }
         }
@@ -283,16 +283,16 @@ public class Spyro extends SequentialSketchMain {
     public Pair<Property, Example> checkPrecision(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg) {
         if (isVerbose)
             System.out.printf("CheckPrecision : Property %d - Query %d\n", outerIterator, innerIterator);
-        return checkPrecision(psi, phi, pos, neg, precision);
+        return checkPrecision(psi, phi, pos, neg, precisionOld);
     }
 
     public Pair<Property, Example> checkPrecisionMin(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg) {
         if (isVerbose)
             System.out.printf("CheckPrecision (Minimize formula) : Property %d - Query %d\n", outerIterator, innerIterator);
-        return checkPrecision(psi, phi, pos, neg, precisionMin);
+        return checkPrecision(psi, phi, pos, neg, precisionOldMin);
     }
 
-    public Pair<Property, Example> checkPrecision(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg, PrecisionOverSketchBuilder precision) {
+    public Pair<Property, Example> checkPrecision(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg, PrecisionOldOverSketchBuilder precision) {
         Program sketchCode = precision.precisionSketchCode(psi, phi, pos, neg, lambdaFunctions.values());
         Program substitutedCleaned = runAndSimplify(sketchCode);
         if (substitutedCleaned != null) {
@@ -580,8 +580,8 @@ public class Spyro extends SequentialSketchMain {
         synthMin = new MinimizationSynthesisSketchBuilder(minSketchBuilder);
 
         soundness = new SoundnessOverSketchBuilder(commonSketchBuilder);
-        precision = new PrecisionOverSketchBuilder(synth);
-        precisionMin = new PrecisionOverSketchBuilder(synthMin);
+        precisionOld = new PrecisionOldOverSketchBuilder(synth);
+        precisionOldMin = new PrecisionOldOverSketchBuilder(synthMin);
         improvement = new ImprovementSketchBuilder(commonSketchBuilder);
 
         soundnessUnder = new SoundnessUnderSketchBuilder(commonSketchBuilder);

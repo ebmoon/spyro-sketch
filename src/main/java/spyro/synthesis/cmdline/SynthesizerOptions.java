@@ -13,6 +13,10 @@ public class SynthesizerOptions extends CliAnnotatedOptionGroup {
     @CliParameter(help = "Synthesize under-approximations instead of over-approximations")
     public boolean under = false;
 
+    @CliParameter(help = "Synthesize over-approximations with additional CEGIS loop")
+    public boolean over = false;
+
+
     @CliParameter(help = "Do not reuse set of hidden variables for counterexample-guided quantifier elimination")
     public boolean noReuseHidden = false;
 
