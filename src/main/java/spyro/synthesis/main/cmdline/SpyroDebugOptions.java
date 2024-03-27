@@ -11,4 +11,7 @@ import sketch.util.cli.CliParameter;
 public class SpyroDebugOptions extends DebugOptions {
     @CliParameter(help = "Dump generated sketch files")
     public boolean dumpSketch = false;
+
+    @CliParameter(help = "Only compute the size of grammar")
+    public boolean printGrammarSize = false;
 }

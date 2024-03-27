@@ -26,9 +26,12 @@ import spyro.synthesis.primitives.*;
 import spyro.util.exceptions.ParseException;
 
 import java.io.*;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -617,6 +620,18 @@ public class Spyro extends SequentialSketchMain {
             throw new ParseException("could not parse program");
         }
 
+        if(options.debugOpts.printGrammarSize) {
+            GrammarSizeCalculator cal = new GrammarSizeCalculator();
+            BigInteger size = cal.computeSize(query);
+
+            BigDecimal sizeDecimal = new BigDecimal(size);
+
+            DecimalFormat df = new DecimalFormat("0.######E0");
+            System.out.println("Grammar Size:");
+            System.out.println(size);
+            System.out.println(df.format(sizeDecimal));
+            return ;
+        }
 
         boolean isUnderProblem = options.synthOpts.under;
 
