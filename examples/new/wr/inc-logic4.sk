@@ -1,0 +1,20 @@
+void inc(int x, ref int x_out) {
+    x_out = x + 1;
+}
+
+void inc_pre1(int x, int m, ref int x_out, ref boolean pre) {
+    pre = 1;
+    if(!(x == m && m >= 0)) {pre = 0; return;}
+    inc(x, x_out);
+}
+
+void client(int x, ref int x_out){
+    inc(x, x_out);
+    inc(x_out, x_out);
+}
+
+void client_pre1(int x, int m, ref int x_out, ref boolean pre){
+    pre = 1;
+    if(!(x == m && m >= 0)) {pre = 0; return;}
+    client(x, x_out);
+}

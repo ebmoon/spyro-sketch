@@ -1,0 +1,28 @@
+int difficult(int y) {
+    return y*y;
+}
+
+void client(ref int x, int y, int z) {
+    if(y == difficult(z)) {
+        x = 1;
+    }
+    else {
+        x = 2;
+    }
+}
+
+void test1(ref int x, int y, int z, ref boolean ok) {
+    ok = 1;
+    client(x, y, z);
+    if(x == 1 || x == 2) {
+        ok = 0;
+    }
+}
+
+void test2(ref int x, int y, int z, ref boolean ok) {
+    ok = 1;
+    client(x, y, z);
+    if(x == 2) {
+        ok = 0;
+    }
+}

@@ -1,0 +1,42 @@
+struct PosInt{
+    int data;
+}
+
+generator void genPosInt(ref PosInt x)
+{
+    x = new PosInt(data = ??(3) + 2);
+}
+
+void getData(PosInt x, ref int data) {
+    data = x.data;
+}
+
+void mod(int x, int M, ref int ret) {
+    ret = (x % M + M) % M;
+}
+
+void h(int a, int x, PosInt M, ref boolean ok, ref int ret) {
+    ok = 1;
+    if(x % M.data == 0) {ok = 0; return ;}
+    mod(a * x, M.data, ret);
+}
+
+void eq(int a, int b, ref boolean collide) {
+    collide = (a == b);
+}
+
+void isPrime(PosInt M, ref boolean ret) {
+    ret = true;
+    for(int i = 2; i*i <= M.data; i++)
+        if(M.data % i == 0)
+            ret = false;
+}
+
+void gcd(int a, int b, ref int g) {
+   while (b != 0) {
+     int tmp = a;
+     a = b;
+     b = tmp % b;
+   }
+   g = a > 0 ? a : -a;
+}

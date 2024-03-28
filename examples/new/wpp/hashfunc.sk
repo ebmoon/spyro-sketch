@@ -1,0 +1,100 @@
+struct PosInt{
+    int data;
+}
+
+generator void genPosInt(ref PosInt x)
+{
+    x = new PosInt(data = ??(3) + 2);
+}
+
+void getData(PosInt x, ref int data) {
+    data = x.data;
+}
+
+void hashfunc(int h, int x, PosInt M, ref int ret) {
+    ret = ((h * x) % M.data + M.data) % M.data;
+}
+
+void prog(ArrayList S, PosInt M, int h, ref boolean ok, ref boolean collide) {
+    ok = 1;
+    if(h % M.data == 0) {ok = 0; return ;}
+    boolean[M.data] So;
+    for(int i = 0; i < M.data; i++)
+        So[i] = 0;
+    collide = false;
+    for(int i = 0; i < S.size; i++)
+    {
+        int val;
+        hashfunc(h, S.elementData[i], M, val);
+        if (So[val] == 1)
+            collide = true;
+        So[val] = 1;
+    }
+}
+
+void isPrime(PosInt M, ref boolean ret) {
+    ret = true;
+    for(int i = 2; i*i <= M.data; i++)
+        if(M.data % i == 0)
+            ret = false;
+}
+
+void setsize(ArrayList arr, ref int ret) {
+    ret = arr.size;
+}
+
+void setsizemod(ArrayList arr, PosInt M, ref int ret) {
+    boolean[M.data] So;
+    for(int i = 0; i < M.data; i++)
+        So[i] = 0;
+    for(int i = 0; i < arr.size; i++)
+        So[(arr.elementData[i] % M.data + M.data) % M.data] = 1;
+    ret = 0;
+    for(int i = 0; i < M.data; i++)
+        ret += So[i];
+}
+
+
+// Library for ArrayList
+
+struct ArrayList {
+    int size;
+    int[size] elementData;
+}
+
+void newArrayList(ref ArrayList ret) {
+    int size = 0;
+    int[size] elementData;
+
+    ret = new ArrayList(
+        size = size,
+        elementData = elementData
+    );
+}
+
+void add(ArrayList arr, int e, ref ArrayList ret) {
+    int size = arr.size + 1;
+
+    int[size] elementData;
+
+    elementData[0::arr.size] = arr.elementData[0::arr.size];
+    elementData[arr.size] = e;
+
+    ret = new ArrayList(
+        size = size,
+        elementData = elementData
+    );
+}
+
+void size(ArrayList arr, ref int ret) {
+    ret = arr.size;
+}
+
+void get(ArrayList arr, int idx, ref int ret) {
+    if (idx < 0 || idx >= arr.size) {
+        ret = -1; // -1 for error
+    } else {
+        ret = arr.elementData[idx];
+    }
+}
+

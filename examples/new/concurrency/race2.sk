@@ -1,0 +1,82 @@
+/* Thread 0 */
+// 0: t <- Get()
+// 1: t <- t + 1
+// 2: Set(t+1)
+
+/* Thread 1 */
+// 0: t <- Get()
+// 1: t <- t - 1
+// 2: Set(t-1)
+
+struct RandomBits {
+    int[20] d;
+}
+
+generator void genRandomBits(ref RandomBits h)
+{
+    h = new RandomBits(
+        d = { ??(1), ??(1), ??(1), ??(1), ??(1)
+            , ??(1), ??(1), ??(1), ??(1), ??(1)
+            , ??(1), ??(1), ??(1), ??(1), ??(1)
+            , ??(1), ??(1), ??(1), ??(1), ??(1)});
+}
+
+struct AtomCons {
+    boolean[2] d;
+}
+
+generator void genAtomCons(ref AtomCons ac) {
+    ac = new AtomCons(
+        d = {??(1), ??(1)});
+}
+
+void atom(AtomCons ac, int l, int r, ref boolean ret) {
+    ret = 1;
+    for(int i = l; i < r; i++)
+        ret = ret && ac.d[i];
+}
+
+void controller(AtomCons ac0, AtomCons ac1, RandomBits h, ref boolean race) {
+    int t = 0, n0 = 3, n1 = 3;
+    int pc0 = 0, pc1 = 0, t0 = 0, t1 = 0, last = -1;
+    for(int i = 0; i < n0 + n1; i++) {
+        int turn = h.d[i];
+        if(last != -1) turn = last;
+        if((turn == 1 && pc1 == n1) || (turn == 0 && pc0 == n0))
+            turn = 1 - turn;
+
+        if(turn == 0) {
+            if(pc0 == 0) {
+                t0 = t;
+            }
+            else if(pc0 == 1) {
+                t0 = t0 + 1;
+            }
+            else if(pc0 == 2) {
+                t = t0;
+            }
+            if(pc0 < n0 - 1 && ac0.d[pc0])
+                last = 0;
+            else
+                last = -1;
+            pc0++;
+        }
+        else {
+            if(pc1 == 0) {
+                t1 = t;
+            }
+            else if(pc1 == 1) {
+                t1 = t1 - 1;
+            }
+            else if(pc1 == 2) {
+                t = t1;
+            }
+            if(pc1 < n1 - 1 && ac1.d[pc1])
+                last = 1;
+            else
+                last = -1;
+            pc1++;
+        }
+    }
+    race = t != 0;
+}

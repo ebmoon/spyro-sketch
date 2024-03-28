@@ -1,0 +1,63 @@
+void max5(int x1, int x2, int x3, int x4, int x5, ref int out){
+    if (x1 > x2) {
+        if (x1 > x3) {
+            if (x1 > x4) {
+                if(x1 > x5) {
+                    out = x1;
+                } else {
+                    out = x5;
+                }
+            } else {
+                if(x4 > x5) {
+                    out = x4;
+                } else {
+                    out = x5;
+                }
+            }
+        } else {
+            if (x3 > x4) {
+                if(x3 > x5) {
+                    out = x3;
+                } else {
+                    out = x5;
+                }
+            } else {
+                if(x4 > x5) {
+                    out = x4;
+                } else {
+                    out = x5;
+                }
+            }
+        }
+    } else {
+        if (x2 > x3) {
+            if (x2 > x4) {
+                if(x2 > x5) {
+                    out = x2;
+                } else {
+                    out = x5;
+                }
+            } else {
+                if(x4 > x5) {
+                    out = x4;
+                } else {
+                    out = x5;
+                }
+            }
+        } else {
+            if (x3 > x4) {
+                if(x3 > x5) {
+                    out = x3;
+                } else {
+                    out = x5;
+                }
+            } else {
+                if(x4 > x5) {
+                    out = x4;
+                } else {
+                    out = x5;
+                }
+            }
+        }
+    }
+}

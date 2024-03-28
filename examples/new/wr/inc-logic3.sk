@@ -1,0 +1,16 @@
+void foo(int x, boolean nd, ref boolean ok) {
+    ok = 1;
+    if(x % 2 == 0)
+        ok = 0;
+    else if(nd)
+        ok = 0;
+}
+
+void flaky_client(ref int x, boolean nd, ref boolean ok) {
+    ok = 1;
+    x = 3;
+    foo(x, nd, ok);
+    if (!ok) return;
+    x = x + 2;
+    if(x != 4) ok = 0;
+}

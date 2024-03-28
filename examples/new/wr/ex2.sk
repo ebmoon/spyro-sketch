@@ -1,0 +1,8 @@
+void prog(int y, ref int x, ref boolean pre){
+    pre = 1;
+    if(!(y >= 0)) {pre = 0; return;}
+    if(y == 0)
+        x = 1;
+    else
+        x = y;
+}

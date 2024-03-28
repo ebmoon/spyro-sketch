@@ -11,7 +11,7 @@ signatures {
 
 language {
     boolean B -> false | AP | AP && AP | AP && AP && AP | AP && AP && AP && AP ;
-    boolean AP -> N0 < N0 | N0 <= N0 | N0 == N0 |  n0 > 0 | n1 > 0;
+    boolean AP -> N0 < N0 | N0 <= N0 | N0 == N0 | n0 > 0 | n1 > 0;
     int N0 ->  n0 | n1 | -n0 | -n1 | t ;
 }
 

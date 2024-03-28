@@ -1,0 +1,75 @@
+// philosopher
+// 0 : take_fork(i)
+// 1 : take_fork((i+1)%N)
+
+
+struct RandomBits {
+    int[10] d;
+}
+
+generator void genRandomBits(ref RandomBits h)
+{
+    h = new RandomBits(
+        d = { ??(2), ??(2), ??(2), ??(2), ??(2)
+            , ??(2), ??(2), ??(2), ??(2), ??(2)});
+}
+
+struct Order {
+    boolean[3] d;
+}
+
+generator void genOrder(ref Order cons) {
+    cons = new Order(d = {??(1), ??(1), ??(1)});
+}
+
+void LR(Order ord, int i, ref boolean ret) {
+    ret = !ord.d[i];
+}
+
+void RL(Order ord, int i, ref boolean ret) {
+    ret = ord.d[i];
+}
+
+void controller(Order ord, RandomBits h, ref boolean deadlock) {
+    int N = 3;
+
+    int[N] pc;
+    boolean[N] frk;
+    int[2][N] take;
+    for(int i = 0; i < N; i++) {
+        pc[i] = 0;
+        frk[i] = 0;
+        if(ord.d[i]) {
+            take[i][0] = (i + 1) % N;
+            take[i][1] = i;
+        }
+        else {
+            take[i][1] = (i + 1) % N;
+            take[i][0] = i;
+        }
+    }
+
+    deadlock = 0;
+
+
+    for(int i = 0; i < N * 2; i++) {
+        int cur = -1, try = h.d[i] % N;
+
+        for(int j = 0; j < N && cur == -1; j++) {
+            if(pc[try] < 2 && !frk[take[try][pc[try]]])
+                cur = try;
+            try = (try + 1) % N;
+        }
+        if(cur == -1) { deadlock = 1; return ;}
+
+        if(pc[cur] == 0)
+            frk[take[cur][pc[cur]]] = 1;
+        else if(pc[cur] == 1) {
+            frk[take[cur][0]] = 0;
+            frk[take[cur][1]] = 0;
+        }
+
+        pc[cur]++;
+    }
+
+}
