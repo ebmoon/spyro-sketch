@@ -14,4 +14,6 @@ public class SpyroDebugOptions extends DebugOptions {
 
     @CliParameter(help = "Only compute the size of grammar")
     public boolean printGrammarSize = false;
+    @CliParameter(help = "Do not display the synthesis results")
+    public boolean noDisplayResults = false;
 }
