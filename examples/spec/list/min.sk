@@ -77,3 +77,7 @@ void equal_list(list l1, list l2, ref boolean ret) {
         ret = l1.hd == l2.hd && ret;
     }
 }
+
+void list_equal(list l1, list l2, ref boolean ret) {
+    equal_list(l1, l2, ret);
+}

@@ -1,16 +1,17 @@
 //@Description Sketch to reverse a list.
 
-var {
+variables {
     queue q;
     int val;
     queue q_out;
 }
 
-relation {
+signatures {
     enqueue(q, val, q_out);
 }
 
-generator {
+language {
+    boolean B -> true | AP | AP || AP | AP || AP || AP;
     boolean AP -> is_empty_list(L) | !is_empty_list(L)
                 | equal_list(L, L) | !equal_list(L, L);
     int I -> val;
@@ -19,8 +20,8 @@ generator {
     queue Q -> q | q_out;
 }
 
-example {
-    int -> ??(3) | -1 * ??(3) ;
-    queue(3) -> empty_queue() | enqueue(queue, int) | dequeue(queue, int) ;
-    list(3) -> nil() | cons(int, list);
+examples {
+    int IEX -> ??(3) | -1 * ??(3) ;
+    queue QEX -> empty_queue() | enqueue(QEX, IEX) | dequeue(QEX, IEX) ;
+    list LEX -> nil() | cons(IEX, LEX);
 }

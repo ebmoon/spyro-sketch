@@ -9,10 +9,10 @@
 /* Thread 1 */
 // 0: t <- Get()
 // 1: t <- t - 1
-// 2: Set(t-1)
+// 2: Set(t)
 // 3: t <- Get()
 // 4: t <- t - 1
-// 5: Set(t-1)
+// 5: Set(t)
 
 struct RandomBits {
     int[20] d;

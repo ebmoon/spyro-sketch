@@ -1,4 +1,4 @@
-//@Description delete all the occurence of the input value
+//@Description delete all the occurrence of the input value
 
 variables {
     list l;

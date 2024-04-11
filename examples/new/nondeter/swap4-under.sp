@@ -1,9 +1,9 @@
 variables {
-    int a1;
-    int a2;
-    int a3;
-    int a0;
-    int n;
+    int a1 <- IEX1;
+    int a2 <- IEX1;
+    int a3 <- IEX1;
+    int a0 <- IEX1;
+    int n <- IEX2;
     hidden Array h1;
     hidden Array h2;
     boolean ok;
@@ -14,16 +14,17 @@ signatures {
 }
 
 language {
-    boolean B0 -> (ok == 1) && B ;
+    boolean B0 -> ok && B | !ok && B ;
     boolean B -> false | AP | AP && AP
                 | AP && AP && AP
                 | AP && AP && AP && AP;
-    boolean AP -> N < N | N <= N | N == N | N != N | n < ??(3) | n >= ??(3);
+    boolean AP -> N < N | N <= N | N == N | N != N | n < ??(2) | n >= ??(2);
     int N -> a0 | a1 | a2 | a3;
 }
 
 examples {
-    int IEX -> ??(3);
+    int IEX1 -> ??(3);
+    int IEX2 -> ??(2);
     Array ArrayEX -> genArray();
     boolean BEX -> ??(1);
 }

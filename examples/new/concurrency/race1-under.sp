@@ -13,7 +13,9 @@ language {
     boolean B0 -> B && O;
     boolean O -> race | !race;
     boolean B -> false | AP | AP && AP | AP && AP && AP | AP && AP && AP && AP | true;
-    boolean AP -> atom(AC, 0, 1) | !atom(AC, 0, 1);
+    boolean AP -> atom(AC, L, R) | !atom(AC, L, R);
+    int L -> 0 | 1;
+    int R -> 1 | 2;
     AtomCons AC -> ac0 | ac1;
 }
 

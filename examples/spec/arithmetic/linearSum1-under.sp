@@ -16,6 +16,6 @@ language {
 }
 
 examples {
-    int IEX -> ??(5) ;
+    int IEX -> ??(5) | -1 * ??(5) ;
 }
 

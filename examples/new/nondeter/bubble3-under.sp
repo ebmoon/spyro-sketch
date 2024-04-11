@@ -12,14 +12,14 @@ signatures {
 }
 
 language {
-    boolean B0 -> (ok == 1) && B ;
+    boolean B0 -> ok && B | !ok && B;
     boolean B -> false | AP | AP && AP
                 | AP && AP && AP
                 | AP && AP && AP && AP
                 | AP && AP && AP && AP && AP
                 | AP && AP && AP && AP && AP && AP;
-    boolean AP -> N < N | N <= N | N == N | N != N;
-    int N -> a0 | a1 | a2 | n | ??(3);
+    boolean AP -> N < N | N <= N | N == N | N != N | n <  ??(3) | n >= ??(3);
+    int N -> a0 | a1 | a2 ;
 }
 
 examples {

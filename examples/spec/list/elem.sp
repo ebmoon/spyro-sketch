@@ -1,26 +1,37 @@
 //@Description need inline bnd 10
 
-var {
+variables {
     list l;
     int val;
     boolean elem_out;
 }
 
-relation {
+signatures {
     elem(l, val, elem_out);
 }
 
-generator {
+language {
+    boolean B -> true | AP | AP || AP | AP || AP || AP;
     boolean AP -> is_empty(L) | !is_empty(L)
                 | elem_out | !elem_out
-                | forall((x) -> compare(x, I), L)
-                | exists((x) -> compare(x, I), L);
+                | forall((x) -> (x == I), L)
+                | forall((x) -> (x != I), L)
+                | forall((x) -> (x >= I), L)
+                | forall((x) -> (x <= I), L)
+                | forall((x) -> (x < I), L)
+                | forall((x) -> (x > I), L)
+                | exists((x) -> (x == I), L)
+                | exists((x) -> (x != I), L)
+                | exists((x) -> (x >= I), L)
+                | exists((x) -> (x <= I), L)
+                | exists((x) -> (x < I), L)
+                | exists((x) -> (x > I), L);
     list L -> l ;
     int I -> val ;
 }
 
-example {
-    int -> ??(3) | -1 * ??(3) ;
-    boolean -> ?? ;
-    list -> nil() | cons(int, list);
+examples {
+    int IEX -> ??(3) | -1 * ??(3) ;
+    boolean BEX -> ?? ;
+    list LEX -> nil() | cons(IEX, LEX);
 }

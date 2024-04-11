@@ -138,3 +138,10 @@ void equal_list(list l1, list l2, ref boolean ret) {
         ret = l1.hd == l2.hd && ret;
     }
 }
+
+void queue_equal(queue q1, queue q2, ref boolean ret) {
+    list l1, l2;
+    queue2list(q1, l1);
+    queue2list(q2, l2);
+    equal_list(l1, l2, ret);
+}
