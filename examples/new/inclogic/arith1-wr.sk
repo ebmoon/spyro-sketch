@@ -1,0 +1,34 @@
+void flip(int x, boolean h, ref int x_out) {
+    x_out = x;
+    if(h) { x_out = -x; }
+}
+
+void flip_pre(int x, int a, int b, boolean h, ref int x_out, ref boolean pre) {
+   pre = (a <= x && x <= b);
+   flip(x, h, x_out);
+}
+
+void max(int x, int y, ref int out) {
+    if(x >= y)
+        out = x;
+    else
+        out = y;
+}
+
+void min(int x, int y, ref int out) {
+    if(x < y)
+        out = x;
+    else
+        out = y;
+}
+
+void abs(int x, ref int out) {
+    if(x > 0)
+        out = x;
+    else
+        out = -x;
+}
+
+void is_pos(int x, ref boolean out) {
+    out = x > 0;
+}

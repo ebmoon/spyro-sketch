@@ -1,0 +1,23 @@
+void coin(int a, int b, int x, int y, ref int r){
+    r = a * x + b * y;
+}
+
+void modmul(int a, int x, int M, ref int o){
+    o = ((a*x)%M+M)%M;
+}
+
+void isPrime(int M, ref boolean ret) {
+    ret = M > 1;
+    for(int i = 2; i*i <= M; i++)
+        if(M % i == 0)
+            ret = false;
+}
+
+void gcd(int a, int b, ref int g) {
+   while (b != 0) {
+     int tmp = a;
+     a = b;
+     b = tmp % b;
+   }
+   g = a > 0 ? a : -a;
+}

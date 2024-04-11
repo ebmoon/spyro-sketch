@@ -1,0 +1,33 @@
+void prog(int x, int h0, int h1, ref int x_out) {
+    x_out = x * h0 + h1;
+}
+
+void prog_pre(int x, int a, int b, int h0, int h1, ref int x_out, ref boolean pre) {
+    pre = (a <= x && x <= b);
+    prog(x, h0, h1, x_out);
+}
+
+void max(int x, int y, ref int out) {
+    if(x >= y)
+        out = x;
+    else
+        out = y;
+}
+
+void min(int x, int y, ref int out) {
+    if(x < y)
+        out = x;
+    else
+        out = y;
+}
+
+void abs(int x, ref int out) {
+    if(x > 0)
+        out = x;
+    else
+        out = -x;
+}
+
+void is_pos(int x, ref boolean out) {
+    out = x > 0;
+}

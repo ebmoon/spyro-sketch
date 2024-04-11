@@ -12,10 +12,10 @@ signatures {
 language {
     boolean B0 -> B && O;
     boolean O -> race | !race;
-    boolean B -> false | AP | AP && AP | AP && AP && AP | AP && AP && AP && AP | true;
+    boolean B -> false | true | AP | AP && AP | AP && AP && AP | AP && AP && AP && AP ;
     boolean AP -> atom(AC, L, R) | !atom(AC, L, R);
-    int L -> 0 | 1;
-    int R -> 1 | 2;
+    int L -> 0 | 1 | 2 | 3 ;
+    int R -> 1 | 2 | 3 | 4 ;
     AtomCons AC -> ac0 | ac1;
 }
 
