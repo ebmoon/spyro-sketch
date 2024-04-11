@@ -7,7 +7,7 @@ import java.math.BigInteger;
 import java.text.DecimalFormat;
 import java.util.Map;
 
-public class RunningResults {
+public class RunningResults implements Comparable<RunningResults>{
     PropertySet properties;
     Map<String, Function> lambdaFunctions;
     BigInteger grammarSize;
@@ -45,6 +45,11 @@ public class RunningResults {
         this.numHiddenWitness = numHiddenWitness;
     }
 
+    @Override
+    public int compareTo(RunningResults other) {
+        return Long.compare(this.runningTime, other.runningTime);
+    }
+
     public String toString() {
         String str = "";
         int idx = 0;
@@ -64,12 +69,12 @@ public class RunningResults {
 
         str += "Total time = " + runningTime + "\n";
         str += "Grammar Size = " + grammarSize + "\n";
-        str += "Soundness Time = " + timeSoundness + "\n";
         str += "Soundness Number = " + numSoundness + "\n";
-        str += "Precision Time = " + timePrecision + "\n";
+        str += "Soundness Time = " + timeSoundness + "\n";
         str += "Precision Number = " + numPrecision + "\n";
-        str += "Synthesis Time = " + timeSynthesis + "\n";
+        str += "Precision Time = " + timePrecision + "\n";
         str += "Synthesis Number = " + numSynthesis + "\n";
+        str += "Synthesis Time = " + timeSynthesis + "\n";
         str += "Max Number of Hidden Witness = " + numHiddenWitness + "\n";
         return str;
     }
@@ -77,7 +82,7 @@ public class RunningResults {
     public String toCSV() {
         BigDecimal sizeDecimal = new BigDecimal(grammarSize);
         DecimalFormat df = new DecimalFormat("0.######E0");
-        return String.format("%s, %d, %d, %d, %d, %d, %d, %d, %d", df.format(sizeDecimal), runningTime, timeSoundness, numSoundness, timePrecision, numPrecision, timeSynthesis, numSynthesis, numHiddenWitness);
+        return String.format("%s, %d, %d, %d, %d, %d, %d, %d, %d", df.format(sizeDecimal), runningTime, numSoundness, timeSoundness, numPrecision, timePrecision, numSynthesis, timeSynthesis, numHiddenWitness);
     }
 
 

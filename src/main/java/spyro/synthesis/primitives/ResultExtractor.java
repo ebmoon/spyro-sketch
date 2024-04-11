@@ -162,7 +162,6 @@ public class ResultExtractor {
 
 
     public static Example extractNegativeExampleCandidate(Program result, String functionName) {
-//        StmtBlock body = (StmtBlock) findFunction(result, SoundnessUnderSketchBuilder.soundnessUnderFunctionID).getBody();
         StmtBlock body = (StmtBlock) findFunction(result, functionName).getBody();
         List<Statement> stmts = body.getStmts();
         int loc = findStatement(stmts, Property.phiID);

@@ -37,6 +37,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.lang.Math.max;
+
 /**
  * The main entry point for the Spyro specification synthesizer.
  * Running it as a standalone program reads a list of files provided
@@ -72,6 +74,7 @@ public class Spyro extends SequentialSketchMain {
     int numPrecision;
     long timeSynthesis;
     int numSynthesis;
+    int maxHiddenSize;
 
     private int innerIterator = 0;
     private int outerIterator = 0;
@@ -261,6 +264,7 @@ public class Spyro extends SequentialSketchMain {
                 }
             } else break;
         }
+        maxHiddenSize = max(maxHiddenSize, hSet.getHiddenValues().size());
         if (isVerbose) System.out.println(ret == null ? "Sound." : "Unsound.");
         timeSoundness += System.currentTimeMillis() - startTime;
         return ret;
@@ -298,7 +302,7 @@ public class Spyro extends SequentialSketchMain {
             System.out.printf("CheckPrecision : Property %d - Query %d\n", outerIterator, innerIterator);
         if (options.synthOpts.over)
             return checkPrecisionOver(psi, phi, pos, neg, precisionOver);
-        return checkPrecision(psi, phi, pos, neg, precisionOld);
+        return checkPrecisionOld(psi, phi, pos, neg, precisionOld);
     }
 
     public Pair<Property, Example> checkPrecisionMin(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg) {
@@ -306,18 +310,23 @@ public class Spyro extends SequentialSketchMain {
             System.out.printf("CheckPrecision (Minimize formula) : Property %d - Query %d\n", outerIterator, innerIterator);
         if (options.synthOpts.over)
             return checkPrecisionOver(psi, phi, pos, neg, precisionOverMin);
-        return checkPrecision(psi, phi, pos, neg, precisionOldMin);
+        return checkPrecisionOld(psi, phi, pos, neg, precisionOldMin);
     }
 
 
-    public Pair<Property, Example> checkPrecision(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg, PrecisionOldOverSketchBuilder precision) {
+    public Pair<Property, Example> checkPrecisionOld(PropertySet psi, Property phi, ExampleSet pos, ExampleSet neg, PrecisionOldOverSketchBuilder precision) {
         numPrecision++;
         long startTime = System.currentTimeMillis();
         Program sketchCode = precision.precisionSketchCode(psi, phi, pos, neg, lambdaFunctions.values());
         Program substitutedCleaned = runAndSimplify(sketchCode);
         Pair<Property, Example> ret = null;
         if (substitutedCleaned != null) {
-            lambdaFunctions = ResultExtractor.extractLambdaFunctions(substitutedCleaned);
+
+            Map<String, Function> extractedLF = ResultExtractor.extractLambdaFunctions(substitutedCleaned);
+            if (precision == precisionOldMin)
+                lambdaFunctions.putAll(ResultExtractor.extractLambdaFunctions(substitutedCleaned));
+            else
+                lambdaFunctions = ResultExtractor.extractLambdaFunctions(substitutedCleaned);
             ret = new Pair<Property, Example>(
                     ResultExtractor.extractProperty(substitutedCleaned),
                     ResultExtractor.extractNegativeExamplePrecision(substitutedCleaned));
@@ -339,17 +348,25 @@ public class Spyro extends SequentialSketchMain {
             if (substitutedCleaned != null) {
                 Example negExCandidate = ResultExtractor.extractNegativeExampleCandidate(substitutedCleaned, PrecisionOverSketchBuilder.precisionOverFunctionID);
                 Property propCandidate = ResultExtractor.extractProperty(substitutedCleaned);
+                Map<String, Function> lfCandidate = ResultExtractor.extractLambdaFunctions(substitutedCleaned);
+
                 Program synthCounterExampleSketchCode = hiddenWitness.hiddenWitnessSketchCode(negExCandidate);
                 substitutedCleaned = runAndSimplify(synthCounterExampleSketchCode);
                 if (substitutedCleaned != null) {
+
                     HiddenValue hiddenValue = ResultExtractor.extractHiddenValue(substitutedCleaned, commonSketchBuilder);
                     hSet.add(hiddenValue);
                 } else {
+                    if (precisionOver == precisionOverMin)
+                        lambdaFunctions.putAll(lfCandidate);
+                    else
+                        lambdaFunctions = lfCandidate;
                     ret = new Pair<>(propCandidate, negExCandidate);
                     break;
                 }
             } else break;
         }
+        maxHiddenSize = max(maxHiddenSize, hSet.getHiddenValues().size());
         if (isVerbose) System.out.println(ret == null ? "Precise." : "Not Precise.");
         timePrecision += System.currentTimeMillis() - startTime;
         return ret;
@@ -375,7 +392,10 @@ public class Spyro extends SequentialSketchMain {
         Program substitutedCleaned = runAndSimplify(sketchCode);
         Pair<Property, Example> ret = null;
         if (substitutedCleaned != null) {
-            lambdaFunctions = ResultExtractor.extractLambdaFunctions(substitutedCleaned);
+            if (builder == precisionUnderMin)
+                lambdaFunctions.putAll(ResultExtractor.extractLambdaFunctions(substitutedCleaned));
+            else
+                lambdaFunctions = ResultExtractor.extractLambdaFunctions(substitutedCleaned);
             ret = new Pair<Property, Example>(
                     ResultExtractor.extractProperty(substitutedCleaned),
                     ResultExtractor.extractPositiveExamplePrecisionUnder(substitutedCleaned));
@@ -670,7 +690,7 @@ public class Spyro extends SequentialSketchMain {
         PropertySet properties = options.synthOpts.under ? synthesizeUnderProperties(psi) : synthesizeOverProperties(psi);
 
         long elapsedTime = System.currentTimeMillis() - startTime;
-        RunningResults results = new RunningResults(options.synthOpts.under, properties, lambdaFunctions, grammarSize, elapsedTime, timeSoundness, numSoundness, timePrecision, numPrecision, timeSynthesis, numSynthesis, hSet.getHiddenValues().size());
+        RunningResults results = new RunningResults(options.synthOpts.under, properties, lambdaFunctions, grammarSize, elapsedTime, timeSoundness, numSoundness, timePrecision, numPrecision, timeSynthesis, numSynthesis, maxHiddenSize);
 
         if (!options.debugOpts.noDisplayResults)
             System.out.println(results);
