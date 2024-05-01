@@ -671,12 +671,12 @@ public class Spyro extends SequentialSketchMain {
         precisionOver = new PrecisionOverSketchBuilder(synth);
         precisionOverMin = new PrecisionOverSketchBuilder(synthMin);
 
-        improvement = new ImprovementSketchBuilder(commonSketchBuilder);
-
         soundnessUnder = new SoundnessUnderSketchBuilder(commonSketchBuilder);
         hiddenWitness = new HiddenWitnessSketchBuilder(commonSketchBuilder);
         precisionUnder = new PrecisionUnderSketchBuilder(synth);
         precisionUnderMin = new PrecisionUnderSketchBuilder(synthMin);
+
+        improvement = new ImprovementSketchBuilder(commonSketchBuilder);
 
         lambdaFunctions = new HashMap<>();
 

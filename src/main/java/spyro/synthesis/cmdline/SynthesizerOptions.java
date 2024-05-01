@@ -16,6 +16,9 @@ public class SynthesizerOptions extends CliAnnotatedOptionGroup {
     @CliParameter(help = "Synthesize over-approximations with additional CEGIS loop")
     public boolean over = false;
 
+    @CliParameter(help = "Query is given in the form of relations instead of functions")
+    public boolean rel = false;
+
     @CliParameter(help = "Do not reuse set of hidden variables for counterexample-guided quantifier elimination")
     public boolean noReuseHidden = false;
 
