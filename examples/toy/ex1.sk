@@ -1,0 +1,3 @@
+void f(int x, int h, ref int xout) {
+    xout = x + 2 * h;
+}
