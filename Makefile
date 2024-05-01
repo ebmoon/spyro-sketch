@@ -2,7 +2,7 @@ PARSER = java -jar ~/antlr-4.13.1-complete.jar
 VERSION = 0.0.1
 
 jar:
-	mvn -e compile assembly:assembly
+	mvn -e compile assembly:single
 	cp target/spyro-sketch-$(VERSION)-noarch.jar spyro-sketch-$(VERSION)-noarch.jar
 
 clean-parser:
