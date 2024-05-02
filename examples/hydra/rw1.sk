@@ -1,0 +1,58 @@
+// Rewrite rules: C == C & KnownBits(x).ones |= v | C == v
+
+struct BV{
+    bit[4] bv;
+}
+
+generator void genBV(ref BV bv) {
+    bv = new BV(bv = {??(1),??(1),??(1),??(1)});
+}
+
+void BV_equal(BV a, BV b, ref boolean ret) {
+    ret = a.bv == b.bv;
+}
+
+void and(BV a, BV b, ref BV o) {
+    o = new BV();
+    o.bv = a.bv & b.bv;
+}
+
+void or(BV a, BV b, ref BV o) {
+    o = new BV();
+    o.bv = a.bv | b.bv;
+}
+
+void xor(BV a, BV b, ref BV o) {
+    o = new BV();
+    o.bv = a.bv ^ b.bv;
+}
+
+void neg(BV a, ref BV o) {
+    o = new BV();
+    o.bv = !a.bv;
+}
+
+struct Abs{
+    BV lower;
+    BV upper;
+}
+
+void consAbs(BV l, BV u, ref Abs a) {
+    a = new Abs(lower = l, upper = u);
+}
+
+void belong(BV c, Abs a, ref boolean ret) {
+    ret = ((c.bv | a.lower.bv) == c.bv) && ((c.bv & a.upper.bv) == c.bv);
+}
+
+void getOnes(Abs a, ref BV ones){
+    ones = a.lower;
+}
+
+void getZeros(Abs a, ref BV zeros){
+    zeros = new BV(bv = ~a.upper.bv);
+}
+
+void rewrite(BV v, BV C, ref boolean valid) {
+    valid = ((v.bv | C.bv) == (v.bv));
+}

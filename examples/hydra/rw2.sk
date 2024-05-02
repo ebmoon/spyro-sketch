@@ -1,0 +1,28 @@
+// Rewrite rules: IsPowerOf2(C) |= x:i4 * C == x:i4 << log2(C)
+
+void log2(int C, ref int ret) {
+    ret = 0;
+    while(C > 1) {
+        C = C / 2;
+        ret = ret + 1;
+    }
+}
+
+void IsPowerOf2(int C, ref boolean ret) {
+    int cnt = 0;
+    for( ; C > 0; C = C / 2)
+        cnt += C % 2;
+    ret = cnt == 1;
+}
+
+int shl(int a, int b) {
+    for( ; b > 0; b--)
+        a = a * 2;
+    return a;
+}
+
+void rewrite(int x, int C, ref boolean valid) {
+    int _log2;
+    log2(C, _log2);
+    valid = (x * C == shl(x, _log2));
+}
